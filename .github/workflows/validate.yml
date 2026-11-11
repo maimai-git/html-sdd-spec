@@ -21,7 +21,7 @@ jobs:
         run: python -m unittest discover -s tests -v
       - name: Build and install wheel
         run: |
-          python -m pip wheel . --no-deps --no-build-isolation -w /tmp/html-sdd-wheel
+          python -m pip wheel . --no-deps -w /tmp/html-sdd-wheel
           python -m venv /tmp/html-sdd-venv
           /tmp/html-sdd-venv/bin/python -m pip install --no-index /tmp/html-sdd-wheel/*.whl
           /tmp/html-sdd-venv/bin/html-sdd --version
