@@ -4,11 +4,13 @@ import argparse
 import json
 import sys
 from pathlib import Path
+from typing import Optional
 
 from .checker import load_spec, validate_spec
 from .renderer import render_spec
 from .diffing import diff_specs, format_changes
 from .scaffold import STANDARD_SDD_DIRECTORY, init_project
+from .context import ContextError, build_context, format_context
 from . import __version__
 
 
@@ -55,6 +57,40 @@ def check_command(path: Path, as_json: bool = False) -> int:
     return 0
 
 
+def context_command(
+    path: Path,
+    record_id: str,
+    role: Optional[str] = None,
+    as_json: bool = False,
+    full: bool = False,
+) -> int:
+    try:
+        spec = load_spec(str(path))
+        context = build_context(spec, record_id, role, full=full)
+    except (OSError, ValueError, json.JSONDecodeError, ContextError) as exc:
+        if as_json:
+            print(
+                json.dumps(
+                    {
+                        "code": "CONTEXT_ERROR",
+                        "path": str(path),
+                        "recordId": record_id,
+                        "message": str(exc),
+                    },
+                    ensure_ascii=False,
+                    indent=2,
+                )
+            )
+        else:
+            print(f"ERROR CONTEXT {path} {record_id}: {exc}")
+        return 1
+    if as_json:
+        print(json.dumps(context, ensure_ascii=False, indent=2))
+    else:
+        print(format_context(context, full=full))
+    return 0
+
+
 def _template_path() -> Path:
     """Return the bundled template, with a source-tree fallback for development."""
     bundled = Path(__file__).resolve().parent / "assets" / "console.html"
@@ -70,6 +106,16 @@ def build_parser() -> argparse.ArgumentParser:
     check = sub.add_parser("check", help="检查 JSON 规范")
     check.add_argument("path", type=Path)
     check.add_argument("--json", action="store_true", dest="as_json")
+    context = sub.add_parser("context", help="按记录 ID 输出关联上下文")
+    context.add_argument("path", type=Path, help="方案事实源 JSON 文件")
+    context.add_argument("record_id", help="稳定记录 ID，例如 REQ-001")
+    context.add_argument(
+        "--role",
+        choices=("owner", "reviewer", "executor"),
+        help="按负责人、审核人或执行人的关注范围整理输出",
+    )
+    context.add_argument("--json", action="store_true", dest="as_json", help="输出机器可读 JSON")
+    context.add_argument("--full", action="store_true", help="展开目标记录；关联记录仍保持精简")
     render = sub.add_parser("render", help="生成单文件 HTML（Mermaid 图表按需使用 CDN）")
     render.add_argument("path", type=Path)
     render.add_argument("--output", type=Path, required=True)
@@ -92,6 +138,8 @@ def main(argv=None) -> int:
     args = build_parser().parse_args(argv)
     if args.command == "check":
         return check_command(args.path, args.as_json)
+    if args.command == "context":
+        return context_command(args.path, args.record_id, args.role, args.as_json, args.full)
     if args.command == "render":
         try:
             spec = load_spec(str(args.path))

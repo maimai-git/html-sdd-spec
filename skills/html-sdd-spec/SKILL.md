@@ -26,6 +26,10 @@ description: 用 HTML SDD 把一次完整开发需求的产品目标、代码现
 5. 只有会改变业务行为、权限、接口/表设计、迁移、外部接入或执行授权的问题才反问用户；其余技术细节根据代码证据处理，并标注假设或待核实。
 6. 运行 `check`、`render`，再按需运行 `diff`；不要直接手改生成后的 HTML。
 
+记录可以可选填写 `state`、`claim`、`evidenceIds` 和结构化 `links`。`state` 表示工作流生命周期；旧 `observed`、`proposed` 值仍兼容但会提示弃用。`claim.kind` 表示具体断言性质（`fact`、`proposal`、`pending`），用 `claim.statement` 写明断言；旧 claim 缺 statement 时保持兼容并提示。`related` 继续兼容旧事实源，`links` 用分类键表达需求到排期、接口、数据表、架构、配置、证据和问题的影响链。
+
+调用 `context` 时指定实际协作角色以筛选关联分类。默认只读精简记录及 relation 来源；阻塞和证据各最多 8 条。需要某条记录的完整字段时，以该 ID 再调用并加 `--full`；不要一次请求全量关联记录。
+
 ## 六个阅读入口
 
 - **需求**：目标、范围、验收标准和关联记录；
@@ -67,6 +71,9 @@ description: 用 HTML SDD 把一次完整开发需求的产品目标、代码现
 
 ```bash
 python3 -m html_sdd check html-sdd-spec/<开发需求目录>/方案事实源.json
+python3 -m html_sdd context html-sdd-spec/<开发需求目录>/方案事实源.json REQ-001 \
+  --role reviewer --json
+# 如需目标记录的完整详情，可追加 --full；关联项仍为精简记录，可按 ID 再查
 python3 -m html_sdd render html-sdd-spec/<开发需求目录>/方案事实源.json \
   --output html-sdd-spec/<开发需求目录>/方案对齐.html
 python3 -m html_sdd diff before.json after.json --json

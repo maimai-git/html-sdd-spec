@@ -93,6 +93,12 @@ apis / tables / architecture / configs / evidence / questions
 
 可以用 `metadata.sectionCoverage` 记录空分类的原因，用 `impact.apis`、`impact.tables` 等字段说明某个需求明确不涉及接口或数据表。
 
+`state` 表示记录的工作流生命周期（`pending`、`in_progress`、`verified`、`blocked`、`accepted`、`cancelled`）；旧值 `observed`、`proposed` 仍可读取，但会收到弃用提示。`claim.kind` 表示具体断言的认知性质（`fact`、`proposal`、`pending`），用 `claim.statement` 写明它标注的内容，`claim.confidence` 可记录可信度。旧 claim 缺少 statement 时仍兼容并提示。`evidenceIds` 只引用事实源中的 `EVID-*`，证据可以补充 `locator`、`capturedAt`、`checkedBy`、`commit` 和 `confidence`。
+
+`related` 继续兼容旧数据；新数据可以用 `links` 按 `requirements`、`plans`、`apis`、`tables`、`architecture`、`configs`、`evidence`、`questions` 分类建立结构化影响链。新增字段都是可选的，不改变旧 `status`。
+
+`context --role` 会筛选关联项：owner 看需求、排期、问题和证据；reviewer 还看接口、数据表、架构和配置；executor 看需求、排期、接口、数据表、架构、配置和证据。默认只返回精简记录、关系来源和总数/返回数/省略数；阻塞、证据各最多 8 条。追加 `--full` 只展开目标 ID 的完整记录，关联项仍精简，可按 ID 再查。
+
 正式项目建议在 `metadata.readiness` 中维护：
 
 - `overall`：当前总体状态；
@@ -169,6 +175,10 @@ html-sdd check ./html-sdd-spec/资产库引用/方案事实源.json
 
 # 输出适合脚本处理的 JSON 检查结果
 html-sdd check ./html-sdd-spec/资产库引用/方案事实源.json --json
+
+# 按稳定 ID 提取角色筛选后的精简上下文；--full 只展开目标记录
+html-sdd context ./html-sdd-spec/资产库引用/方案事实源.json REQ-001 \
+  --role reviewer --json
 
 # 从 JSON 生成单文件 HTML；Mermaid 图表按需使用 CDN，失败时保留图源
 html-sdd render ./html-sdd-spec/资产库引用/方案事实源.json \

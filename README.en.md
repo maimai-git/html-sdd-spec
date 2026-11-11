@@ -92,11 +92,17 @@ Tool source, tests, and executable scripts may keep English names; the root dire
 html-sdd init
 html-sdd check ./html-sdd-spec/资产库引用/方案事实源.json
 html-sdd check ./html-sdd-spec/资产库引用/方案事实源.json --json
+html-sdd context ./html-sdd-spec/资产库引用/方案事实源.json REQ-001 --role reviewer --json
+html-sdd context ./html-sdd-spec/资产库引用/方案事实源.json REQ-001 --role executor --full
 html-sdd render ./html-sdd-spec/资产库引用/方案事实源.json \
   --output ./html-sdd-spec/资产库引用/方案对齐.html
 html-sdd diff before.json after.json
 html-sdd diff before.json after.json --json
 ```
+
+`context` returns a compact target and related summaries filtered by role (`owner`, `reviewer`, or `executor`). Blockers and evidence are returned separately with counts for omitted items. `--full` expands only the target, in both text and JSON output; query a related ID for its full contract. Existing `related` links remain supported.
+
+Records can optionally include lifecycle `state`, a concrete `claim.statement` with kind (`fact`, `proposal`, `pending`) and confidence, `evidenceIds`, and typed `links`. Claims describe specific assertions, while state describes work progress. Evidence can record a locator, capture time, reviewer, and commit. These fields do not replace verification.
 
 ## Example
 

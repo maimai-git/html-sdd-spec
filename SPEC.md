@@ -29,6 +29,14 @@
 
 AI 后续读取 SDD 时，优先读取 `方案事实源.json` 的摘要和当前任务关联 ID，只加载关联的需求、排期、接口、数据表、架构、配置和证据；不应每轮都把完整 HTML 页面当上下文读入。HTML 面向人浏览，事实源 JSON 面向机器按需读取。
 
+所有记录都可以可选填写 `state`、`claim` 和 `evidenceIds`。`state` 只表示工作流生命周期；旧值 `observed`、`proposed` 仍兼容并提示弃用。`claim.kind` 表示某个具体断言是 `fact`、`proposal` 还是 `pending`，应以 `claim.statement` 写明断言；旧 claim 缺少 statement 时只提示，不报错。`claim.confidence` 记录对该断言的可信程度。`evidenceIds` 必须指向现有 `EVID-*`。证据记录可以增加 `locator`、`capturedAt`、`checkedBy`、`commit` 和 `confidence`，但不复制完整日志或敏感值。
+
+例如 `state: "pending"` 表示记录对应的工作尚未完成；`claim.kind: "fact"` + `claim.statement: "文件资产库路由与服务代码已落地。"` 表示这条具体断言有证据支持。两者维度独立。新 claim 应写明 statement；旧 claim 缺少 statement 时 checker 只警告。
+
+兼容缺少 statement 字段；显式填写 `statement: null` 或空字符串属于无效值，checker 与 Schema 都会拒绝。
+
+`related` 保持兼容；`links` 是按分类组织的结构化关系，支持需求、排期、接口、数据表、架构、配置、证据和问题。校验器会检查分类和目标 ID 是否匹配。
+
 ## 默认分类
 
 需求、排期、接口、数据表、架构设计、上线需要配置。
@@ -72,6 +80,12 @@ HTML SDD 默认落在项目根目录的 `html-sdd-spec/<开发需求目录>/`，
 HTML SDD 是持续更新的事实源。架构、技术方案、接口、数据表、配置、验收或排期变化时，先更新 `方案事实源.json`，再重新渲染 HTML；不要直接修改生成后的 HTML。重大变化应暂停受影响任务，记录前后差异、原因、影响和关联 ID，并重新评估 `codingReady`。可用 `metadata.changeLog` 保存变更历史，但不新增页面分类。
 
 `html-sdd diff` 比较 metadata、baseline、Agent、需求、排期、接口、数据表、架构、配置、证据和问题；`--json` 输出稳定 ID 以及 before/after，供审核人和 Agent 复核。
+
+`html-sdd context <方案事实源.json> <记录 ID> [--role owner|reviewer|executor] [--full] [--json]` 默认按角色筛选关联分类并只输出精简字段；`--full` 只展开目标记录，关联记录仍精简。关联、依赖最多返回 48/12 条，阻塞和证据各最多 8 条，并返回总数、返回数和省略数；需要详情时按关联 ID 再调用。
+
+owner 关联需求、排期、问题和证据；reviewer 关联需求、排期、接口、数据表、架构、配置、问题和证据；executor 关联需求、排期、接口、数据表、架构、配置和证据。目标记录始终保留，阻塞和证据从与目标相关的记录收集并分别限制为 8 条。
+
+证据记录统一放在 `evidence` 列表，合并其 relation 来源，不再重复放入 `relatedRecords`；旧 `related` 中的证据 ID 同样适用。顶层条数统计只计非证据关联项，证据单独使用 `evidenceCounts`。
 
 ## 编码 READY
 
