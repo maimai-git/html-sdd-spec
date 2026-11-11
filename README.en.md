@@ -2,12 +2,12 @@
 
 HTML SDD Spec is a lightweight format for aligning product requirements, the current codebase, technical design, Agent work plans, and verification evidence in one document.
 
-`方案事实源.json` is the machine-readable source of truth. The generated HTML is an offline reader for people and AI agents.
+`方案事实源.json` is the machine-readable source of truth. The generated HTML is a single-file reader for people and AI agents; Mermaid is loaded from a pinned CDN only when a diagram needs it, with source text available as a fallback.
 
 ## Quick start
 
 Requires Python 3.9+.
-The offline page uses the browser's native gzip decompressor; use a current Chrome, Edge, Firefox, or Safari.
+The page uses the browser's native gzip decompressor; architecture diagrams load Mermaid on demand when the network is available. Use a current Chrome, Edge, Firefox, or Safari.
 
 ```bash
 python3 -m pip install -e .
@@ -28,8 +28,8 @@ You do not need to write separate prompts for the owner, reviewer, and executor.
 Use HTML SDD to implement this requirement: add batch shipment to order fulfillment, using the current codebase to define APIs, tables, schedule, and release configuration.
 ```
 
-The Agent reads project rules and source code, builds the current baseline, and generates or updates `html-sdd-spec/<requirement-directory>/方案事实源.json` and the offline HTML. It asks only about business rules, permissions, migrations, external integrations, or execution authority that would change the plan. Routine technical details are derived from code evidence and marked as assumptions when needed.
-The generated HTML embeds compressed data to remain a single offline file. Agents should read the human-readable `方案事实源.json` by relevant IDs instead of loading the full HTML into context.
+The Agent reads project rules and source code, builds the current baseline, and generates or updates `html-sdd-spec/<requirement-directory>/方案事实源.json` and the single-file HTML. It asks only about business rules, permissions, migrations, external integrations, or execution authority that would change the plan. Routine technical details are derived from code evidence and marked as assumptions when needed.
+The generated HTML embeds compressed data. Mermaid is requested only for architecture records that use `diagramEngine=mermaid`; if the CDN is unavailable, the page keeps the Mermaid source visible. Agents should read the human-readable `方案事实源.json` by relevant IDs instead of loading the full HTML into context.
 
 For a project without an SDD, say:
 
@@ -52,7 +52,7 @@ The default is automatic. Use one Agent for a single-module change, no API/data 
 - Module schedule, priority, dependencies, and Agent ownership;
 - API change type, parameters, request/response examples, and current route evidence;
 - Data table purpose, migration status, and DDL text;
-- Architecture notes, diagrams, sequence diagrams, and source text;
+- Architecture notes, diagrams, sequence diagrams, Mermaid source text, and fallbacks;
 - Environment variables, Apollo values, and manual release steps;
 - Open questions and a `metadata.readiness` coding gate.
 

@@ -2,7 +2,7 @@
 
 HTML SDD Spec 是一套把产品需求、当前代码、技术方案、Agent 排期和验证证据放进同一份文档的轻量规范。
 
-它把 `方案事实源.json` 作为机器可读的事实源，把离线 HTML 作为人和 AI 共同阅读、讨论和复核的界面。
+它把 `方案事实源.json` 作为机器可读的事实源，把单文件 HTML 作为人和 AI 共同阅读、讨论和复核的界面。
 
 ## 适合解决什么问题
 
@@ -13,8 +13,8 @@ HTML SDD Spec 是一套把产品需求、当前代码、技术方案、Agent 排
 
 ## 三分钟运行
 
-环境要求：Python 3.9 或更高版本，不依赖第三方运行时。
-离线页面使用浏览器原生 gzip 解压；请使用当前版本的 Chrome、Edge、Firefox 或 Safari。
+环境要求：Python 3.9 或更高版本，不依赖第三方 Python 运行时。
+页面使用浏览器原生 gzip 解压；架构图/时序图有网络时按需加载 Mermaid CDN，无网络时保留图源和文字回退。请使用当前版本的 Chrome、Edge、Firefox 或 Safari。
 
 完整安装和同事接入流程见 [安装与使用](docs/安装使用.md)。
 
@@ -72,12 +72,12 @@ Agent 会自动读取项目规则和代码，先建立当前版本基线，再�
 2. **排期**：主模块、子模块、优先级、需求关联、Agent 分工、依赖和进度；
 3. **接口**：接口分组、变更类型、当前代码现状、请求参数、返回参数、请求实例和响应实例；
 4. **数据表**：新增/变更/复用状态、表作用、当前状态、结构差异和 DDL；
-5. **架构设计**：技术方案说明卡、架构图、时序图和离线图源；
+5. **架构设计**：技术方案说明卡、架构图、时序图和 Mermaid 图源；
 6. **上线需要配置**：环境变量、Apollo、手工 DDL 和其他非敏感配置文本。
 
 页面一次只展示一个选中的接口、表或架构条目；排期使用整页表格，方便扫读和比较。
 AI 后续协作时优先从 `方案事实源.json` 按需求 ID 提取当前任务所需内容，不要每轮重新读取完整 HTML；完整页面保留给人浏览。
-生成的 HTML 会把数据压缩后内嵌，保持单文件离线打开；AI 应读取可读的 `方案事实源.json`，不要把 HTML 当事实源加载进上下文。
+生成的 HTML 会把数据压缩后内嵌，保持单文件打开；Mermaid 只在进入需要图源的架构条目时请求 CDN，加载失败时直接展示图源。AI 应读取可读的 `方案事实源.json`，不要把 HTML 当事实源加载进上下文。
 页面默认先显示摘要：版本细节、编码门禁、接口实例、DDL、验收证据和关联记录按需展开；排期使用宽屏横向表格，主表显示优先级、模块/主任务、关联需求、执行人、计划时间、状态、最新进度、备注、阻塞和详情，完整任务说明在单行详情中查看。
 
 ## 事实源和编码门禁
@@ -106,7 +106,7 @@ apis / tables / architecture / configs / evidence / questions
 
 HTML SDD 是持续更新的事实源。架构、接口、数据表、配置、验收或排期发生变化时，先改方案事实源，再运行 `check`、`render` 和 `diff`，最后继续编码。重大变化要暂停受影响任务，由审核人重新评估；如果原方案不再成立，负责人把 `codingReady` 改回 `false`。生成后的 HTML 不直接手改，可选用 `metadata.changeLog` 记录原因和前后差异。
 
-架构技术方案统一使用 `conclusion`、`current`、`steps`、`impact`、`risks` 字段；架构图或时序图使用 `diagramType` 加 `diagramSvg`、`diagramSource` 或 `fallback`。`check` 会检查这些字段和子需求到排期的关联。
+架构技术方案统一使用 `conclusion`、`current`、`steps`、`impact`、`risks` 字段；架构图或时序图使用 `diagramType` 加 `diagramEngine`、`diagramSvg`、`diagramSource` 或 `fallback`。`diagramEngine` 可选 `mermaid`、`inline-svg`、`text`；使用 `mermaid` 时必须提供 `diagramSource`。`check` 会检查这些字段和子需求到排期的关联。
 
 ## SDD 文件目录约定
 
@@ -170,7 +170,7 @@ html-sdd check ./html-sdd-spec/资产库引用/方案事实源.json
 # 输出适合脚本处理的 JSON 检查结果
 html-sdd check ./html-sdd-spec/资产库引用/方案事实源.json --json
 
-# 从 JSON 生成完全离线的 HTML
+# 从 JSON 生成单文件 HTML；Mermaid 图表按需使用 CDN，失败时保留图源
 html-sdd render ./html-sdd-spec/资产库引用/方案事实源.json \
   --output ./html-sdd-spec/资产库引用/方案对齐.html
 
@@ -204,6 +204,10 @@ html-sdd diff ./before.json ./after.json --json
 ![HTML SDD 控制台示例](docs/images/html-sdd-console.png)
 
 ![HTML SDD 排期示例](docs/images/html-sdd-schedule.png)
+
+架构设计中的 Mermaid 时序图会在浏览器中按需渲染；下面是资产库示例的实际效果。
+
+![Mermaid 时序图示例](docs/images/html-sdd-mermaid.png)
 
 ## 仓库目录
 

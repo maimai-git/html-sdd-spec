@@ -70,7 +70,7 @@ def build_parser() -> argparse.ArgumentParser:
     check = sub.add_parser("check", help="检查 JSON 规范")
     check.add_argument("path", type=Path)
     check.add_argument("--json", action="store_true", dest="as_json")
-    render = sub.add_parser("render", help="生成离线 HTML")
+    render = sub.add_parser("render", help="生成单文件 HTML（Mermaid 图表按需使用 CDN）")
     render.add_argument("path", type=Path)
     render.add_argument("--output", type=Path, required=True)
     diff = sub.add_parser("diff", help="比较两个 JSON 规范")

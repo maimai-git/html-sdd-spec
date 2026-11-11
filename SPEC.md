@@ -65,7 +65,7 @@ HTML SDD 默认落在项目根目录的 `html-sdd-spec/<开发需求目录>/`，
 
 接口必须标记新增接口或存量接口变更；数据表必须标记新增数据表、存量表变更或存量表复用。当前代码、migration 文件和已部署数据库的证据必须分开。
 
-架构记录按类型填写：`solution` 使用 `conclusion`、`current`、`steps`、`impact`、`risks`；`diagram` 使用 `diagramType`，并至少提供 `diagramSvg`、`diagramSource` 或 `fallback`。字段名要和模板、Schema 保持一致。
+架构记录按类型填写：`solution` 使用 `conclusion`、`current`、`steps`、`impact`、`risks`；`diagram` 使用 `diagramType`，并至少提供 `diagramSvg`、`diagramSource` 或 `fallback`。可以用 `diagramEngine` 指定 `mermaid`、`inline-svg` 或 `text`；使用 `mermaid` 时必须提供 `diagramSource`。字段名要和模板、Schema 保持一致。
 
 ## 方案变更
 
@@ -82,4 +82,4 @@ HTML SDD 是持续更新的事实源。架构、技术方案、接口、数据�
 规范文件不得包含 Token、密码、Cookie、私钥、连接串和真实密钥。配置使用非敏感值或占位符。
 
 完整字段约束见 schema/html-sdd.schema.json；可阅读页面由 templates/console.html 生成。
-渲染器默认把 JSON 事实源 gzip 后以 Base64 内嵌到单文件 HTML，页面用浏览器原生解压；不支持该能力的浏览器应显示可读错误。HTML 仍是预览产物，不是机器事实源。
+渲染器默认把 JSON 事实源 gzip 后以 Base64 内嵌到单文件 HTML，页面用浏览器原生解压；架构图记录使用 `diagramEngine=mermaid` 时，页面按需从固定版本的 jsDelivr CDN 加载 Mermaid。网络或脚本不可用时显示图源/文字回退，不影响其他分类阅读。HTML 仍是预览产物，不是机器事实源。

@@ -43,6 +43,7 @@ PLAN_STATUSES = frozenset({
     "待拆分", "待确认", "编码 READY", "待开始", "进行中", "待接入",
     "待执行", "待复核", "待验收", "阻塞", "已完成", "已取消",
 })
+DIAGRAM_ENGINES = frozenset({"mermaid", "inline-svg", "text"})
 
 
 @dataclass(frozen=True)
@@ -271,6 +272,29 @@ def _check_integrity(spec: dict[str, Any]) -> list[Issue]:
                 missing(path, "diagramType", "diagram 架构记录必须说明图类型")
             if not any(architecture.get(field) for field in ("diagramSvg", "diagramSource", "fallback")):
                 missing(path, "diagramSource", "diagram 架构记录至少需要 diagramSvg、diagramSource 或 fallback")
+            engine = architecture.get("diagramEngine")
+            if engine is not None and (not isinstance(engine, str) or engine not in DIAGRAM_ENGINES):
+                issues.append(
+                    Issue(
+                        "error",
+                        "ARCH_DIAGRAM_ENGINE_INVALID",
+                        f"{path}.diagramEngine",
+                        f"diagramEngine 不在固定枚举中：{engine}；可选值：{'、'.join(sorted(DIAGRAM_ENGINES))}",
+                    )
+                )
+            elif engine == "mermaid" and not architecture.get("diagramSource"):
+                issues.append(
+                    Issue(
+                        "error",
+                        "ARCH_DIAGRAM_SOURCE_MISSING",
+                        f"{path}.diagramSource",
+                        "diagramEngine=mermaid 时必须提供 Mermaid 图源",
+                    )
+                )
+            elif engine == "inline-svg" and not architecture.get("diagramSvg"):
+                missing(path, "diagramSvg", "diagramEngine=inline-svg 时必须提供内联 SVG")
+            elif engine == "text" and not architecture.get("fallback"):
+                missing(path, "fallback", "diagramEngine=text 时必须提供文字回退")
 
     plan_requirement_ids = {
         requirement_id
