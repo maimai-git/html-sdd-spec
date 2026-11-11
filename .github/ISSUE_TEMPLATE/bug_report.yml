@@ -1,0 +1,45 @@
+name: Bug report
+description: Report a reproducible problem in the CLI, renderer, checker, or template.
+title: "[Bug] "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        请先确认问题可以在干净 checkout 中复现，并删除所有敏感信息。
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: HTML SDD Spec version or commit.
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: input
+    id: command
+    attributes:
+      label: Command
+      description: Command that reproduces the problem.
+      placeholder: "html-sdd check examples/asset-library/sdd.json"
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction details
+      description: Include a minimal sanitized sdd.json or steps. Do not include tokens, passwords, cookies, private keys, or connection strings.
+    validations:
+      required: true

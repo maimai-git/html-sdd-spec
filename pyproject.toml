@@ -1,0 +1,32 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "html-sdd-spec"
+version = "0.1.0"
+description = "A readable HTML spec and collaboration contract for product, engineering, and agents"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { file = "LICENSE" }
+authors = [{ name = "HTML SDD Spec contributors" }]
+keywords = ["specification", "requirements", "agents", "architecture", "html"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+]
+
+[project.scripts]
+html-sdd = "html_sdd.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["html_sdd*"]
+
+[tool.setuptools.package-data]
+html_sdd = ["assets/*.html"]

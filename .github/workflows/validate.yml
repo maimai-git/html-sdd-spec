@@ -1,0 +1,42 @@
+name: validate-html-sdd
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install package
+        run: python -m pip install --upgrade pip && python -m pip install -e .
+      - name: Run tests
+        run: python -m unittest discover -s tests -v
+      - name: Build and install wheel
+        run: |
+          python -m pip wheel . --no-deps --no-build-isolation -w /tmp/html-sdd-wheel
+          python -m venv /tmp/html-sdd-venv
+          /tmp/html-sdd-venv/bin/python -m pip install --no-index /tmp/html-sdd-wheel/*.whl
+          /tmp/html-sdd-venv/bin/html-sdd --version
+          /tmp/html-sdd-venv/bin/html-sdd check examples/asset-library/sdd.json
+      - name: Validate and render example
+        run: |
+          html-sdd --version
+          html-sdd check examples/asset-library/sdd.json
+          html-sdd render examples/asset-library/sdd.json --output /tmp/html-sdd-index.html
+          python - <<'PY'
+          import pathlib
+          import re
+
+          html = pathlib.Path('/tmp/html-sdd-index.html').read_text(encoding='utf-8')
+          scripts = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', html, flags=re.I | re.S)
+          pathlib.Path('/tmp/html-sdd-script.js').write_text('\n'.join(scripts), encoding='utf-8')
+          PY
+          node --check /tmp/html-sdd-script.js

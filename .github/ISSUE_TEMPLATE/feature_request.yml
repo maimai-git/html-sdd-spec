@@ -1,0 +1,33 @@
+name: Feature request
+description: Propose a change to the SDD format, CLI, template, or Agent workflow.
+title: "[Feature] "
+labels:
+  - enhancement
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem to solve
+      description: What alignment or collaboration problem does this address?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe the user-visible format, command, or workflow change.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false
+  - type: textarea
+    id: compatibility
+    attributes:
+      label: Compatibility and migration
+      description: Explain schema, CLI, template, or existing sdd.json impact.
+    validations:
+      required: true
