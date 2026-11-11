@@ -3,7 +3,7 @@ from setuptools import find_packages, setup
 
 setup(
     name="html-sdd-spec",
-    version="0.1.0",
+    version="0.2.0",
     description="A readable HTML spec and collaboration contract for product, engineering, and agents",
     packages=find_packages(),
     package_data={"html_sdd": ["assets/*.html"]},

@@ -26,6 +26,7 @@ jobs:
           /tmp/html-sdd-venv/bin/python -m pip install --no-index /tmp/html-sdd-wheel/*.whl
           /tmp/html-sdd-venv/bin/html-sdd --version
           /tmp/html-sdd-venv/bin/html-sdd check examples/asset-library/sdd.json
+          /tmp/html-sdd-venv/bin/html-sdd context examples/asset-library/sdd.json REQ-001 --role executor --full --json > /tmp/html-sdd-context.json
       - name: Validate and render example
         run: |
           html-sdd --version

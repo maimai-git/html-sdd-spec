@@ -13,7 +13,7 @@
 - [ ] 检查 `metadata.readiness`，确认示例把“已实现、DDL 待执行、外部接入待完成、未核实”分开表达。
 - [ ] 更新 `CHANGELOG.md` 和版本号。
 - [ ] 确认 `pyproject.toml`、`setup.py` 和 `CHANGELOG.md` 的版本一致。
-- [ ] 在临时虚拟环境安装 wheel，并运行 `html-sdd --version`、`check` 和 `render` 冒烟验证。
+- [ ] 在临时虚拟环境安装 wheel，并运行 `html-sdd --version`、`check`、`context --role executor --full --json` 和 `render` 冒烟验证。
 
 ## 发布步骤
 
@@ -25,5 +25,5 @@
 ## 发布后
 
 - [ ] 新用户可以直接从仓库根目录运行 `python3 -m html_sdd ...`。
-- [ ] 已安装用户可以运行 `html-sdd check`、`render`、`diff` 和 `init`。
+- [ ] 已安装用户可以运行 `html-sdd check`、`render`、`context`、`diff` 和 `init`。
 - [ ] Issue 模板、贡献指南、行为准则和安全说明链接可访问。

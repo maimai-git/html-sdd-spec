@@ -3,6 +3,9 @@ try:
 except ModuleNotFoundError:  # Python 3.9 has no stdlib TOML parser.
     tomllib = None
 import unittest
+import re
+
+from html_sdd import __version__
 from pathlib import Path
 
 
@@ -15,12 +18,12 @@ class PackagingTest(unittest.TestCase):
         if tomllib is not None:
             project = tomllib.loads(text)["project"]
             self.assertEqual("html-sdd-spec", project["name"])
-            self.assertEqual("0.1.0", project["version"])
+            self.assertEqual(__version__, project["version"])
             self.assertEqual("html_sdd.cli:main", project["scripts"]["html-sdd"])
             self.assertGreaterEqual(len(project["requires-python"]), 4)
         else:
             self.assertRegex(text, r'(?m)^name = "html-sdd-spec"$')
-            self.assertRegex(text, r'(?m)^version = "0\.1\.0"$')
+            self.assertRegex(text, rf'(?m)^version = "{re.escape(__version__)}"$')
             self.assertRegex(text, r'(?m)^html-sdd = "html_sdd\.cli:main"$')
             self.assertRegex(text, r'(?m)^requires-python = ">=3\.9"$')
 
