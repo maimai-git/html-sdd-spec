@@ -74,6 +74,16 @@
       "summary": "把历史输出、上传文件和旧资产统一成可查询、可收藏、可移动、可下载的文件资源；正文仍由 file_record/file authority 管理。",
       "scope": "历史查询、一级文件夹、上传授权与完成、重命名/移动、收藏、批量操作、批量下载、回收站和受控内容访问；不改前端代码。",
       "status": "已实现，迁移待执行",
+      "state": "pending",
+      "claim": {
+        "kind": "fact",
+        "confidence": "high",
+        "statement": "文件资产库路由与服务代码已落地。"
+      },
+      "evidenceIds": [
+        "EVID-001",
+        "EVID-002"
+      ],
       "acceptance": [
         {
           "id": "AC-001",
@@ -105,7 +115,36 @@
         "DATA-F-007",
         "ARCH-001",
         "CFG-002"
-      ]
+      ],
+      "links": {
+        "plans": [
+          "PLAN-001",
+          "PLAN-002",
+          "PLAN-004"
+        ],
+        "apis": [
+          "API-F-005",
+          "API-F-007",
+          "API-F-012"
+        ],
+        "tables": [
+          "DATA-F-001",
+          "DATA-F-007"
+        ],
+        "architecture": [
+          "ARCH-001"
+        ],
+        "configs": [
+          "CFG-002"
+        ],
+        "evidence": [
+          "EVID-001",
+          "EVID-002"
+        ],
+        "questions": [
+          "Q-001"
+        ]
+      }
     },
     {
       "id": "REQ-002",
@@ -4406,14 +4445,24 @@
       "kind": "source",
       "label": "文件资产库路由和服务",
       "source": "asset-library-service/src/main/java/com/assetlibrary/assets/AssetRoutes.java; AssetLibraryHandler.java; AssetLibraryRepository.java",
-      "status": "已检查：文件库路由和业务代码已落地"
+      "status": "已检查：文件库路由和业务代码已落地",
+      "locator": "AssetRoutes; AssetLibraryHandler; AssetLibraryRepository",
+      "capturedAt": "2026-11-10T20:30:00+08:00",
+      "checkedBy": "AGENT-REVIEWER",
+      "commit": "245685c2",
+      "confidence": "high"
     },
     {
       "id": "EVID-002",
       "kind": "source",
       "label": "风格模特路由和服务",
       "source": "asset-library-service/src/main/java/com/assetlibrary/assets/AssetLibraryStyleModelHandler.java; StyleModelRepository.java",
-      "status": "已检查：CRUD、发布、回收、引用代码已落地"
+      "status": "已检查：CRUD、发布、回收、引用代码已落地",
+      "locator": "AssetLibraryStyleModelHandler; StyleModelRepository",
+      "capturedAt": "2026-11-10T20:30:00+08:00",
+      "checkedBy": "AGENT-REVIEWER",
+      "commit": "245685c2",
+      "confidence": "high"
     },
     {
       "id": "EVID-003",

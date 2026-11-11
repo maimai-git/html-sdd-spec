@@ -43,6 +43,21 @@ PLAN_STATUSES = frozenset({
     "待拆分", "待确认", "编码 READY", "待开始", "进行中", "待接入",
     "待执行", "待复核", "待验收", "阻塞", "已完成", "已取消",
 })
+RECORD_STATES = frozenset({
+    "observed", "proposed", "pending", "in_progress", "verified", "blocked", "accepted", "cancelled",
+})
+CLAIM_KINDS = frozenset({"fact", "proposal", "pending"})
+CONFIDENCE_LEVELS = frozenset({"high", "medium", "low"})
+LINK_TARGET_SECTIONS = {
+    "requirements": "requirements",
+    "plans": "plans",
+    "apis": "apis",
+    "tables": "tables",
+    "architecture": "architecture",
+    "configs": "configs",
+    "evidence": "evidence",
+    "questions": "questions",
+}
 DIAGRAM_ENGINES = frozenset({"mermaid", "inline-svg", "text"})
 
 
@@ -250,6 +265,180 @@ def _check_plan_statuses(spec: dict[str, Any]) -> list[Issue]:
                     f"排期状态不在固定枚举中：{status}；可选值：{'、'.join(sorted(PLAN_STATUSES))}",
                 )
             )
+    return issues
+
+
+def _section_record_ids(spec: dict[str, Any]) -> dict[str, set[str]]:
+    return {
+        section: {
+            record.get("id")
+            for record in spec.get(section, [])
+            if isinstance(record, dict) and isinstance(record.get("id"), str)
+        }
+        for section in RECORD_SECTIONS
+    }
+
+
+def _check_claims_and_links(spec: dict[str, Any]) -> list[Issue]:
+    issues: list[Issue] = []
+    section_ids = _section_record_ids(spec)
+    all_ids = set().union(*section_ids.values()) if section_ids else set()
+
+    for section in RECORD_SECTIONS:
+        records = spec.get(section, [])
+        if not isinstance(records, list):
+            continue
+        for index, record in enumerate(records):
+            if not isinstance(record, dict):
+                continue
+            base = f"{section}[{index}]"
+
+            if section == "evidence":
+                for field in ("locator", "capturedAt", "commit", "checkedBy", "confidence"):
+                    if field not in record:
+                        continue
+                    value = record[field]
+                    valid = isinstance(value, str)
+                    if valid and field == "checkedBy":
+                        valid = bool(ID_PATTERN.fullmatch(value))
+                    if valid and field == "confidence":
+                        valid = value in CONFIDENCE_LEVELS
+                    if not valid:
+                        issues.append(Issue(
+                            "error", "EVIDENCE_METADATA_INVALID", f"{base}.{field}",
+                            f"证据 {field} 类型或取值无效；checkedBy 应为记录 ID，confidence 为 high、medium、low，其余字段为字符串",
+                        ))
+
+            state = record.get("state")
+            if "state" in record and (not isinstance(state, str) or state not in RECORD_STATES):
+                issues.append(
+                    Issue(
+                        "error",
+                        "STATE_INVALID",
+                        f"{base}.state",
+                        f"state 不在固定枚举中：{state}；可选值：{'、'.join(sorted(RECORD_STATES))}",
+                    )
+                )
+            elif state in {"observed", "proposed"}:
+                issues.append(
+                    Issue(
+                        "warning",
+                        "STATE_DEPRECATED",
+                        f"{base}.state",
+                        f"state={state} 是兼容旧值；state 现在表示记录生命周期，请使用 pending、in_progress、verified、blocked、accepted 或 cancelled",
+                    )
+                )
+
+            claim = record.get("claim")
+            if "claim" in record:
+                if not isinstance(claim, dict):
+                    issues.append(Issue("error", "CLAIM_SHAPE", f"{base}.claim", "claim 必须是对象"))
+                else:
+                    kind = claim.get("kind")
+                    if not isinstance(kind, str) or kind not in CLAIM_KINDS:
+                        issues.append(
+                            Issue(
+                                "error",
+                                "CLAIM_KIND_INVALID",
+                                f"{base}.claim.kind",
+                                f"claim.kind 必须是 fact、proposal 或 pending，当前为：{kind}",
+                            )
+                        )
+                    confidence = claim.get("confidence")
+                    if "confidence" in claim and (
+                        not isinstance(confidence, str) or confidence not in CONFIDENCE_LEVELS
+                    ):
+                        issues.append(
+                            Issue(
+                                "error",
+                                "CLAIM_CONFIDENCE_INVALID",
+                                f"{base}.claim.confidence",
+                                f"claim.confidence 必须是 high、medium 或 low，当前为：{confidence}",
+                            )
+                        )
+                    statement = claim.get("statement")
+                    if "statement" not in claim:
+                        issues.append(
+                            Issue(
+                                "warning",
+                                "CLAIM_STATEMENT_MISSING",
+                                f"{base}.claim.statement",
+                                "旧 claim 缺少 statement，仍兼容；请用自然语言标明该 claim 覆盖的具体断言",
+                            )
+                        )
+                    elif not isinstance(statement, str) or not statement.strip():
+                        issues.append(
+                            Issue(
+                                "error",
+                                "CLAIM_STATEMENT_INVALID",
+                                f"{base}.claim.statement",
+                                "claim.statement 必须是非空字符串",
+                            )
+                        )
+
+            evidence_ids = record.get("evidenceIds")
+            if "evidenceIds" in record:
+                if not isinstance(evidence_ids, list):
+                    issues.append(Issue("error", "REF_SHAPE", f"{base}.evidenceIds", "evidenceIds 必须是 ID 数组"))
+                else:
+                    for evidence_index, evidence_id in enumerate(evidence_ids):
+                        evidence_path = f"{base}.evidenceIds[{evidence_index}]"
+                        if not isinstance(evidence_id, str) or evidence_id not in section_ids["evidence"]:
+                            issues.append(
+                                Issue(
+                                    "error",
+                                    "REF_MISSING",
+                                    evidence_path,
+                                    f"证据 ID 不存在：{evidence_id}",
+                                )
+                            )
+
+            links = record.get("links")
+            if "links" in record:
+                if not isinstance(links, dict):
+                    issues.append(Issue("error", "LINK_SHAPE", f"{base}.links", "links 必须是按分类组织的对象"))
+                else:
+                    for target_section, target_ids in links.items():
+                        link_path = f"{base}.links.{target_section}"
+                        expected_section = LINK_TARGET_SECTIONS.get(target_section)
+                        if expected_section is None:
+                            issues.append(
+                                Issue(
+                                    "error",
+                                    "LINK_CATEGORY_INVALID",
+                                    link_path,
+                                    f"links 分类不支持：{target_section}；可选分类：{'、'.join(LINK_TARGET_SECTIONS)}",
+                                )
+                            )
+                            continue
+                        if not isinstance(target_ids, list):
+                            issues.append(Issue("error", "LINK_SHAPE", link_path, "links 分类值必须是 ID 数组"))
+                            continue
+                        for target_index, target_id in enumerate(target_ids):
+                            target_path = f"{link_path}[{target_index}]"
+                            if not isinstance(target_id, str) or target_id not in all_ids:
+                                issues.append(
+                                    Issue(
+                                        "error",
+                                        "LINK_TARGET_MISSING",
+                                        target_path,
+                                        f"关联 ID 不存在：{target_id}（期望分类：{expected_section}）",
+                                    )
+                                )
+                            elif target_id not in section_ids[expected_section]:
+                                actual_section = next(
+                                    section_name
+                                    for section_name, ids in section_ids.items()
+                                    if target_id in ids
+                                )
+                                issues.append(
+                                    Issue(
+                                        "error",
+                                        "LINK_TARGET_MISMATCH",
+                                        target_path,
+                                        f"关联 ID {target_id} 位于 {actual_section}，但 links.{target_section} 期望 {expected_section}",
+                                    )
+                                )
     return issues
 
 
@@ -496,6 +685,7 @@ def validate_spec(spec: dict[str, Any]) -> list[Issue]:
     issues.extend(id_issues)
     issues.extend(_check_required_fields(spec))
     issues.extend(_check_plan_statuses(spec))
+    issues.extend(_check_claims_and_links(spec))
     issues.extend(_check_references(spec, set(known_ids)))
     issues.extend(_check_integrity(spec))
     issues.extend(_check_ready_gate(spec))

@@ -52,6 +52,18 @@ class SchemaShapeTest(unittest.TestCase):
         self.assertIn("阻塞", plan["status"]["enum"])
         self.assertEqual("string", plan["note"]["type"])
 
+    def test_schema_declares_optional_claim_state_links_and_evidence_metadata(self):
+        schema = json.loads(SCHEMA_PATH.read_text())
+        record = schema["$defs"]["record"]["properties"]
+        self.assertIn("state", record)
+        self.assertIn("claim", record)
+        self.assertEqual(["kind"], record["claim"]["required"])
+        self.assertEqual("string", record["claim"]["properties"]["statement"]["type"])
+        self.assertIn("evidenceIds", record)
+        self.assertIn("links", record)
+        evidence = schema["$defs"]["evidence"]["allOf"][1]["properties"]
+        self.assertTrue({"locator", "capturedAt", "checkedBy", "commit", "confidence"} <= set(evidence))
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -86,7 +86,37 @@
       "required": ["id"],
       "properties": {
         "id": {"$ref": "#/$defs/id"},
-        "related": {"type": "array", "items": {"$ref": "#/$defs/id"}}
+        "related": {"type": "array", "items": {"$ref": "#/$defs/id"}},
+        "state": {
+          "type": "string",
+          "description": "记录的工作流生命周期；observed 和 proposed 仅为兼容旧数据的弃用值。",
+          "enum": ["observed", "proposed", "pending", "in_progress", "verified", "blocked", "accepted", "cancelled"]
+        },
+        "claim": {
+          "type": "object",
+          "required": ["kind"],
+          "properties": {
+            "kind": {"type": "string", "enum": ["fact", "proposal", "pending"]},
+            "confidence": {"type": "string", "enum": ["high", "medium", "low"]},
+            "statement": {"type": "string", "minLength": 1, "pattern": "\\S", "description": "被标注的具体事实、提案或待确认点。旧 claim 可暂缺。"}
+          },
+          "additionalProperties": true
+        },
+        "evidenceIds": {"type": "array", "items": {"$ref": "#/$defs/id"}},
+        "links": {
+          "type": "object",
+          "properties": {
+            "requirements": {"type": "array", "items": {"$ref": "#/$defs/id"}},
+            "plans": {"type": "array", "items": {"$ref": "#/$defs/id"}},
+            "apis": {"type": "array", "items": {"$ref": "#/$defs/id"}},
+            "tables": {"type": "array", "items": {"$ref": "#/$defs/id"}},
+            "architecture": {"type": "array", "items": {"$ref": "#/$defs/id"}},
+            "configs": {"type": "array", "items": {"$ref": "#/$defs/id"}},
+            "evidence": {"type": "array", "items": {"$ref": "#/$defs/id"}},
+            "questions": {"type": "array", "items": {"$ref": "#/$defs/id"}}
+          },
+          "additionalProperties": false
+        }
       },
       "additionalProperties": true
     },
@@ -287,7 +317,12 @@
             "kind": {"type": "string", "enum": ["source", "migration", "database", "runtime", "e2e"]},
             "label": {"type": "string"},
             "source": {"type": "string"},
-            "status": {"type": "string"}
+            "status": {"type": "string"},
+            "locator": {"type": "string"},
+            "capturedAt": {"type": "string"},
+            "checkedBy": {"$ref": "#/$defs/id"},
+            "commit": {"type": "string"},
+            "confidence": {"type": "string", "enum": ["high", "medium", "low"]}
           }
         }
       ]
