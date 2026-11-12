@@ -6,7 +6,7 @@ setup(
     version="0.2.2",
     description="A readable HTML spec and collaboration contract for product, engineering, and agents",
     packages=find_packages(),
-    package_data={"html_sdd": ["assets/*.html"]},
+    package_data={"html_sdd": ["assets/*.html", "assets/*.json"]},
     include_package_data=True,
     entry_points={"console_scripts": ["html-sdd=html_sdd.cli:main"]},
     python_requires=">=3.9",

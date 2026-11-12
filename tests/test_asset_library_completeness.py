@@ -32,7 +32,7 @@ class AssetLibraryCompletenessTest(unittest.TestCase):
         self.assertIn("/api/library/references/validate", paths)
         turn = next(row for row in self.spec["apis"] if "/api/v1/chats/" in row["path"])
         self.assertEqual("存量接口变更", turn["changeType"])
-        self.assertIn("待接入", turn["status"])
+        self.assertIn("待接入", turn["statusNote"])
 
     def test_tables_cover_both_migrations_and_existing_authorities(self):
         names = {row["name"] for row in self.spec["tables"]}

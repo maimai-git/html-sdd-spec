@@ -29,4 +29,4 @@ html-sdd = "html_sdd.cli:main"
 include = ["html_sdd*"]
 
 [tool.setuptools.package-data]
-html_sdd = ["assets/*.html"]
+html_sdd = ["assets/*.html", "assets/*.json"]

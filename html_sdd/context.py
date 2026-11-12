@@ -1,8 +1,13 @@
 from __future__ import annotations
 
+import copy
 import json
 
 from typing import Any, Iterable, Optional
+
+from .references import expand_api
+from .statuses import registry
+CLOSED_QUESTION_STATUSES = frozenset(registry()["closedQuestions"])
 
 
 SECTION_ORDER = (
@@ -10,6 +15,7 @@ SECTION_ORDER = (
     "requirements",
     "plans",
     "apis",
+    "existingInterfaces",
     "tables",
     "architecture",
     "configs",
@@ -19,8 +25,8 @@ SECTION_ORDER = (
 
 ROLE_FOCUS = {
     "owner": ("requirements", "plans", "questions", "evidence"),
-    "reviewer": ("requirements", "plans", "apis", "tables", "architecture", "configs", "questions", "evidence"),
-    "executor": ("requirements", "plans", "apis", "tables", "architecture", "configs", "evidence"),
+    "reviewer": ("requirements", "plans", "apis", "existingInterfaces", "tables", "architecture", "configs", "questions", "evidence"),
+    "executor": ("requirements", "plans", "apis", "existingInterfaces", "tables", "architecture", "configs", "evidence"),
 }
 
 MAX_RELATED_RECORDS = 48
@@ -101,6 +107,14 @@ def _compact_record(
         "claim": compact_claim,
         "evidenceIds": evidence_ids[:MAX_EVIDENCE],
     }
+    if isinstance(record.get("statusNote"),str):
+        result["statusNote"] = record["statusNote"][:SUMMARY_LIMIT]
+    if section == "questions" and isinstance(record.get("requiresUserDecision"), bool):
+        result["requiresUserDecision"] = record["requiresUserDecision"]
+    if section in {"apis", "tables"} and record.get("developmentStatus") in ("已完成", "部分完成", "未开发"):
+        result["developmentStatus"] = record["developmentStatus"]
+    if section == "plans" and type(record.get("sequence")) is int and record["sequence"] > 0:
+        result["sequence"] = record["sequence"]
     if relation is not None:
         result["relation"] = sorted(set(relation))
     return result
@@ -181,23 +195,32 @@ def _inbound_relations(record: dict[str, Any], target_id: str) -> set[str]:
 def _is_open_blocker(section: str, record: dict[str, Any]) -> bool:
     state = record.get("state")
     status = str(record.get("status") or "")
+    if section == "questions" and (
+        state in {"verified", "accepted", "cancelled"}
+        or status in CLOSED_QUESTION_STATUSES
+    ):
+        return False
     if state == "blocked" or "阻塞" in status or record.get("blocker"):
         return True
-    if section == "questions" and status not in {"已确认", "已解决", "已关闭", "已完成"}:
+    if section == "questions" and status not in CLOSED_QUESTION_STATUSES:
         return True
     return False
 
 
 def _blocker_entry(record_id: str, section: str, record: dict[str, Any]) -> dict[str, Any]:
-    message = record.get("blocker") or record.get("note") or record.get("question") or record.get("status") or "待处理"
+    message = record.get("blocker") or record.get("note") or record.get("question") or record.get("statusNote") or record.get("status") or "待处理"
     if not isinstance(message, str):
         message = str(message)
-    return {
+    result = {
         "id": record_id,
         "section": section,
         "status": record.get("status"),
         "message": message[:SUMMARY_LIMIT],
     }
+
+    if section == "questions" and isinstance(record.get("requiresUserDecision"), bool):
+        result["requiresUserDecision"] = record["requiresUserDecision"]
+    return result
 
 
 def _limited(items: list[dict[str, Any]], limit: int) -> tuple[list[dict[str, Any]], dict[str, int]]:
@@ -214,7 +237,13 @@ def build_context(
     record_id: str,
     role: Optional[str] = None,
     full: bool = False,
+    limit: int = 8,
+    offset: int = 0,
 ) -> dict[str, Any]:
+    if type(limit) is not int or not 1 <= limit <= MAX_RELATED_RECORDS:
+        raise ContextError("limit 必须为 1..48 的整数")
+    if type(offset) is not int or offset < 0:
+        raise ContextError("offset 必须为非负整数")
     records = _record_index(spec)
     if record_id not in records:
         raise ContextError(f"记录 ID 不存在：{record_id}")
@@ -242,7 +271,9 @@ def build_context(
         _compact_record(item_id, records[item_id][0], records[item_id][1], sorted(relations[item_id]))
         for item_id in candidate_ids
     ]
-    related_records, related_counts = _limited(all_related, MAX_RELATED_RECORDS)
+    related_records = all_related[offset:offset + limit]
+    related_counts = {"totalCount": len(all_related), "includedCount": len(related_records),
+                      "omittedCount": len(all_related) - len(related_records)}
 
     dependency_ids = set(_values(record, "deps"))
     for related_id in candidate_ids:
@@ -285,9 +316,10 @@ def build_context(
         "section": section,
         "role": role,
         "focusSections": list(ROLE_FOCUS[role] if role else SECTION_ORDER),
-        "record": record if full else compact_target,
+        "record": (expand_api(spec, record, record_id) if section in {"apis", "existingInterfaces"} else record) if full else compact_target,
         "relatedRecords": related_records,
         **related_counts,
+        "pagination": _pagination(offset, limit, len(related_records), len(all_related)),
         "dependencies": dependencies,
         "dependencyCounts": dependency_counts,
         "blockers": blockers,
@@ -310,6 +342,8 @@ def format_context(context: dict[str, Any], full: bool = False) -> str:
             title = item.get("title")
             title = title or item.get("message") or item["id"]
             suffix = "；关系=" + ",".join(item["relation"]) if item.get("relation") else ""
+            if item.get("statusNote"):
+                suffix += "；状态说明=" + item["statusNote"]
             lines.append(f"- {item['id']} [{item['section']}] {title}{suffix}")
         return lines
 
@@ -323,7 +357,7 @@ def format_context(context: dict[str, Any], full: bool = False) -> str:
         f"标题：{record.get('title') or _display_title(context['recordId'], record)}",
         f"关联记录：共 {context['totalCount']}，返回 {context['includedCount']}，省略 {context['omittedCount']}",
     ]
-    for key, label in (("status", "状态"), ("state", "生命周期"), ("summary", "摘要")):
+    for key, label in (("status", "状态"), ("state", "生命周期"), ("summary", "摘要"), ("statusNote", "状态说明")):
         if record.get(key):
             lines.append(f"{label}：{record[key]}")
     claim = record.get("claim")
@@ -335,4 +369,38 @@ def format_context(context: dict[str, Any], full: bool = False) -> str:
     lines.extend(lines_for(context["blockers"], "阻塞", context["blockerCounts"]))
     lines.extend(lines_for(context["dependencies"], "依赖", context["dependencyCounts"]))
     lines.extend(lines_for(context["evidence"], "证据", context["evidenceCounts"]))
+    page = context.get("pagination")
+    if page and page["nextOffset"] is not None:
+        lines.append(f"后续关联摘要：--offset {page['nextOffset']} --limit {page['limit']}；剩余 {page['remainingCount']} 条；摘要不能代替完整任务合同")
     return "\n".join(lines)
+
+
+def _pagination(offset: int, limit: int, included: int, total: int) -> dict[str, Any]:
+    end = offset + included
+    return {"offset": offset, "limit": limit,
+            "nextOffset": end if end < total else None,
+            "remainingCount": max(0, total - end)}
+
+
+def serialize_context(context: dict[str, Any], full: bool = False,
+                      as_json: bool = False, max_chars: int = 12000) -> str:
+    """Bound serialized output including the CLI newline; preserve target and auxiliary lists."""
+    if type(max_chars) is not int or max_chars < 1024:
+        raise ContextError("输出预算 --max-chars 必须为至少 1024 的整数")
+    result = copy.deepcopy(context)
+    had_related = bool(result["relatedRecords"])
+    while True:
+        output = json.dumps(result, ensure_ascii=False, indent=2) if as_json else format_context(result, full)
+        if len(output) + 1 <= max_chars:
+            if had_related and not result["relatedRecords"]:
+                break
+            return output
+        if not result["relatedRecords"]:
+            break
+        result["relatedRecords"].pop()
+        count = len(result["relatedRecords"])
+        result["includedCount"] = count
+        result["omittedCount"] = result["totalCount"] - count
+        page = result["pagination"]
+        result["pagination"] = _pagination(page["offset"], page["limit"], count, result["totalCount"])
+    raise ContextError("输出预算不足：目标详情、依赖、阻塞和证据摘要不能裁掉。增加 --max-chars 或查询更具体的任务 ID；当前输出未交付完整合同。")

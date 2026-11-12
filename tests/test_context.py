@@ -204,7 +204,7 @@ class ContextTest(unittest.TestCase):
             )
             self.assertEqual(0, result.returncode, result.stderr)
             payload = json.loads(result.stdout)
-            counts[role] = payload["includedCount"]
+            counts[role] = payload["totalCount"]
             sizes[role] = len(result.stdout.encode("utf-8"))
             legacy_payload = copy.deepcopy(payload)
             for related in legacy_payload["relatedRecords"]:

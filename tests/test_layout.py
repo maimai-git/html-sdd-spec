@@ -26,10 +26,24 @@ class StandardLayoutTest(unittest.TestCase):
             self.assertTrue((target / "方案对齐.html").exists())
             self.assertTrue((target / "使用说明.md").exists())
             self.assertTrue((target / "变更记录" / "说明.md").exists())
-            self.assertTrue((target / "证据索引" / "说明.md").exists())
+            self.assertFalse((target / "证据索引").exists())
+            self.assertTrue((target / ".gitignore").exists())
             self.assertIn("子需求", (target / "使用说明.md").read_text())
             self.assertFalse((target / "sdd.json").exists())
             self.assertFalse((target / "rendered" / "index.html").exists())
+
+    def test_local_evidence_is_ignored_without_hiding_spec_or_html(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            project = Path(tmp)
+            subprocess.run(["git", "init", "-q", str(project)], check=True)
+            target = project / "需求"
+            subprocess.run([sys.executable, "-m", "html_sdd", "init", str(target)], cwd=ROOT, check=True, capture_output=True)
+            for name in ("证据索引/回执.json", "证据/截图.png"):
+                result = subprocess.run(["git", "check-ignore", "-q", "需求/" + name], cwd=project)
+                self.assertEqual(0, result.returncode)
+            for name in ("方案事实源.json", "方案对齐.html"):
+                result = subprocess.run(["git", "check-ignore", "-q", "需求/" + name], cwd=project)
+                self.assertEqual(1, result.returncode)
 
     def test_custom_artifact_directory_keeps_the_same_layout(self):
         with tempfile.TemporaryDirectory() as tmp:

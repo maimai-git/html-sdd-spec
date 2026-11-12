@@ -18,25 +18,94 @@
     "questions"
   ],
   "properties": {
-    "specVersion": {"type": "string", "const": "0.1"},
+    "specVersion": {
+      "type": "string",
+      "const": "0.1"
+    },
+    "definitions": {
+      "$ref": "#/$defs/definitionCatalog"
+    },
+    "existingInterfaces": {
+      "type": "array",
+      "items": {
+        "allOf": [
+          {
+            "$ref": "#/$defs/record"
+          },
+          {
+            "properties": {
+              "request": {
+                "$ref": "#/$defs/fieldList"
+              },
+              "response": {
+                "$ref": "#/$defs/fieldList"
+              },
+              "rules": {
+                "$ref": "#/$defs/ruleList"
+              }
+            }
+          }
+        ]
+      }
+    },
     "metadata": {
       "type": "object",
-      "required": ["id", "title", "summary", "status", "updatedAt"],
+      "required": [
+        "id",
+        "title",
+        "summary",
+        "status",
+        "updatedAt"
+      ],
       "properties": {
-        "id": {"type": "string", "pattern": "^[A-Z0-9][A-Z0-9-]*$"},
-        "title": {"type": "string", "minLength": 1},
-        "summary": {"type": "string", "minLength": 1},
-        "status": {"type": "string"},
-        "updatedAt": {"type": "string"},
-        "language": {"type": "string"},
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Z0-9][A-Z0-9-]*$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "summary": {
+          "type": "string",
+          "minLength": 1
+        },
+        "status": {
+          "type": "string"
+        },
+        "updatedAt": {
+          "type": "string"
+        },
+        "language": {
+          "type": "string"
+        },
         "readiness": {
           "type": "object",
-          "required": ["overall", "codingReady", "blockingItems", "exitCriteria"],
+          "required": [
+            "overall",
+            "codingReady",
+            "blockingItems",
+            "exitCriteria"
+          ],
           "properties": {
-            "overall": {"type": "string"},
-            "codingReady": {"type": "boolean"},
-            "blockingItems": {"type": "array", "items": {"type": "string"}},
-            "exitCriteria": {"type": "array", "items": {"type": "string"}}
+            "overall": {
+              "type": "string"
+            },
+            "codingReady": {
+              "type": "boolean"
+            },
+            "blockingItems": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "exitCriteria": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
           },
           "additionalProperties": true
         },
@@ -44,116 +113,488 @@
           "type": "object",
           "additionalProperties": {
             "type": "object",
-            "required": ["status"],
+            "required": [
+              "status"
+            ],
             "properties": {
-              "status": {"type": "string", "enum": ["included", "not_applicable", "pending"]},
-              "reason": {"type": "string"}
+              "status": {
+                "type": "string",
+                "enum": [
+                  "included",
+                  "not_applicable",
+                  "pending"
+                ]
+              },
+              "reason": {
+                "type": "string"
+              }
             },
             "additionalProperties": true
           }
+        },
+        "statusPolicy": {
+          "type": "string",
+          "enum": [
+            "strict",
+            "legacy"
+          ]
+        },
+        "statusNote": {
+          "type": "string"
         }
       },
       "additionalProperties": true
     },
     "baseline": {
       "type": "object",
-      "required": ["repository", "branch", "commit", "inspectedAt", "timezone", "worktreeState", "relevantDirtyPaths"],
+      "required": [
+        "repository",
+        "branch",
+        "commit",
+        "inspectedAt",
+        "timezone",
+        "worktreeState",
+        "relevantDirtyPaths"
+      ],
       "properties": {
-        "repository": {"type": "string"},
-        "branch": {"type": "string"},
-        "commit": {"type": "string"},
-        "inspectedAt": {"type": "string"},
-        "timezone": {"type": "string"},
-        "worktreeState": {"type": "string"},
-        "relevantDirtyPaths": {"type": "array", "items": {"type": "string"}}
+        "repository": {
+          "type": "string"
+        },
+        "branch": {
+          "type": "string"
+        },
+        "commit": {
+          "type": "string"
+        },
+        "inspectedAt": {
+          "type": "string"
+        },
+        "timezone": {
+          "type": "string"
+        },
+        "worktreeState": {
+          "type": "string"
+        },
+        "relevantDirtyPaths": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
       },
       "additionalProperties": true
     },
-    "agents": {"type": "array", "items": {"$ref": "#/$defs/agent"}},
-    "requirements": {"type": "array", "items": {"$ref": "#/$defs/requirement"}},
-    "plans": {"type": "array", "items": {"$ref": "#/$defs/plan"}},
-    "apis": {"type": "array", "items": {"$ref": "#/$defs/api"}},
-    "tables": {"type": "array", "items": {"$ref": "#/$defs/table"}},
-    "architecture": {"type": "array", "items": {"$ref": "#/$defs/architecture"}},
-    "configs": {"type": "array", "items": {"$ref": "#/$defs/config"}},
-    "evidence": {"type": "array", "items": {"$ref": "#/$defs/evidence"}},
-    "questions": {"type": "array", "items": {"$ref": "#/$defs/question"}}
+    "agents": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/agent"
+      }
+    },
+    "requirements": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/requirement"
+      }
+    },
+    "plans": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/plan"
+      }
+    },
+    "apis": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/api"
+      }
+    },
+    "tables": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/table"
+      }
+    },
+    "architecture": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/architecture"
+      }
+    },
+    "configs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/config"
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/evidence"
+      }
+    },
+    "questions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/question"
+      }
+    }
   },
   "$defs": {
-    "id": {"type": "string", "pattern": "^[A-Z][A-Z0-9-]*$"},
+    "fieldReference": {
+      "type": "object",
+      "required": [
+        "$ref"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "$ref": {
+          "type": "string",
+          "pattern": "^#/definitions/fields/(?:[^~/]|~[01])+$"
+        }
+      }
+    },
+    "ruleReference": {
+      "type": "object",
+      "required": [
+        "$ref"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "$ref": {
+          "type": "string",
+          "pattern": "^#/definitions/rules/(?:[^~/]|~[01])+$"
+        }
+      }
+    },
+    "inlineField": {
+      "type": "object",
+      "not": {
+        "required": [
+          "$ref"
+        ]
+      }
+    },
+    "definedField": {
+      "type": "object",
+      "required": [
+        "field"
+      ],
+      "not": {
+        "required": [
+          "$ref"
+        ]
+      },
+      "properties": {
+        "field": {
+          "type": "string",
+          "pattern": "\\S"
+        }
+      }
+    },
+    "fieldList": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/inlineField"
+          },
+          {
+            "$ref": "#/$defs/fieldReference"
+          }
+        ]
+      }
+    },
+    "ruleList": {
+      "type": "array",
+      "items": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "$ref": "#/$defs/ruleReference"
+          }
+        ]
+      }
+    },
+    "definitionCatalog": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fields": {
+          "type": "object",
+          "propertyNames": {
+            "minLength": 1
+          },
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/definedField"
+              },
+              {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "$ref": "#/$defs/definedField"
+                }
+              }
+            ]
+          }
+        },
+        "rules": {
+          "type": "object",
+          "propertyNames": {
+            "minLength": 1
+          },
+          "additionalProperties": {
+            "anyOf": [
+              {
+                "type": "string",
+                "pattern": "\\S"
+              },
+              {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string",
+                  "pattern": "\\S"
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Z0-9-]*$"
+    },
     "record": {
       "type": "object",
-      "required": ["id"],
+      "required": [
+        "id"
+      ],
       "properties": {
-        "id": {"$ref": "#/$defs/id"},
-        "related": {"type": "array", "items": {"$ref": "#/$defs/id"}},
+        "id": {
+          "$ref": "#/$defs/id"
+        },
+        "related": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
         "state": {
           "type": "string",
           "description": "记录的工作流生命周期；observed 和 proposed 仅为兼容旧数据的弃用值。",
-          "enum": ["observed", "proposed", "pending", "in_progress", "verified", "blocked", "accepted", "cancelled"]
+          "enum": [
+            "observed",
+            "proposed",
+            "pending",
+            "in_progress",
+            "verified",
+            "blocked",
+            "accepted",
+            "cancelled"
+          ]
         },
         "claim": {
           "type": "object",
-          "required": ["kind"],
+          "required": [
+            "kind"
+          ],
           "properties": {
-            "kind": {"type": "string", "enum": ["fact", "proposal", "pending"]},
-            "confidence": {"type": "string", "enum": ["high", "medium", "low"]},
-            "statement": {"type": "string", "minLength": 1, "pattern": "\\S", "description": "被标注的具体事实、提案或待确认点。旧 claim 可暂缺。"}
+            "kind": {
+              "type": "string",
+              "enum": [
+                "fact",
+                "proposal",
+                "pending"
+              ]
+            },
+            "confidence": {
+              "type": "string",
+              "enum": [
+                "high",
+                "medium",
+                "low"
+              ]
+            },
+            "statement": {
+              "type": "string",
+              "minLength": 1,
+              "pattern": "\\S",
+              "description": "被标注的具体事实、提案或待确认点。旧 claim 可暂缺。"
+            }
           },
           "additionalProperties": true
         },
-        "evidenceIds": {"type": "array", "items": {"$ref": "#/$defs/id"}},
+        "evidenceIds": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
         "links": {
           "type": "object",
           "properties": {
-            "requirements": {"type": "array", "items": {"$ref": "#/$defs/id"}},
-            "plans": {"type": "array", "items": {"$ref": "#/$defs/id"}},
-            "apis": {"type": "array", "items": {"$ref": "#/$defs/id"}},
-            "tables": {"type": "array", "items": {"$ref": "#/$defs/id"}},
-            "architecture": {"type": "array", "items": {"$ref": "#/$defs/id"}},
-            "configs": {"type": "array", "items": {"$ref": "#/$defs/id"}},
-            "evidence": {"type": "array", "items": {"$ref": "#/$defs/id"}},
-            "questions": {"type": "array", "items": {"$ref": "#/$defs/id"}}
+            "requirements": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/id"
+              }
+            },
+            "plans": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/id"
+              }
+            },
+            "apis": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/id"
+              }
+            },
+            "tables": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/id"
+              }
+            },
+            "architecture": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/id"
+              }
+            },
+            "configs": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/id"
+              }
+            },
+            "evidence": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/id"
+              }
+            },
+            "questions": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/id"
+              }
+            }
           },
           "additionalProperties": false
+        },
+        "statusNote": {
+          "type": "string"
         }
       },
       "additionalProperties": true
     },
     "agent": {
       "allOf": [
-        {"$ref": "#/$defs/record"},
         {
-          "required": ["name", "role"],
+          "$ref": "#/$defs/record"
+        },
+        {
+          "required": [
+            "name",
+            "role"
+          ],
           "properties": {
-            "name": {"type": "string"},
-            "role": {"type": "string"},
-            "session": {"type": "string"},
-            "reportFrequency": {"type": "string"},
-            "status": {"type": "string"}
+            "name": {
+              "type": "string"
+            },
+            "role": {
+              "type": "string"
+            },
+            "session": {
+              "type": "string"
+            },
+            "reportFrequency": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            }
           }
         }
       ]
     },
     "requirement": {
       "allOf": [
-        {"$ref": "#/$defs/record"},
         {
-          "required": ["group", "title", "summary", "status", "acceptance"],
+          "$ref": "#/$defs/record"
+        },
+        {
+          "required": [
+            "group",
+            "title",
+            "summary",
+            "status",
+            "acceptance"
+          ],
           "properties": {
-            "group": {"type": "string"},
-            "title": {"type": "string"},
-            "summary": {"type": "string"},
-            "scope": {"type": "string"},
-            "status": {"type": "string"},
-            "acceptance": {"type": "array", "items": {"$ref": "#/$defs/acceptance"}},
+            "group": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "summary": {
+              "type": "string"
+            },
+            "scope": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            },
+            "acceptance": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/acceptance"
+              }
+            },
             "impact": {
               "type": "object",
               "properties": {
-                "apis": {"type": "string", "enum": ["required", "not_applicable", "unknown"]},
-                "tables": {"type": "string", "enum": ["required", "not_applicable", "unknown"]},
-                "architecture": {"type": "string", "enum": ["required", "not_applicable", "unknown"]},
-                "configs": {"type": "string", "enum": ["required", "not_applicable", "unknown"]}
+                "apis": {
+                  "type": "string",
+                  "enum": [
+                    "required",
+                    "not_applicable",
+                    "unknown"
+                  ]
+                },
+                "tables": {
+                  "type": "string",
+                  "enum": [
+                    "required",
+                    "not_applicable",
+                    "unknown"
+                  ]
+                },
+                "architecture": {
+                  "type": "string",
+                  "enum": [
+                    "required",
+                    "not_applicable",
+                    "unknown"
+                  ]
+                },
+                "configs": {
+                  "type": "string",
+                  "enum": [
+                    "required",
+                    "not_applicable",
+                    "unknown"
+                  ]
+                }
               },
               "additionalProperties": true
             }
@@ -163,130 +604,440 @@
     },
     "acceptance": {
       "allOf": [
-        {"$ref": "#/$defs/record"},
         {
-          "required": ["text", "status"],
+          "$ref": "#/$defs/record"
+        },
+        {
+          "required": [
+            "text",
+            "status"
+          ],
           "properties": {
-            "text": {"type": "string"},
-            "status": {"type": "string"},
-            "evidence": {"type": "string"}
+            "text": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            },
+            "evidence": {
+              "type": "string"
+            },
+            "statusNote": {
+              "type": "string"
+            }
           }
         }
       ]
     },
     "plan": {
       "allOf": [
-        {"$ref": "#/$defs/record"},
         {
-          "required": ["priority", "module", "requirementIds", "main", "sub", "owner", "reviewer", "executor", "status"],
+          "$ref": "#/$defs/record"
+        },
+        {
+          "required": [
+            "priority",
+            "module",
+            "requirementIds",
+            "main",
+            "sub",
+            "owner",
+            "reviewer",
+            "executor",
+            "status"
+          ],
           "properties": {
-            "priority": {"type": "string", "enum": ["P0", "P1", "P2"]},
-            "module": {"type": "string"},
-            "requirementIds": {"type": "array", "items": {"$ref": "#/$defs/id"}},
-            "main": {"type": "string"},
-            "sub": {"type": "string"},
-            "owner": {"$ref": "#/$defs/id"},
-            "reviewer": {"$ref": "#/$defs/id"},
-            "reviewerIds": {"type": "array", "items": {"$ref": "#/$defs/id"}},
-            "executor": {"$ref": "#/$defs/id"},
-            "executorIds": {"type": "array", "items": {"$ref": "#/$defs/id"}},
-            "ownerPaths": {"type": "array", "items": {"type": "string", "minLength": 1}},
-            "status": {"type": "string", "enum": ["待拆分", "待确认", "编码 READY", "待开始", "进行中", "待接入", "待执行", "待复核", "待验收", "阻塞", "已完成", "已取消"]},
-            "note": {"type": "string"},
-            "deps": {"type": "array", "items": {"$ref": "#/$defs/id"}}
+            "sequence": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9007199254740991,
+              "description": "稳定任务序号，整份排期唯一，不随筛选或排序变化。"
+            },
+            "priority": {
+              "type": "string",
+              "enum": [
+                "P0",
+                "P1",
+                "P2"
+              ]
+            },
+            "module": {
+              "type": "string"
+            },
+            "requirementIds": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/id"
+              }
+            },
+            "main": {
+              "type": "string"
+            },
+            "sub": {
+              "type": "string"
+            },
+            "owner": {
+              "$ref": "#/$defs/id"
+            },
+            "reviewer": {
+              "$ref": "#/$defs/id"
+            },
+            "reviewerIds": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/id"
+              }
+            },
+            "executor": {
+              "$ref": "#/$defs/id"
+            },
+            "executorIds": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/id"
+              }
+            },
+            "ownerPaths": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "status": {
+              "type": "string",
+              "enum": [
+                "待拆分",
+                "待确认",
+                "编码 READY",
+                "待开始",
+                "进行中",
+                "待接入",
+                "待执行",
+                "待复核",
+                "待验收",
+                "阻塞",
+                "已完成",
+                "已取消"
+              ]
+            },
+            "note": {
+              "type": "string"
+            },
+            "deps": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/id"
+              }
+            }
           }
         }
       ]
     },
     "api": {
       "allOf": [
-        {"$ref": "#/$defs/record"},
         {
-          "required": ["group", "name", "method", "path", "changeType", "status", "summary", "request", "response", "requestExample", "responseExample"],
+          "$ref": "#/$defs/record"
+        },
+        {
+          "required": [
+            "group",
+            "name",
+            "method",
+            "path",
+            "changeType",
+            "status",
+            "summary",
+            "request",
+            "response",
+            "requestExample",
+            "responseExample"
+          ],
           "properties": {
-            "group": {"type": "string"},
-            "name": {"type": "string"},
-            "method": {"type": "string"},
-            "path": {"type": "string"},
-            "changeType": {"type": "string", "enum": ["新增接口", "存量接口变更"]},
-            "status": {"type": "string"},
-            "summary": {"type": "string"},
-            "request": {"type": "array"},
-            "response": {"type": "array"},
-            "requestExample": {"type": ["object", "array", "string"]},
-            "responseExample": {"type": ["object", "array", "string"]},
-            "current": {"type": "string"},
-            "evidence": {"type": "string"}
+            "developmentStatus": {
+              "type": "string",
+              "enum": [
+                "已完成",
+                "部分完成",
+                "未开发"
+              ],
+              "description": "本期开发状态；缺省待核实，与部署及迁移执行状态分开。"
+            },
+            "group": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "method": {
+              "type": "string"
+            },
+            "path": {
+              "type": "string"
+            },
+            "changeType": {
+              "type": "string",
+              "enum": [
+                "新增接口",
+                "存量接口变更",
+                "存量接口复用"
+              ]
+            },
+            "status": {
+              "type": "string"
+            },
+            "summary": {
+              "type": "string"
+            },
+            "request": {
+              "$ref": "#/$defs/fieldList"
+            },
+            "response": {
+              "$ref": "#/$defs/fieldList"
+            },
+            "rules": {
+              "$ref": "#/$defs/ruleList"
+            },
+            "requestExample": {
+              "type": [
+                "object",
+                "array",
+                "string"
+              ]
+            },
+            "responseExample": {
+              "type": [
+                "object",
+                "array",
+                "string"
+              ]
+            },
+            "current": {
+              "type": "string"
+            },
+            "evidence": {
+              "type": "string"
+            }
           }
         }
       ]
     },
     "table": {
       "allOf": [
-        {"$ref": "#/$defs/record"},
         {
-          "required": ["group", "name", "changeType", "status", "purpose", "ddl"],
+          "$ref": "#/$defs/record"
+        },
+        {
+          "required": [
+            "group",
+            "name",
+            "changeType",
+            "status",
+            "purpose",
+            "ddl"
+          ],
           "properties": {
-            "group": {"type": "string"},
-            "name": {"type": "string"},
-            "changeType": {"type": "string", "enum": ["新增数据表", "存量表变更", "存量表复用"]},
-            "status": {"type": "string"},
-            "purpose": {"type": "string"},
-            "ddl": {"type": "string"},
-            "current": {"type": "string"},
-            "difference": {"type": "string"}
+            "developmentStatus": {
+              "type": "string",
+              "enum": [
+                "已完成",
+                "部分完成",
+                "未开发"
+              ],
+              "description": "本期开发状态；缺省待核实，与部署及迁移执行状态分开。"
+            },
+            "group": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "changeType": {
+              "type": "string",
+              "enum": [
+                "新增数据表",
+                "存量表变更",
+                "存量表复用"
+              ]
+            },
+            "status": {
+              "type": "string"
+            },
+            "purpose": {
+              "type": "string"
+            },
+            "ddl": {
+              "type": "string"
+            },
+            "current": {
+              "type": "string"
+            },
+            "difference": {
+              "type": "string"
+            }
           }
         }
       ]
     },
     "architecture": {
       "allOf": [
-        {"$ref": "#/$defs/record"},
         {
-          "required": ["group", "type", "title", "status"],
+          "$ref": "#/$defs/record"
+        },
+        {
+          "required": [
+            "group",
+            "type",
+            "title",
+            "status"
+          ],
           "properties": {
-            "group": {"type": "string"},
-            "type": {"type": "string", "enum": ["solution", "diagram"]},
-            "title": {"type": "string"},
-            "status": {"type": "string"},
-            "conclusion": {"type": "string"},
-            "current": {"type": "string"},
-            "steps": {"type": "array", "items": {"type": "string"}},
-            "impact": {"type": "string"},
-            "risks": {"type": "string"},
-            "diagramType": {"type": "string"},
-            "diagramEngine": {"type": "string", "enum": ["mermaid", "inline-svg", "text"]},
-            "diagramSvg": {"type": "string"},
-            "diagramSource": {"type": "string"},
-            "fallback": {"type": "string"}
+            "group": {
+              "type": "string"
+            },
+            "type": {
+              "type": "string",
+              "enum": [
+                "solution",
+                "diagram"
+              ]
+            },
+            "title": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            },
+            "conclusion": {
+              "type": "string"
+            },
+            "current": {
+              "type": "string"
+            },
+            "steps": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "impact": {
+              "type": "string"
+            },
+            "risks": {
+              "type": "string"
+            },
+            "diagramType": {
+              "type": "string"
+            },
+            "diagramEngine": {
+              "type": "string",
+              "enum": [
+                "mermaid",
+                "inline-svg",
+                "text"
+              ]
+            },
+            "diagramSvg": {
+              "type": "string"
+            },
+            "diagramSource": {
+              "type": "string"
+            },
+            "fallback": {
+              "type": "string"
+            }
           },
           "allOf": [
             {
-              "if": {"properties": {"type": {"const": "solution"}}},
-              "then": {"required": ["conclusion", "current", "steps", "impact", "risks"]}
-            },
-            {
-              "if": {"properties": {"type": {"const": "diagram"}}},
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "solution"
+                  }
+                }
+              },
               "then": {
-                "required": ["diagramType"],
-                "anyOf": [
-                  {"required": ["diagramSvg"]},
-                  {"required": ["diagramSource"]},
-                  {"required": ["fallback"]}
+                "required": [
+                  "conclusion",
+                  "current",
+                  "steps",
+                  "impact",
+                  "risks"
                 ]
               }
             },
             {
-              "if": {"properties": {"diagramEngine": {"const": "mermaid"}}},
-              "then": {"required": ["diagramSource"]}
+              "if": {
+                "properties": {
+                  "type": {
+                    "const": "diagram"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "diagramType"
+                ],
+                "anyOf": [
+                  {
+                    "required": [
+                      "diagramSvg"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "diagramSource"
+                    ]
+                  },
+                  {
+                    "required": [
+                      "fallback"
+                    ]
+                  }
+                ]
+              }
             },
             {
-              "if": {"properties": {"diagramEngine": {"const": "inline-svg"}}},
-              "then": {"required": ["diagramSvg"]}
+              "if": {
+                "properties": {
+                  "diagramEngine": {
+                    "const": "mermaid"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "diagramSource"
+                ]
+              }
             },
             {
-              "if": {"properties": {"diagramEngine": {"const": "text"}}},
-              "then": {"required": ["fallback"]}
+              "if": {
+                "properties": {
+                  "diagramEngine": {
+                    "const": "inline-svg"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "diagramSvg"
+                ]
+              }
+            },
+            {
+              "if": {
+                "properties": {
+                  "diagramEngine": {
+                    "const": "text"
+                  }
+                }
+              },
+              "then": {
+                "required": [
+                  "fallback"
+                ]
+              }
             }
           ]
         }
@@ -294,52 +1045,461 @@
     },
     "config": {
       "allOf": [
-        {"$ref": "#/$defs/record"},
         {
-          "required": ["group", "kind", "title", "environment", "status", "content"],
+          "$ref": "#/$defs/record"
+        },
+        {
+          "required": [
+            "group",
+            "kind",
+            "title",
+            "environment",
+            "status",
+            "content"
+          ],
           "properties": {
-            "group": {"type": "string"},
-            "kind": {"type": "string"},
-            "title": {"type": "string"},
-            "environment": {"type": "string"},
-            "status": {"type": "string"},
-            "content": {"type": "string"}
+            "source": {
+              "type": "string",
+              "description": "本阶段实际配置或SQL文件的路径；content是阅读快照，执行以源文件为准。"
+            },
+            "group": {
+              "type": "string"
+            },
+            "kind": {
+              "type": "string"
+            },
+            "title": {
+              "type": "string"
+            },
+            "environment": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            },
+            "content": {
+              "type": "string"
+            }
           }
         }
       ]
     },
     "evidence": {
       "allOf": [
-        {"$ref": "#/$defs/record"},
         {
-          "required": ["kind", "label", "source", "status"],
+          "$ref": "#/$defs/record"
+        },
+        {
+          "required": [
+            "kind",
+            "label",
+            "source",
+            "status"
+          ],
           "properties": {
-            "kind": {"type": "string", "enum": ["source", "migration", "database", "runtime", "e2e"]},
-            "label": {"type": "string"},
-            "source": {"type": "string"},
-            "status": {"type": "string"},
-            "locator": {"type": "string"},
-            "capturedAt": {"type": "string"},
-            "checkedBy": {"$ref": "#/$defs/id"},
-            "commit": {"type": "string"},
-            "confidence": {"type": "string", "enum": ["high", "medium", "low"]}
+            "kind": {
+              "type": "string",
+              "enum": [
+                "source",
+                "migration",
+                "database",
+                "runtime",
+                "e2e"
+              ]
+            },
+            "label": {
+              "type": "string"
+            },
+            "source": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            },
+            "locator": {
+              "type": "string"
+            },
+            "capturedAt": {
+              "type": "string"
+            },
+            "checkedBy": {
+              "$ref": "#/$defs/id"
+            },
+            "commit": {
+              "type": "string"
+            },
+            "confidence": {
+              "type": "string",
+              "enum": [
+                "high",
+                "medium",
+                "low"
+              ]
+            }
           }
         }
       ]
     },
     "question": {
       "allOf": [
-        {"$ref": "#/$defs/record"},
         {
-          "required": ["question", "status"],
+          "$ref": "#/$defs/record"
+        },
+        {
+          "required": [
+            "question",
+            "status"
+          ],
           "properties": {
-            "question": {"type": "string"},
-            "status": {"type": "string"},
-            "impact": {"type": "string"},
-            "owner": {"$ref": "#/$defs/id"}
+            "requiresUserDecision": {
+              "type": "boolean",
+              "description": "true 需要用户决定，false 由 AI 核实；省略表示待分类，不代表无需用户决定。"
+            },
+            "question": {
+              "type": "string"
+            },
+            "status": {
+              "type": "string"
+            },
+            "impact": {
+              "type": "string"
+            },
+            "owner": {
+              "$ref": "#/$defs/id"
+            }
           }
         }
       ]
     }
-  }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "metadata": {
+            "required": [
+              "statusPolicy"
+            ],
+            "properties": {
+              "statusPolicy": {
+                "const": "strict"
+              }
+            }
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "metadata": {
+            "properties": {
+              "status": {
+                "enum": [
+                  "方案待对齐",
+                  "方案已对齐",
+                  "开发中",
+                  "验证中",
+                  "待上线",
+                  "已上线",
+                  "阻塞",
+                  "已取消",
+                  "待核实"
+                ]
+              }
+            }
+          },
+          "agents": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "待开始",
+                    "进行中",
+                    "阻塞",
+                    "已完成",
+                    "已取消",
+                    "待核实"
+                  ]
+                },
+                "statusNote": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "requirements": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "status"
+              ],
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "待拆分",
+                    "待确认",
+                    "编码 READY",
+                    "进行中",
+                    "待复核",
+                    "待验收",
+                    "阻塞",
+                    "已完成",
+                    "已取消",
+                    "待核实"
+                  ]
+                },
+                "statusNote": {
+                  "type": "string"
+                },
+                "acceptance": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "status"
+                    ],
+                    "properties": {
+                      "status": {
+                        "enum": [
+                          "待验证",
+                          "待验收",
+                          "验证中",
+                          "已通过",
+                          "未通过",
+                          "阻塞",
+                          "不适用",
+                          "待核实"
+                        ]
+                      },
+                      "statusNote": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "plans": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "status"
+              ],
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "待拆分",
+                    "待确认",
+                    "编码 READY",
+                    "待开始",
+                    "进行中",
+                    "待接入",
+                    "待执行",
+                    "待复核",
+                    "待验收",
+                    "阻塞",
+                    "已完成",
+                    "已取消"
+                  ]
+                },
+                "statusNote": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "apis": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "status"
+              ],
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "待部署",
+                    "已部署",
+                    "待验证",
+                    "已验证",
+                    "阻塞",
+                    "不适用",
+                    "待核实"
+                  ]
+                },
+                "statusNote": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "existingInterfaces": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "status"
+              ],
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "待部署",
+                    "已部署",
+                    "待验证",
+                    "已验证",
+                    "阻塞",
+                    "不适用",
+                    "待核实"
+                  ]
+                },
+                "statusNote": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "tables": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "status"
+              ],
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "待部署",
+                    "已部署",
+                    "待验证",
+                    "已验证",
+                    "阻塞",
+                    "不适用",
+                    "待核实"
+                  ]
+                },
+                "statusNote": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "architecture": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "status"
+              ],
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "待设计",
+                    "设计中",
+                    "待复核",
+                    "已确认",
+                    "阻塞",
+                    "已取消",
+                    "待核实"
+                  ]
+                },
+                "statusNote": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "configs": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "status"
+              ],
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "待配置",
+                    "待执行",
+                    "已执行",
+                    "待验证",
+                    "已验证",
+                    "阻塞",
+                    "不适用",
+                    "待核实"
+                  ]
+                },
+                "statusNote": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "status"
+              ],
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "待核实",
+                    "已记录",
+                    "已验证",
+                    "失败",
+                    "已失效"
+                  ]
+                },
+                "statusNote": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "status"
+              ],
+              "properties": {
+                "status": {
+                  "type": "string",
+                  "enum": [
+                    "待确认",
+                    "核实中",
+                    "阻塞",
+                    "已确认",
+                    "已解决",
+                    "已关闭",
+                    "已完成",
+                    "已取消",
+                    "待核实"
+                  ]
+                },
+                "statusNote": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
 }

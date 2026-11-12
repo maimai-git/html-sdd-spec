@@ -1,11 +1,9 @@
-import base64
-import gzip
 import json
 import re
 
 
 def decode_html_payload(html: str) -> dict:
-    match = re.search(r'const specGzipBase64="([A-Za-z0-9+/=]+)";', html)
+    match = re.search(r'<script id="html-sdd-spec" type="application/json">(.*?)</script>', html, re.DOTALL)
     if match is None:
-        raise AssertionError("generated HTML has no compressed SDD payload")
-    return json.loads(gzip.decompress(base64.b64decode(match.group(1))))
+        raise AssertionError("generated HTML has no plain SDD JSON payload")
+    return json.loads(match.group(1))

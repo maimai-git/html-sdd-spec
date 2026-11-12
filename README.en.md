@@ -7,7 +7,7 @@ HTML SDD Spec is a lightweight format for aligning product requirements, the cur
 ## Quick start
 
 Requires Python 3.9+.
-The page uses the browser's native gzip decompressor; architecture diagrams load Mermaid on demand when the network is available. Use a current Chrome, Edge, Firefox, or Safari.
+The page embeds plain JSON without gzip or Base64; architecture diagrams load Mermaid on demand when the network is available. Use a current Chrome, Edge, Firefox, or Safari.
 
 ```bash
 python3 -m pip install -e .
@@ -75,7 +75,7 @@ html-sdd-spec/资产库引用/
 ├── 方案对齐.html
 ├── 使用说明.md
 ├── 变更记录/说明.md
-└── 证据索引/说明.md
+└── .gitignore
 ```
 
 Tool source, tests, and executable scripts may keep English names; the root directory `html-sdd-spec/` is the agreed English exception. If an existing project already has an SDD elsewhere, record it and migrate only after checking for duplicate sources.
@@ -115,3 +115,13 @@ The example deliberately separates implemented code, manual migrations, pending 
 HTML SDD is an offline planning and alignment artifact. It does not connect to production databases, execute DDL, apply deployment configuration, or store tokens, passwords, cookies, private keys, or connection strings.
 
 See [CONTRIBUTING.md](CONTRIBUTING.md), [CHANGELOG.md](CHANGELOG.md), [SECURITY.md](SECURITY.md), the [release checklist](docs/release-checklist.md), and the [MIT License](LICENSE).
+
+API and table catalogs support independent development-status and change-type filters. Optional `developmentStatus` is explicit; missing values stay unverified. Deployment notes remain separate. Examples and DDL start expanded; version and readiness details use compact popups. See the [small illustrative catalog example](examples/目录筛选/使用说明.md).
+
+Evidence directories are not created by default. Optional local `证据/` and `证据索引/` materials are Git-ignored; keep concise results and shareable commit/CI references in JSON. Existing tracked files need a separate migration.
+
+Read context by task ID: 8 related summaries and a 12,000-character output budget by default. Use `--offset` for pagination and `--full` for the target contract. `browser-check` reports a short summary and keeps full logs locally.
+
+Optional `definitions.fields` / `definitions.rules` reuse identical contracts via local `$ref` entries. Detail views and `context --full` resolve them on demand; HTML retains the compact references. `html-sdd reuse <JSON>` previews savings; `--output <candidate.json>` writes a separate candidate. Inline contracts remain supported.
+
+Status labels, per-section subsets and semantic colors share one packaged registry. New documents use strict validation; legacy free text stays available as notes with an unverified badge. Query a subset with `html-sdd statuses --section plans`.

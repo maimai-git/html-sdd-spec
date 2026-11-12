@@ -1,0 +1,244 @@
+{
+  "specVersion": "0.1",
+  "metadata": {"id":"CATALOG-DEMO","title":"文件管理 · 目录筛选演示","summary":"示意数据，用于体验筛选和开发/部署状态区分，不代表业务开发实绩。","status":"待核实","updatedAt":"2026-11-12T00:00:00+08:00","language":"zh-CN","readiness":{"overall":"待验收","codingReady":false,"blockingItems":[],"exitCriteria":["需求、接口、数据表、配置和验证证据可追踪","未决问题已经明确负责人和下一步"]},"sectionCoverage":{"requirements":{"status":"included","reason":"交互示意数据"},"plans":{"status":"included","reason":"交互示意数据"},"apis":{"status":"included","reason":"交互示意数据"},"tables":{"status":"included","reason":"交互示意数据"},"architecture":{"status":"not_applicable","reason":"本例只演示目录交互"},"configs":{"status":"included","reason":"交互示意数据"}},"statusNote":"交互示意","statusPolicy":"strict"},
+  "baseline": {"repository":"交互示意","branch":"示意数据","commit":"非业务代码快照","inspectedAt":"2026-11-12","timezone":"Asia/Shanghai","worktreeState":"unknown","relevantDirtyPaths":[]},
+  "agents": [
+    {
+      "id": "AGENT-OWNER",
+      "name": "负责人 Agent",
+      "role": "和用户对齐、分派和汇报",
+      "status": "待核实"
+    },
+    {
+      "id": "AGENT-REVIEWER",
+      "name": "审核人 Agent",
+      "role": "拆需求、查现状、审核方案",
+      "status": "待核实"
+    },
+    {
+      "id": "AGENT-EXECUTOR",
+      "name": "执行人 Agent",
+      "role": "写代码、测试和验证",
+      "status": "待核实"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "REQ-001",
+      "group": "交互演示",
+      "title": "本期文件管理迭代",
+      "summary": "示意数据，用于体验筛选和开发/部署状态区分，不代表业务开发实绩。",
+      "scope": "展示状态分类、目录筛选、默认展开及紧凑阅读。",
+      "status": "待核实",
+      "related": ["API-001","API-002","API-003","API-004","DATA-001","DATA-002","DATA-003","PLAN-001","CFG-001","CFG-002"],
+      "acceptance": [{"id":"AC-001","text":"组合筛选和恢复后目录与详情一致。","status":"待核实","evidence":"仅交互示意","statusNote":"演示用例"}],
+      "statusNote": "示意需求"
+    }
+  ],
+  "plans": [
+    {
+      "id": "PLAN-001",
+      "priority": "P2",
+      "module": "文件",
+      "requirementIds": ["REQ-001"],
+      "main": "文件查询示意",
+      "sub": "演示数据不用于评估真实开发完成度。",
+      "owner": "AGENT-OWNER",
+      "reviewer": "AGENT-REVIEWER",
+      "executor": "AGENT-EXECUTOR",
+      "status": "已完成",
+      "note": "仅为交互展示",
+      "sequence": 1
+    },
+    {
+      "id": "PLAN-002",
+      "priority": "P0",
+      "module": "空间",
+      "requirementIds": ["REQ-001"],
+      "main": "空间隔离示意",
+      "sub": "演示数据不用于评估真实开发完成度。",
+      "owner": "AGENT-OWNER",
+      "reviewer": "AGENT-REVIEWER",
+      "executor": "AGENT-EXECUTOR",
+      "status": "进行中",
+      "note": "仅为交互展示",
+      "sequence": 2
+    },
+    {
+      "id": "PLAN-003",
+      "priority": "P0",
+      "module": "文件",
+      "requirementIds": ["REQ-001"],
+      "main": "文件上传示意",
+      "sub": "演示数据不用于评估真实开发完成度。",
+      "owner": "AGENT-OWNER",
+      "reviewer": "AGENT-REVIEWER",
+      "executor": "AGENT-EXECUTOR",
+      "status": "待开始",
+      "note": "仅为交互展示",
+      "sequence": 5
+    },
+    {
+      "id": "PLAN-004",
+      "priority": "P1",
+      "module": "空间",
+      "requirementIds": ["REQ-001"],
+      "main": "空间同步示意",
+      "sub": "演示数据不用于评估真实开发完成度。",
+      "owner": "AGENT-OWNER",
+      "reviewer": "AGENT-REVIEWER",
+      "executor": "AGENT-EXECUTOR",
+      "status": "阻塞",
+      "note": "仅为交互展示",
+      "sequence": 8
+    }
+  ],
+  "apis": [
+    {
+      "id": "API-001",
+      "group": "文件管理",
+      "name": "查询文件",
+      "method": "GET",
+      "path": "/api/demo/files",
+      "changeType": "新增接口",
+      "status": "待核实",
+      "summary": "仅用于展示目录交互，不调用真实后端。",
+      "request": [{"name":"page","location":"query","type":"integer","required":"否","description":"示意页码","example":1}],
+      "response": [{"name":"items","type":"array","required":"是","description":"示意结果","example":[]}],
+      "requestExample": {"page":1},
+      "responseExample": {"items":[]},
+      "developmentStatus": "已完成",
+      "statusNote": "本阶段代码示意已完成，运行环境尚未验证"
+    },
+    {
+      "id": "API-002",
+      "group": "文件管理",
+      "name": "更新文件标签（原有接口按本期范围逐步改造）",
+      "method": "PATCH",
+      "path": "/api/demo/files/{id}/tags",
+      "changeType": "存量接口变更",
+      "status": "待核实",
+      "summary": "仅用于展示目录交互，不调用真实后端。",
+      "request": [{"name":"page","location":"query","type":"integer","required":"否","description":"示意页码","example":1}],
+      "response": [{"name":"items","type":"array","required":"是","description":"示意结果","example":[]}],
+      "requestExample": {"page":1},
+      "responseExample": {"items":[]},
+      "developmentStatus": "部分完成",
+      "statusNote": "路由原已存在，标签同步尚未完成"
+    },
+    {
+      "id": "API-003",
+      "group": "文件管理",
+      "name": "读取存量下载信息",
+      "method": "GET",
+      "path": "/api/demo/downloads/{id}",
+      "changeType": "存量接口复用",
+      "status": "待核实",
+      "summary": "仅用于展示目录交互，不调用真实后端。",
+      "request": [{"name":"page","location":"query","type":"integer","required":"否","description":"示意页码","example":1}],
+      "response": [{"name":"items","type":"array","required":"是","description":"示意结果","example":[]}],
+      "requestExample": {"page":1},
+      "responseExample": {"items":[]},
+      "developmentStatus": "未开发",
+      "statusNote": "存量能力存在，本期接入与验证未开发"
+    },
+    {
+      "id": "API-004",
+      "group": "文件管理",
+      "name": "历史接口待核对",
+      "method": "GET",
+      "path": "/api/demo/files/history/long-segment/long-segment/long-segment/long-segment/long-segment/long-segment/long-segment/long-segment/native-find-tail",
+      "changeType": "新增接口",
+      "status": "待核实",
+      "summary": "仅用于展示目录交互，不调用真实后端。",
+      "request": [{"name":"page","location":"query","type":"integer","required":"否","description":"示意页码","example":1}],
+      "response": [{"name":"items","type":"array","required":"是","description":"示意结果","example":[]}],
+      "requestExample": {"page":1},
+      "responseExample": {"items":[]},
+      "statusNote": "历史实现说明，当前开发范围待核对"
+    }
+  ],
+  "tables": [
+    {
+      "id": "DATA-001",
+      "group": "文件管理",
+      "name": "demo_file_1",
+      "changeType": "新增数据表",
+      "developmentStatus": "已完成",
+      "status": "待核实",
+      "purpose": "用于展示新增、变更和复用筛选，不代表真实业务表。",
+      "ddl": "-- 请以当前项目审核后的真实迁移文件为准。",
+      "statusNote": "仅演示本阶段开发状态，迁移执行情况未验证"
+    },
+    {
+      "id": "DATA-002",
+      "group": "文件管理",
+      "name": "demo_file_2",
+      "changeType": "存量表变更",
+      "developmentStatus": "未开发",
+      "status": "待核实",
+      "purpose": "用于展示新增、变更和复用筛选，不代表真实业务表。",
+      "ddl": "-- 请以当前项目审核后的真实迁移文件为准。",
+      "statusNote": "仅演示本阶段开发状态，迁移执行情况未验证"
+    },
+    {
+      "id": "DATA-003",
+      "group": "文件管理",
+      "name": "demo_file_3",
+      "changeType": "存量表复用",
+      "developmentStatus": "部分完成",
+      "status": "待核实",
+      "purpose": "用于展示新增、变更和复用筛选，不代表真实业务表。",
+      "ddl": "-- 请以当前项目审核后的真实迁移文件为准。",
+      "statusNote": "仅演示本阶段开发状态，迁移执行情况未验证"
+    }
+  ],
+  "architecture": [],
+  "configs": [
+    {
+      "id": "CFG-001",
+      "group": "本阶段执行项",
+      "title": "本阶段配置示意",
+      "kind": "文本示意",
+      "environment": "演示",
+      "status": "待核实",
+      "content": "demo.files.enabled=true\n",
+      "source": "examples/目录筛选/上线配置.txt",
+      "related": ["REQ-001"],
+      "statusNote": "人工确认后执行"
+    },
+    {
+      "id": "CFG-002",
+      "group": "本阶段执行项",
+      "title": "本阶段 SQL 示意",
+      "kind": "文本示意",
+      "environment": "演示",
+      "status": "待核实",
+      "content": "-- 仅为交互示意，非生产迁移\nCREATE TABLE demo_file (id BIGINT PRIMARY KEY);\n",
+      "source": "examples/目录筛选/最终SQL.sql",
+      "related": ["REQ-001"],
+      "statusNote": "人工确认后执行"
+    }
+  ],
+  "evidence": [],
+  "questions": [],
+  "existingInterfaces": [
+    {
+      "id": "API-BASELINE",
+      "group": "文件管理",
+      "name": "读取存量下载信息",
+      "method": "GET",
+      "path": "/api/demo/downloads/{id}",
+      "changeType": "存量接口复用",
+      "status": "待核实",
+      "summary": "仅用于展示目录交互，不调用真实后端。",
+      "request": [{"name":"page","location":"query","type":"integer","required":"否","description":"示意页码","example":1}],
+      "response": [{"name":"items","type":"array","required":"是","description":"示意结果","example":[]}],
+      "requestExample": {"page":1},
+      "responseExample": {"items":[]},
+      "developmentStatus": "未开发",
+      "baseline": "示意 master 快照",
+      "statusNote": "存量能力存在，本期接入与验证未开发"
+    }
+  ]
+}

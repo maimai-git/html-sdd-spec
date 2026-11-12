@@ -7,3 +7,8 @@ dist/
 .pytest_cache/
 .playwright-cli/
 .DS_Store
+output/playwright/
+
+# HTML SDD 本地证据材料
+/html-sdd-spec/**/证据索引/
+/html-sdd-spec/**/证据/

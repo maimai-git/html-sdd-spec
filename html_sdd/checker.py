@@ -5,6 +5,9 @@ import json
 import re
 from typing import Any, Iterable, Optional
 
+from .references import DefinitionError, validate_references
+from .statuses import registry, status_issues
+
 RECORD_SECTIONS = (
     "agents",
     "requirements",
@@ -39,10 +42,8 @@ SENSITIVE_PATTERNS = (
     re.compile(r"-----BEGIN [A-Z ]+PRIVATE KEY-----"),
     re.compile(r"(?i)\bjdbc:[^\s]+"),
 )
-PLAN_STATUSES = frozenset({
-    "待拆分", "待确认", "编码 READY", "待开始", "进行中", "待接入",
-    "待执行", "待复核", "待验收", "阻塞", "已完成", "已取消",
-})
+PLAN_STATUSES = frozenset(registry()['sections']['plans'])
+DEVELOPMENT_STATUSES = frozenset(registry()['sections']['developmentStatus'])
 RECORD_STATES = frozenset({
     "observed", "proposed", "pending", "in_progress", "verified", "blocked", "accepted", "cancelled",
 })
@@ -252,9 +253,18 @@ def _check_required_fields(spec: dict[str, Any]) -> list[Issue]:
 
 def _check_plan_statuses(spec: dict[str, Any]) -> list[Issue]:
     issues: list[Issue] = []
+    sequences: set[int] = set()
     for index, plan in enumerate(spec.get("plans", [])):
         if not isinstance(plan, dict):
             continue
+        if "sequence" in plan:
+            sequence = plan["sequence"]
+            if type(sequence) is not int or not 1 <= sequence <= 9007199254740991:
+                issues.append(Issue("error", "PLAN_SEQUENCE_INVALID", f"plans[{index}].sequence", "任务序号必须为 1 到 9007199254740991 之间的整数"))
+            elif sequence in sequences:
+                issues.append(Issue("error", "PLAN_SEQUENCE_DUPLICATE", f"plans[{index}].sequence", "任务序号必须在整份排期中唯一"))
+            else:
+                sequences.add(sequence)
         status = plan.get("status")
         if status not in PLAN_STATUSES:
             issues.append(
@@ -292,6 +302,12 @@ def _check_claims_and_links(spec: dict[str, Any]) -> list[Issue]:
             if not isinstance(record, dict):
                 continue
             base = f"{section}[{index}]"
+
+            if section == "configs" and "source" in record and not isinstance(record["source"], str):
+                issues.append(Issue("error", "CONFIG_SOURCE_INVALID", f"{base}.source", "配置执行源 source 必须为字符串路径；未知时省略"))
+
+            if section == "questions" and "requiresUserDecision" in record and not isinstance(record["requiresUserDecision"], bool):
+                issues.append(Issue("error", "QUESTION_DECISION_FLAG", f"{base}.requiresUserDecision", "requiresUserDecision 只能为 true 或 false；省略表示待分类"))
 
             if section == "evidence":
                 for field in ("locator", "capturedAt", "commit", "checkedBy", "confidence"):
@@ -676,11 +692,16 @@ def validate_spec(spec: dict[str, Any]) -> list[Issue]:
     issues: list[Issue] = []
     if not isinstance(spec, dict):
         return [Issue("error", "ROOT_SHAPE", "", "规范根节点必须是对象")]
+    try:
+        validate_references(spec)
+    except DefinitionError as exc:
+        issues.append(Issue("error", "DEFINITION_ERROR", exc.path, str(exc)))
     missing = sorted(REQUIRED_TOP_LEVEL - set(spec))
     for name in missing:
         issues.append(Issue("error", "TOP_LEVEL_MISSING", name, f"缺少顶层分类：{name}"))
     if spec.get("specVersion") != "0.1":
         issues.append(Issue("error", "SPEC_VERSION", "specVersion", "当前 CLI 只支持 specVersion 0.1"))
+    issues.extend(Issue(*item) for item in status_issues(spec))
     known_ids, id_issues = _record_ids(spec)
     issues.extend(id_issues)
     issues.extend(_check_required_fields(spec))
