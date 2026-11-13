@@ -11,6 +11,7 @@ from .renderer import render_spec
 from .diffing import diff_specs, format_changes
 from .scaffold import STANDARD_SDD_DIRECTORY, init_project
 from .context import ContextError, build_context, serialize_context
+from .summary import build_summary, format_summary
 from . import __version__
 
 
@@ -107,6 +108,9 @@ def build_parser() -> argparse.ArgumentParser:
     check = sub.add_parser("check", help="检查 JSON 规范")
     check.add_argument("path", type=Path)
     check.add_argument("--json", action="store_true", dest="as_json")
+    summary = sub.add_parser("summary", help="盘点整个需求的剩余任务、验收和发布缺口")
+    summary.add_argument("path", type=Path, help="方案事实源 JSON 文件")
+    summary.add_argument("--json", action="store_true", dest="as_json")
     context = sub.add_parser("context", help="按记录 ID 输出关联上下文")
     context.add_argument("path", type=Path, help="方案事实源 JSON 文件")
     context.add_argument("record_id", help="稳定记录 ID，例如 REQ-001")
@@ -151,6 +155,14 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv=None) -> int:
     args = build_parser().parse_args(argv)
+    if args.command == "summary":
+        try:
+            result = build_summary(load_spec(str(args.path)))
+        except (OSError, ValueError) as exc:
+            print(f"ERROR SUMMARY: {exc}", file=sys.stderr)
+            return 1
+        print(json.dumps(result, ensure_ascii=False, indent=2) if args.as_json else format_summary(result))
+        return 0
     if args.command == "statuses":
         from .statuses import registry
         data=registry()

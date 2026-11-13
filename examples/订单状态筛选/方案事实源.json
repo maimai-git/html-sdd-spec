@@ -1,0 +1,90 @@
+{
+  "specVersion": "0.1",
+  "metadata": {
+    "id": "PROJECT-ORDER-FILTER",
+    "title": "订单状态筛选",
+    "summary": "在订单列表中筛选待发货或已发货订单。",
+    "status": "验证中",
+    "statusPolicy": "strict",
+    "language": "zh-CN",
+    "updatedAt": "2026-11-13T14:00:00+08:00",
+    "readiness": {
+      "overall": "待验收",
+      "codingReady": true,
+      "blockingItems": []
+    },
+    "sectionCoverage": {
+      "tables": {"status": "not_applicable", "reason": "沿用订单表已有的状态字段。"},
+      "architecture": {"status": "not_applicable", "reason": "沿用订单列表的查询链路。"},
+      "configs": {"status": "not_applicable", "reason": "无新增配置。"}
+    }
+  },
+  "baseline": {
+    "repository": "order-demo（虚构）",
+    "branch": "main",
+    "commit": "未记录（演示）",
+    "inspectedAt": "2026-11-13 14:00",
+    "timezone": "Asia/Shanghai",
+    "worktreeState": "unknown",
+    "relevantDirtyPaths": []
+  },
+  "agents": [
+    {"id": "AGENT-OWNER", "name": "负责人 Agent", "role": "确认需求", "status": "已完成"},
+    {"id": "AGENT-REVIEWER", "name": "审核人 Agent", "role": "复核验收", "status": "待开始"},
+    {"id": "AGENT-EXECUTOR", "name": "执行人 Agent", "role": "开发和验证", "status": "进行中"}
+  ],
+  "requirements": [
+    {
+      "id": "REQ-001",
+      "group": "订单查询",
+      "title": "按状态筛选订单",
+      "summary": "运营可以在订单列表中只查看待发货或已发货订单。",
+      "scope": "增加可选状态参数，省略时保持原列表行为。",
+      "outOfScope": ["批量导出。"],
+      "status": "待验收",
+      "acceptance": [
+        {"id": "AC-001", "text": "省略状态参数时，列表仍返回原有结果。", "status": "已通过", "evidence": "EVID-001"},
+        {"id": "AC-002", "text": "测试环境传入待发货状态时，只返回待发货订单。", "status": "待验收"}
+      ],
+      "related": ["PLAN-001", "PLAN-002", "API-001"]
+    }
+  ],
+  "plans": [
+    {
+      "id": "PLAN-001", "sequence": 1, "priority": "P0", "module": "订单查询",
+      "requirementIds": ["REQ-001"], "main": "支持订单状态筛选", "sub": "扩展查询参数，保留旧调用行为。",
+      "owner": "AGENT-OWNER", "reviewer": "AGENT-REVIEWER", "executor": "AGENT-EXECUTOR",
+      "status": "已完成", "progress": "示例中代码和本地回归已完成。"
+    },
+    {
+      "id": "PLAN-002", "sequence": 2, "priority": "P0", "module": "订单查询",
+      "requirementIds": ["REQ-001"], "main": "验证测试环境", "sub": "部署后用两种状态的订单验证筛选。",
+      "owner": "AGENT-OWNER", "reviewer": "AGENT-REVIEWER", "executor": "AGENT-EXECUTOR",
+      "status": "待验收", "progress": "下一步在测试环境部署后验证待发货查询。", "deps": ["PLAN-001"]
+    }
+  ],
+  "apis": [
+    {
+      "id": "API-001", "group": "订单查询", "name": "查询订单列表",
+      "method": "GET", "path": "/api/orders", "changeType": "存量接口变更",
+      "summary": "支持按状态筛选订单，省略时返回全部状态。",
+      "developmentStatus": "已完成", "status": "待部署", "statusNote": "等待部署到测试环境。",
+      "request": [
+        {"field": "status", "location": "query", "type": "string", "required": "否", "description": "PENDING 待发货，SHIPPED 已发货。", "example": "PENDING"}
+      ],
+      "response": [
+        {"field": "items", "type": "array", "required": "是", "description": "符合条件的订单列表。", "example": [{"id": 42, "status": "PENDING"}]}
+      ],
+      "requestExample": {"status": "PENDING"},
+      "responseExample": {"items": [{"id": 42, "status": "PENDING"}]},
+      "related": ["REQ-001"]
+    }
+  ],
+  "tables": [],
+  "architecture": [],
+  "configs": [],
+  "questions": [],
+  "evidence": [
+    {"id": "EVID-001", "kind": "test", "label": "本地兼容性回归（演示）", "source": "演示记录：不传状态时返回待发货和已发货订单。", "status": "已验证"}
+  ]
+}
