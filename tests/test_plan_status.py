@@ -26,7 +26,7 @@ class PlanStatusTest(unittest.TestCase):
 
     def test_schedule_template_has_note_column_and_status_renderer(self):
         html = TEMPLATE.read_text(encoding="utf-8")
-        self.assertIn("<th>备注</th>", html)
+        self.assertIn("<th>进展与备注</th>", html)
         self.assertIn("planStatus(p.status)", html)
         self.assertIn("planStatusClass", html)
 

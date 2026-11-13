@@ -23,7 +23,9 @@ class ScaffoldTest(unittest.TestCase):
             self.assertTrue((target / "方案对齐.html").exists())
             spec = json.loads((target / "方案事实源.json").read_text())
             self.assertEqual("0.1", spec["specVersion"])
-            self.assertIn("上线需要配置", (target / "方案对齐.html").read_text())
+            html = (target / "方案对齐.html").read_text(encoding="utf-8")
+            self.assertIn("上线配置", html)
+            self.assertIn("vue.global.prod.js", html)
 
 
 if __name__ == "__main__":

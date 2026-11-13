@@ -551,6 +551,14 @@
             "scope": {
               "type": "string"
             },
+            "outOfScope": {
+              "description": "本期明确排除或沿用现状的事项，每项一条。",
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "\\S"
+              }
+            },
             "status": {
               "type": "string"
             },

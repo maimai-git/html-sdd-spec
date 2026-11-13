@@ -93,12 +93,16 @@ def context_command(
     return 0
 
 
-def _template_path() -> Path:
+DEFAULT_TEMPLATE = "vue"
+
+
+def _template_path(template: str) -> Path:
     """Return the bundled template, with a source-tree fallback for development."""
-    bundled = Path(__file__).resolve().parent / "assets" / "console.html"
+    filename = "console-vue.html" if template == "vue" else "console.html"
+    bundled = Path(__file__).resolve().parent / "assets" / filename
     if bundled.exists():
         return bundled
-    return Path(__file__).resolve().parents[1] / "templates" / "console.html"
+    return Path(__file__).resolve().parents[1] / "templates" / filename
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -138,6 +142,10 @@ def build_parser() -> argparse.ArgumentParser:
     render = sub.add_parser("render", help="生成单文件 HTML（Mermaid 图表按需使用 CDN）")
     render.add_argument("path", type=Path)
     render.add_argument("--output", type=Path, required=True)
+    render.add_argument(
+        "--template", choices=("classic", "vue"), default=DEFAULT_TEMPLATE,
+        help="页面模板，默认 vue（从 CDN 加载 Vue）；可选 classic",
+    )
     diff = sub.add_parser("diff", help="比较两个 JSON 规范")
     diff.add_argument("before", type=Path)
     diff.add_argument("after", type=Path)
@@ -220,7 +228,7 @@ def main(argv=None) -> int:
     if args.command == "render":
         try:
             spec = load_spec(str(args.path))
-            html = render_spec(spec, _template_path())
+            html = render_spec(spec, _template_path(args.template))
             args.output.parent.mkdir(parents=True, exist_ok=True)
             args.output.write_text(html, encoding="utf-8")
             print(f"OK {args.output}")
@@ -243,7 +251,7 @@ def main(argv=None) -> int:
             return 1
     if args.command == "init":
         try:
-            init_project(args.directory, _template_path())
+            init_project(args.directory, _template_path(DEFAULT_TEMPLATE))
             print(f"OK {args.directory}")
             return 0
         except (OSError, ValueError) as exc:

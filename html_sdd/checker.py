@@ -42,6 +42,15 @@ SENSITIVE_PATTERNS = (
     re.compile(r"-----BEGIN [A-Z ]+PRIVATE KEY-----"),
     re.compile(r"(?i)\bjdbc:[^\s]+"),
 )
+REMOTE_URL_PATTERN = re.compile(r"\b(?:https?|ssh|git)://[^\s<>'\"，；、。]+", re.I)
+LOCAL_MACHINE_PATH_PATTERN = re.compile(
+    r"(?<![\w./\\-])(?:"
+    r"file://|[A-Z]:[\\/]|\\\\[^\\/\s]+\\|~/|"
+    r"/(?:Users|home|tmp|private|Volumes|var/(?:tmp|folders|log))/|"
+    r"/root/[^/\s，；、。]+(?:/|\.[A-Z0-9])"
+    r")",
+    re.I | re.ASCII,
+)
 PLAN_STATUSES = frozenset(registry()['sections']['plans'])
 DEVELOPMENT_STATUSES = frozenset(registry()['sections']['developmentStatus'])
 RECORD_STATES = frozenset({
@@ -245,6 +254,15 @@ def _check_required_fields(spec: dict[str, Any]) -> list[Issue]:
         for index, record in enumerate(records):
             if not isinstance(record, dict):
                 continue
+            if section == "requirements" and "outOfScope" in record:
+                exclusions = record["outOfScope"]
+                if not isinstance(exclusions, list) or any(
+                    not isinstance(item, str) or not item.strip() for item in exclusions
+                ):
+                    issues.append(Issue(
+                        "error", "OUT_OF_SCOPE_INVALID", f"{section}[{index}].outOfScope",
+                        "非范围必须为非空字符串组成的数组，可省略或留空",
+                    ))
             for field in required:
                 if field not in record or record[field] in (None, "", []):
                     issues.append(Issue("error", "FIELD_MISSING", f"{section}[{index}].{field}", f"缺少必填字段：{field}"))
@@ -693,6 +711,17 @@ def _check_sensitive(spec: dict[str, Any]) -> list[Issue]:
     return issues
 
 
+def _check_local_machine_paths(spec: dict[str, Any]) -> list[Issue]:
+    issues: list[Issue] = []
+    for path, value in _walk_strings(spec):
+        if LOCAL_MACHINE_PATH_PATTERN.search(REMOTE_URL_PATTERN.sub("", value)):
+            issues.append(Issue(
+                "warning", "LOCAL_MACHINE_PATH", path,
+                "发现本机路径。仓内文件请用仓库根目录相对路径，外部资料请用共享链接，本机材料请标注本机留存。",
+            ))
+    return issues
+
+
 def validate_spec(spec: dict[str, Any]) -> list[Issue]:
     issues: list[Issue] = []
     if not isinstance(spec, dict):
@@ -716,6 +745,7 @@ def validate_spec(spec: dict[str, Any]) -> list[Issue]:
     issues.extend(_check_integrity(spec))
     issues.extend(_check_ready_gate(spec))
     issues.extend(_check_sensitive(spec))
+    issues.extend(_check_local_machine_paths(spec))
     return issues
 
 

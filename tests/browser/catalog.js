@@ -70,9 +70,15 @@ async page => {
   await tab('上线需要配置');verify(!(await page.locator('body').innerText()).includes('只展示需要填写或执行的文本'),'指定提示仍存在');verify((await page.locator('#detail').innerText()).includes('执行来源'),'配置执行源未展示');
   await tab('排期');verify(!(await page.locator('#sidebar').isVisible()),'排期仍有左菜单');await page.getByRole('button',{name:'详情',exact:true}).first().click();verify(await page.locator('.plan-details-row').first().isVisible(),'排期详情失效');
   await page.goto(new URL('../asset-library/index.html',demoUrl).href);await tab('接口');
-  verify(await page.locator('#catalog .catalog-status').evaluateAll(nodes=>nodes.every(e=>e.textContent==='待核实')),'历史快照被猜成开发完成');
-  await page.getByLabel('本期开发状态',{exact:true}).selectOption('已完成');verify((await page.locator('#detail').innerText())==='没有匹配条目','旧数据被错误纳入已完成');
-  await page.getByRole('button',{name:'恢复全部',exact:true}).click();verify(await page.locator('#catalog [data-record]').count()===await page.evaluate(()=>window.__HTML_SDD__.apis.length),'旧数据恢复后丢失');
+  const assetCatalog=page.locator('aside [data-record]');
+  const assetSource=await page.locator('#html-sdd-spec').evaluate(node=>JSON.parse(node.textContent));
+  verify(await assetCatalog.count()===assetSource.apis.length,'旧数据条目丢失');
+  verify(await assetCatalog.locator('.tags .badge:last-child').evaluateAll(nodes=>nodes.every(node=>node.textContent==='待核实')),'历史快照被猜成开发完成');
+  const assetStatus=page.getByLabel('本期开发状态',{exact:true});
+  await assetStatus.selectOption('已完成');
+  verify(await assetCatalog.count()===0,'旧数据被错误纳入已完成');
+  await assetStatus.selectOption('');
+  verify(await assetCatalog.count()===assetSource.apis.length,'旧数据恢复后丢失');
   await page.goto(demoUrl);await tab('接口');
   verify(errors.length===0,'页面错误 '+errors.join(';'));
   return {checks,metrics,nativeFind:find.id,offline:new URL(demoUrl).protocol==="file:",errors};

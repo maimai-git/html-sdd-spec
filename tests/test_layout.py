@@ -32,16 +32,16 @@ class StandardLayoutTest(unittest.TestCase):
             self.assertFalse((target / "sdd.json").exists())
             self.assertFalse((target / "rendered" / "index.html").exists())
 
-    def test_local_evidence_is_ignored_without_hiding_spec_or_html(self):
+    def test_local_archives_are_ignored_without_hiding_shared_files(self):
         with tempfile.TemporaryDirectory() as tmp:
             project = Path(tmp)
             subprocess.run(["git", "init", "-q", str(project)], check=True)
             target = project / "需求"
             subprocess.run([sys.executable, "-m", "html_sdd", "init", str(target)], cwd=ROOT, check=True, capture_output=True)
-            for name in ("证据索引/回执.json", "证据/截图.png"):
+            for name in ("变更记录/说明.md", "证据索引/回执.json", "证据/截图.png"):
                 result = subprocess.run(["git", "check-ignore", "-q", "需求/" + name], cwd=project)
                 self.assertEqual(0, result.returncode)
-            for name in ("方案事实源.json", "方案对齐.html"):
+            for name in ("方案事实源.json", "方案对齐.html", "使用说明.md", ".gitignore"):
                 result = subprocess.run(["git", "check-ignore", "-q", "需求/" + name], cwd=project)
                 self.assertEqual(1, result.returncode)
 

@@ -14,6 +14,16 @@ class CheckerTest(unittest.TestCase):
         issues = validate_spec(EXAMPLE)
         self.assertEqual([], [i for i in issues if i.level == "error"], issues)
 
+    def test_out_of_scope_accepts_only_a_list_of_nonblank_strings(self):
+        for value in ([], ["批量 ZIP 由前端处理"], "单条文本", ["  "], [False], None):
+            with self.subTest(value=value):
+                spec = copy.deepcopy(EXAMPLE)
+                spec["requirements"][0]["outOfScope"] = value
+                invalid = any(
+                    issue.code == "OUT_OF_SCOPE_INVALID" for issue in validate_spec(spec)
+                )
+                self.assertEqual(value not in ([], ["批量 ZIP 由前端处理"]), invalid)
+
     def test_missing_related_id_is_reported(self):
         spec = copy.deepcopy(EXAMPLE)
         spec["requirements"][0]["related"].append("API-NOT-FOUND")
@@ -29,6 +39,22 @@ class CheckerTest(unittest.TestCase):
         issues = validate_spec(spec)
         codes = {i.code for i in issues}
         self.assertIn("READY_INCOMPLETE", codes)
+
+    def test_machine_path_warning_uses_field_locations_without_path_values(self):
+        spec = copy.deepcopy(EXAMPLE)
+        spec["baseline"]["repository"] = "/Users/example/project"
+        spec["baseline"]["productSource"] = "file:///home/example/requirements.md"
+        spec["evidence"][0]["source"] = r"本机日志 C:\Users\example\run.log"
+        spec["evidence"][1]["content"] = "报告：/private/tmp/results.json"
+        spec["apis"][0]["path"] = "/api/library/folders"
+        spec["evidence"][2]["source"] = "https://docs.example.com/tmp/results.json"
+        spec["evidence"][3]["source"] = "docs/requirements.md；审核任务 /root/reviewer"
+        issues = [issue for issue in validate_spec(spec) if issue.code == "LOCAL_MACHINE_PATH"]
+        self.assertEqual(
+            {"baseline.repository", "baseline.productSource", "evidence[0].source", "evidence[1].content"},
+            {issue.path for issue in issues},
+        )
+        self.assertTrue(all(issue.level == "warning" and "example" not in issue.message for issue in issues))
 
     def test_sensitive_value_is_rejected(self):
         spec = copy.deepcopy(EXAMPLE)

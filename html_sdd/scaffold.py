@@ -85,14 +85,20 @@ def init_project(target: Path, template_path: Path) -> None:
         f"编辑 `{SOURCE_FILE_NAME}`，然后运行：\n\n"
         f"html-sdd check '{SOURCE_FILE_NAME}'\n"
         f"html-sdd render '{SOURCE_FILE_NAME}' --output '{HTML_FILE_NAME}'\n\n"
-        "一个开发过程使用一个目录；多个子需求登记在同一份事实源中。这份 JSON 是唯一事实源，HTML 由它生成，不要直接修改 HTML。证据材料默认不创建；按需放入本地证据/或证据索引/，已由 .gitignore 排除。JSON 只保留简短结果和引用，避免依赖他人无法访问的本地文件。\n",
+        "一个开发过程使用一个目录；多个子需求登记在同一份事实源中。这份 JSON 是唯一事实源，HTML 由它生成，不要直接修改 HTML。变更记录/、证据索引/、证据/ 用于本地归档，已由 .gitignore 排除。JSON 保留当前结论、简短验收结果和可访问的引用。\n",
         encoding="utf-8",
     )
     (target / HTML_FILE_NAME).write_text(render_spec(spec, template_path), encoding="utf-8")
     (target / CHANGELOG_DIRECTORY_NAME / "说明.md").write_text(
-        "# 变更记录\n\n记录重大方案、接口、数据表、配置和排期变化；同步更新方案事实源后再重新渲染 HTML。\n",
+        "# 本地变更记录\n\n"
+        "每条只记一件影响交付的事。先写结论，再用短句说明原因、影响和验证。"
+        "需要追溯时附记录编号或提交。\n\n"
+        "## YYYY-MM-DD｜一句话说明改动\n\n"
+        "- 原因：为什么要改。\n"
+        "- 影响：涉及哪些需求、接口或任务。\n"
+        "- 验证：在哪个环境核对了什么，结果如何。缺证据时写待核实。\n",
         encoding="utf-8",
     )
     (target / ".gitignore").write_text(
-        "# 本地证据材料按需创建，不提交到 Git\n/证据索引/\n/证据/\n", encoding="utf-8"
+        "# 本地变更记录与证据归档\n/变更记录/\n/证据索引/\n/证据/\n", encoding="utf-8"
     )

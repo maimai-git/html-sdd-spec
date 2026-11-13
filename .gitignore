@@ -10,5 +10,6 @@ dist/
 output/playwright/
 
 # HTML SDD 本地证据材料
+/html-sdd-spec/**/变更记录/
 /html-sdd-spec/**/证据索引/
 /html-sdd-spec/**/证据/

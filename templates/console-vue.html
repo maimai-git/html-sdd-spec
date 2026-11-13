@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>__HTML_SDD_DOCUMENT_TITLE__</title>
+<style>
+:root{font:16px/1.55 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:#172739;background:#f5f7fa;--line:#d8e0eb;--navy:#244779;--muted:#536579;--pale:#eef3f9}
+*{box-sizing:border-box}body{margin:0}button,select,input{font:inherit}button{color:inherit;cursor:pointer}button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #2465b2;outline-offset:2px}
+header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:1}.top{display:flex;align-items:center;gap:14px;padding:13px 24px}.brand{font-weight:760;color:var(--navy);white-space:nowrap}.project{flex:1;color:var(--muted)}nav{display:flex;gap:7px;padding:0 24px;overflow:auto}nav button{background:none;border:0;border-bottom:3px solid transparent;padding:9px 12px;white-space:nowrap}nav button.active{color:var(--navy);font-weight:700;border-color:var(--navy)}
+.layout{display:grid;grid-template-columns:292px minmax(0,1fr);min-height:calc(100vh - 102px)}aside{position:sticky;top:102px;align-self:start;max-height:calc(100vh - 102px);overflow:auto;padding:15px 12px;background:#f9fbfd;border-right:1px solid var(--line)}.tools{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-bottom:15px}.tools select,.tools input:not([type=checkbox]){border:1px solid var(--line);border-radius:6px;background:white;color:inherit;padding:5px 8px}.search{width:100%;margin-bottom:8px;border:1px solid var(--line);border-radius:6px;background:#fff;padding:6px 8px}.catalog-tools{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px}.catalog-tools select{min-width:0;width:100%;font-size:13px}.catalog-tools .verification{grid-column:1/-1}.muted,small{color:var(--muted);font-size:13px}.group{margin:15px 6px 6px;font-weight:730;color:#294668}.record{display:block;text-align:left;width:100%;border:1px solid transparent;border-radius:6px;padding:7px 8px;background:none}.record.active{background:#e6eefb;border-color:#c5d7ef}.record:hover{background:var(--pale)}.path{display:block;font:13px ui-monospace,monospace;overflow-wrap:anywhere;color:var(--muted);margin-top:3px}.tags{display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-top:4px}.badge{display:inline-block;padding:1px 7px;border-radius:5px;font-size:12px;font-weight:650;background:var(--pale);white-space:nowrap}
+main{padding:20px 24px;min-width:0}.surface{background:#fff;border:1px solid var(--line);border-radius:9px;padding:20px 23px}.head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:15px}.head h1,h1{font-size:24px;line-height:1.3;margin:0 0 5px}h2{font-size:16px;margin:0 0 6px}p{margin:0 0 12px}.block{margin-top:17px}.block p{white-space:pre-wrap;overflow-wrap:anywhere}.twocol{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.scroll{overflow:auto;border:1px solid var(--line);border-radius:7px}table{width:100%;border-collapse:collapse;text-align:left;font-size:14px}th,td{padding:8px 9px;vertical-align:top;border-bottom:1px solid var(--line);overflow-wrap:anywhere}th{background:var(--pale);white-space:nowrap}tr:last-child td{border-bottom:0}.plan table{min-width:1060px}.note{max-width:430px}.clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.link{background:none;border:0;padding:0;text-align:left;color:var(--navy);text-decoration:underline;text-underline-offset:3px}.plan .link{text-decoration:none}.plan .link:hover{color:#172739}.grouphead td{padding:6px 9px;background:#e9eff7;color:var(--navy);font-weight:700}.plan-expanded td{background:#f6f9fd;padding:12px 16px}.plan-expanded b{color:var(--navy)}
+pre{margin:0;overflow:auto;max-height:560px;padding:13px 15px;border-radius:6px;background:#152131;color:#f0f5fb;font:13px/1.55 ui-monospace,monospace}.diagram{overflow:auto;padding:10px;border:1px solid var(--line);border-radius:6px;text-align:center}.diagram svg,.diagram img{max-width:100%;height:auto}summary{cursor:pointer;color:var(--navy);font-weight:650;margin-bottom:8px}.facts{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:6px 14px;margin:0;font-size:14px}.facts dt{font-weight:700}.api-rules{margin:0;padding-left:1.2em;overflow-wrap:anywhere}.api-rules li+li{margin-top:4px}.api-summary{white-space:pre-wrap;overflow-wrap:anywhere}.facts dd{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}.overview{margin-bottom:12px}.overview details{background:#fff;border:1px solid var(--line);border-radius:6px;padding:7px 11px}.empty{color:var(--muted);padding:24px}.related{display:flex;flex-wrap:wrap;gap:5px 13px}
+@media(max-width:900px){.layout{grid-template-columns:230px minmax(0,1fr)}.twocol{grid-template-columns:1fr}main{padding:14px}.head{display:block}}
+.record.compact-record{padding:3px 8px}
+.compact-record .record-name{display:block;font-size:13px;line-height:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.compact-record .path{margin-top:2px;font-size:11px;line-height:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;user-select:text}
+.compact-record .tags{margin-top:2px;gap:3px}
+.compact-record .badge{padding:0 4px;font-size:11px;line-height:16px}
+
+.param-scroll{max-width:100%;overflow-x:auto}
+.param-scroll table{min-width:540px}
+.param-scroll.request-params table{min-width:620px}
+/* Keep identifiers readable while leaving prose columns free to wrap. */
+.param-scroll td:first-child,.param-scroll td:nth-child(2),.param-scroll.request-params td:nth-child(3){white-space:nowrap;overflow-wrap:normal;word-break:normal}
+.param-scroll td:nth-last-child(2){min-width:15rem}
+.param-scroll td:last-child{min-width:6rem}
+@media print{
+ .param-scroll td:first-child,.param-scroll td:nth-child(2),.param-scroll.request-params td:nth-child(3){white-space:normal;overflow-wrap:anywhere}
+ .param-scroll td:nth-last-child(2),.param-scroll td:last-child{min-width:0}
+}
+.param-scroll:focus-visible{outline:2px solid #2465b2;outline-offset:2px}
+@media print{.param-scroll table,.param-scroll.request-params table{min-width:0}}
+</style>
+<script defer src="https://cdn.jsdelivr.net/npm/vue@3.5.24/dist/vue.global.prod.js"></script>
+</head>
+<body>
+<div id="app">正在加载方案页面…</div>
+<template id="console-view">
+<header>
+ <div class="top"><span class="brand">HTML SDD Spec</span><span class="project">{{ spec.metadata.title }}</span><span class="badge" :style="tone(spec.metadata.status)">{{ spec.metadata.status }}</span></div>
+ <nav aria-label="方案分类"><button v-for="tab in tabs" :key="tab[0]" :class="{active:mode===tab[0]}" :data-mode="tab[0]" :aria-current="mode===tab[0]?'page':null" @click="selectMode(tab[0])">{{ tab[1] }}</button></nav>
+</header>
+<div :class="{layout:mode!=='plans'}">
+ <aside v-if="mode!=='plans'">
+  <input class="search" type="search" v-model="filters[mode].query" placeholder="筛选名称、路径或编号" aria-label="筛选目录">
+  <div class="tools catalog-tools" v-if="catalogFilter">
+   <select v-model="filters[mode].change" aria-label="变更类型"><option value="">全部变更</option><option v-for="kind in changes" :key="kind">{{ kind }}</option></select>
+   <select v-model="filters[mode].status" aria-label="本期开发状态">
+    <option value="">全部开发状态</option>
+    <option v-for="status in developmentFilters" :key="status">{{ status }}</option>
+   </select>
+  </div>
+  <div class="tools catalog-tools" v-else-if="mode==='existingInterfaces'">
+   <select class="verification" v-model="filters[mode].status" aria-label="现有接口核实状态"><option value="">全部核实状态</option><option v-for="status in verificationStatuses" :key="status">{{ status }}</option></select>
+  </div>
+  <small>{{ visible.length }} / {{ records.length }} 项</small>
+  <section v-for="[group, entries] in catalog" :key="group">
+   <div class="group">{{ group }}</div>
+   <button v-for="item in entries" :key="item.id" class="record" :class="{active:record?.id===item.id,'compact-record':isApi||mode==='tables'}" :data-record="item.id" @click="selected=item.id">
+    <span class="record-name" :title="label(item)">{{ label(item) }}</span><span class="path" v-if="item.path" :title="item.path">{{ item.path }}</span>
+    <span class="tags"><span v-if="item.method" class="badge">{{ item.method }}</span><span v-if="item.changeType" class="badge">{{ item.changeType }}</span><span class="badge" :style="tone(itemStatus(item))">{{ itemStatus(item) }}</span></span>
+   </button>
+  </section>
+ </aside>
+ <main>
+  <div v-if="mode==='requirements'" class="overview tools">
+   <details><summary>版本信息</summary><dl class="facts"><template v-for="[key,value] in Object.entries(spec.baseline||{})" :key="key"><dt>{{ caption(key) }}</dt><dd>{{ readable(value) }}</dd></template></dl></details>
+   <details v-if="readiness"><summary>编码条件 · {{ readiness.codingReady ? '可开始' : '待确认' }}</summary><p v-for="line in readiness.exitCriteria" :key="line">{{ line }}</p><small>{{ readable(readiness.blockingItems) }}</small></details>
+   <details v-if="spec.questions?.length"><summary>待确认事项 · {{ spec.questions.length }}</summary><p v-for="item in spec.questions" :key="item.id">{{ item.question }} <small>{{ item.status }}</small></p></details>
+  </div>
+  <section v-if="mode==='plans'" class="plan surface">
+   <h1>需求排期</h1>
+   <div class="tools"><select v-model="planStatus" aria-label="排期状态"><option value="">全部状态</option><option v-for="status in registry.sections.plans" :key="status">{{ status }}</option></select><select v-model="sort" aria-label="排期排序"><option value="priority">优先级从高到低</option><option value="reverse">优先级从低到高</option><option value="sequence">按序号</option></select><label><input type="checkbox" v-model="groupPlans"> 按模块分组</label><small>{{ planRows.length }} / {{ records.length }} 项</small></div>
+   <div class="scroll"><table><thead><tr><th v-for="column in planColumns" :key="column">{{ column }}</th></tr></thead>
+    <tbody v-for="[group,entries] in schedule" :key="group">
+     <tr v-if="groupPlans" class="grouphead"><td :colspan="planColumns.length">{{ group }}</td></tr>
+     <template v-for="task in entries" :key="task.id">
+      <tr :data-plan="task.id"><td>{{ task.sequence }}</td><td><b>{{ task.priority }}</b></td><td><button class="link" :aria-expanded="openTask===task.id" @click="openTask=openTask===task.id?'':task.id">{{ task.main }}</button><small v-if="!groupPlans"> · {{ task.module }}</small></td><td><div v-for="id in task.requirementIds" :key="id"><button class="link" @click="jump(id)">{{ nameFor(id) }}</button></div></td><td>{{ agentNames(task.executor,task.executorIds) }}</td><td><span class="badge" :style="tone(task.status)">{{ task.status }}</span></td><td class="note"><div class="clamp" :title="taskNote(task)">{{ taskNote(task) }}</div></td></tr>
+      <tr class="plan-expanded" v-if="openTask===task.id"><td :colspan="planColumns.length"><dl class="facts"><template v-for="[key,value] in planDetails(task)" :key="key"><dt>{{ caption(key) }}</dt><dd>{{ readable(value) }}</dd></template></dl><related-records :record="task" @jump="jump"></related-records></td></tr>
+     </template>
+    </tbody>
+   </table><p v-if="!planRows.length" class="empty">没有符合条件的任务</p></div>
+  </section>
+  <article class="surface" v-else-if="record" :key="record.id">
+   <div class="head"><div><h1>{{ label(record) }}</h1><small>{{ record.id }}</small><span v-if="record.path" class="path">{{ record.method }} {{ record.path }}</span></div><div class="tags"><span v-if="record.changeType" class="badge">{{ record.changeType }}</span><span v-if="catalogFilter" class="badge" :style="tone(itemStatus(record))">本期开发 · {{ itemStatus(record) }}</span>
+    <span class="badge" :style="tone(recordStatus(record))">{{ isApi || mode==='tables' ? '部署/验证 · ' : '' }}{{ recordStatus(record) }}</span></div></div>
+   <p v-if="isApi && record.summary && record.summary.trim()!==label(record)" class="api-summary">{{ record.summary }}</p>
+   <p v-if="!isApi && statusNote(record)" class="muted">{{ statusNote(record) }}</p>
+   <div v-if="isApi" class="twocol">
+    <section class="block" v-for="[slot,title] in [['request','请求参数'],['response','返回参数']]" :key="slot">
+     <h2>{{ title }}</h2><div class="scroll param-scroll" :class="{'request-params':slot==='request'}" tabindex="0" role="region" :aria-label="title"><table><thead><tr><th v-for="key in columns(slot)" :key="key">{{ caption(key) }}</th></tr></thead><tbody><tr v-for="(field,i) in fields(record[slot])" :key="i"><td v-for="key in columns(slot)" :key="key">{{ fieldText(field,key) }}</td></tr><tr v-if="!fields(record[slot]).length"><td :colspan="columns(slot).length">无</td></tr></tbody></table></div>
+    </section>
+   </div>
+   <div v-if="isApi" class="twocol">
+    <details open class="block" v-for="[slot,title] in [['requestExample','请求示例'],['responseExample','响应示例']]" :key="slot"><summary>{{ title }}</summary><pre>{{ readable(record[slot]) }}</pre></details>
+   </div>
+   <section v-for="[key,value] in primary" :key="key" class="block"><h2>{{ caption(key) }}</h2><pre v-if="['ddl','content'].includes(key)">{{ readable(value) }}</pre><ol v-else-if="Array.isArray(value)"><li v-for="(line,i) in value" :key="i">{{ readable(line) }}</li></ol><p v-else>{{ readable(value) }}</p></section>
+   <section v-if="record.type==='diagram' && (record.diagramSource || record.diagramSvg || record.fallback)" class="block">
+    <h2>{{ diagramLabel(record) }}</h2>
+    <pre v-if="diagramEngine(record)==='text'">{{ record.diagramSource || record.fallback }}</pre>
+    <div v-else-if="record.diagramSvg && diagramEngine(record)!=='mermaid'" class="diagram">
+     <img :src="svgImage(record.diagramSvg)" :alt="record.title">
+    </div>
+    <template v-else>
+     <div v-if="diagramReady" ref="diagramNode" class="diagram"></div>
+     <details v-if="record.diagramSource" :open="!diagramReady"><summary>图源</summary><pre>{{ record.diagramSource }}</pre></details>
+     <p v-if="record.fallback">{{ record.fallback }}</p>
+    </template>
+   </section>
+   <section v-if="record.acceptance?.length" class="block"><h2>验收标准</h2><div class="scroll"><table><thead><tr><th>标准</th><th>状态</th><th>证据</th></tr></thead><tbody><tr v-for="item in record.acceptance" :key="item.id"><td>{{ item.text }}</td><td><span class="badge" :style="tone(item.status)">{{ item.status }}</span></td><td>{{ readable(item.evidence) }}</td></tr></tbody></table></div></section>
+   <details v-if="apiRules.length" class="block">
+    <summary>调用规则（{{ apiRules.length }}）</summary>
+    <ul class="api-rules"><li v-for="(rule,i) in apiRules" :key="i">{{ rule }}</li></ul>
+   </details>
+   <details v-if="!isApi && more.length" class="block"><summary>更多信息</summary><dl class="facts"><template v-for="[key,value] in more" :key="key"><dt>{{ caption(key) }}</dt><dd>{{ readable(value) }}</dd></template></dl></details>
+   <related-records :record="record" @jump="jump"></related-records>
+  </article>
+  <p v-else class="empty">{{ records.length ? '没有符合条件的条目' : (spec.metadata.sectionCoverage?.[mode]?.reason || '本次未涉及') }}</p>
+ </main>
+</div>
+</template>
+<template id="related-records-view">
+ <details v-if="ids.length" class="block related-disclosure">
+  <summary>关联记录（{{ ids.length }}）</summary>
+  <div class="related">
+   <template v-for="id in ids" :key="id">
+    <button v-if="byId.has(id)" class="link" @click="$emit('jump',id)">{{ id }}</button>
+    <small v-else>{{ id }}</small>
+   </template>
+  </div>
+ </details>
+</template>
+<script id="html-sdd-spec" type="application/json">__HTML_SDD_SPEC_JSON__</script>
+<script>
+window.addEventListener('DOMContentLoaded',()=>{
+ if(!window.Vue){document.getElementById('app').textContent='Vue 加载失败，请检查网络后刷新页面。';return}
+ const {createApp,ref,reactive,computed,watch,nextTick}=Vue;
+ const spec=JSON.parse(document.getElementById('html-sdd-spec').textContent);
+ const registry=__HTML_SDD_STATUSES__;
+ const tabs=[['requirements','需求'],['plans','排期'],['apis','接口'],['existingInterfaces','现有接口'],['tables','数据表'],['architecture','架构设计'],['configs','上线配置']];
+ const labels={name:'字段',location:'位置',type:'类型',required:'必填',description:'说明',example:'示例',summary:'概述',scope:'范围',outOfScope:'非范围',current:'当前情况',conclusion:'方案',steps:'主要做法',impact:'涉及内容',risks:'注意事项',rules:'规则',ddl:'DDL',content:'配置内容',statusNote:'状态说明',repository:'仓库',branch:'分支',commit:'提交',inspectedAt:'检查时间',timezone:'时区',worktreeState:'工作区',relevantDirtyPaths:'相关改动',sub:'子任务',start:'计划开始',end:'预计完成',owner:'负责人',reviewer:'审核人',executor:'执行人',batch:'批次',effort:'预估',deps:'依赖',progress:'进展',note:'备注',blocker:'阻塞原因',acceptanceCriteria:'验收标准',verification:'验证结果',ownerPaths:'文件范围',environment:'环境',kind:'类别',purpose:'用途',difference:'差异',evidence:'证据',notes:'补充说明',fallback:'文字说明',diagramType:'图类型',diagramEngine:'渲染方式'};
+ const primaryKeys={requirements:['summary','scope','outOfScope'],tables:['ddl'],architecture:['summary','conclusion','current','steps','impact','risks'],configs:['content']};
+ const omitted=['id','group','title','name','displayName','status','statusNote','developmentStatus','changeType','path','method','request','response','requestExample','responseExample','acceptance','related','links','diagramSource','diagramSvg'];
+ const planOmit=['id','sequence','priority','module','main','requirementIds','status','progress','note','blocker','statusNote','related','links'];
+ const agentMap=new Map((spec.agents||[]).map(agent=>[agent.id,agent.name]));
+ const byId=new Map(tabs.flatMap(([mode])=>(spec[mode]||[]).map(item=>[item.id,{mode,item}])));
+ const label=item=>item.title||(item.displayName?`${item.name}（${item.displayName}）`:item.name)||item.main||item.id;
+ const caption=key=>labels[key]||key;
+ const readable=value=>value==null?'—':typeof value==='string'?value:typeof value==='object'?JSON.stringify(value,null,2):String(value);
+ const tone=status=>registry.tones[registry.statuses[status]||'neutral'];
+ const present=value=>value!=null&&value!==''&&(!Array.isArray(value)||value.length>0);
+ const extra=(item,omit)=>Object.entries(item).filter(([key,value])=>!omit.includes(key)&&present(value));
+ const groupBy=(rows,key)=>{const groups=new Map();for(const row of rows){const name=key(row)||'未分组';if(!groups.has(name))groups.set(name,[]);groups.get(name).push(row)}return [...groups]};
+ const resolve=(items,kind)=>(items||[]).flatMap(item=>{if(!item?.$ref)return [item];const name=item.$ref.split('/').at(-1).replace(/~1/g,'/').replace(/~0/g,'~');return spec.definitions?.[kind]?.[name]??[]});
+ const fields=items=>resolve(items,'fields');
+ const requestColumns=['name','location','type','required','description','example'];
+ const responseColumns=requestColumns.filter(key=>key!=='location');
+ const columns=slot=>slot==='request'?requestColumns:responseColumns;
+ const aliases={name:'field',location:'where',description:'desc'};
+ const fieldText=(field,key)=>readable(field[key]??field[aliases[key]]);
+ const nameFor=id=>byId.has(id)?label(byId.get(id).item):id;
+ const agentNames=(primary,ids)=>[...new Set([primary,...(ids||[])].filter(Boolean))].map(id=>agentMap.get(id)||id).join('、')||'未安排';
+ const diagramEngine=item=>item?.diagramEngine||(item?.diagramSvg?'inline-svg':item?.diagramSource?'mermaid':'text');
+ const svgImage=svg=>'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+ const diagramLabel=item=>({sequence:'时序图',er:'数据关系图',flowchart:'流程图'}[String(item.diagramType||'').toLowerCase()]||'架构图');
+ function taskNote(task){
+  const notes=[task.blocker,task.progress,task.note,task.statusNote]
+   .filter(value=>typeof value==='string'&&value.trim()).map(value=>value.trim());
+  const unique=[...new Set(notes)];
+  if(typeof task.blocker==='string'&&task.blocker.trim())unique[0]='阻塞说明：'+unique[0];
+  else if(task.status==='阻塞')unique.unshift('阻塞原因待补充');
+  return unique.join('；')||'—';
+ }
+ function planDetails(task){
+  const details=extra(task,planOmit);
+  const note=taskNote(task);
+  if(note!=='—')details.push(['进展与备注',note]);
+  return details;
+ }
+ const planColumns=['序号','优先级','模块 / 任务','关联需求','执行人','状态','进展与备注'];
+ let mermaidPromise;
+ function mermaid(){
+  return mermaidPromise??=new Promise((done,fail)=>{const script=document.createElement('script');script.src='https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.min.js';script.onload=()=>{if(!window.mermaid){fail();return}window.mermaid.initialize({startOnLoad:false,securityLevel:'strict',theme:'neutral'});done(window.mermaid)};script.onerror=fail;document.head.append(script)});
+ }
+ const RelatedRecords={
+  template:document.getElementById('related-records-view').innerHTML,
+  props:['record'],
+  emits:['jump'],
+  setup(props){
+   const asList=value=>Array.isArray(value)?value:[];
+   const ids=computed(()=>{
+    const linked=Object.values(props.record.links||{}).flatMap(asList);
+    return [...new Set([...asList(props.record.related),...linked].filter(id=>typeof id==='string'&&id.trim()))];
+   });
+   return {ids,byId};
+  },
+ };
+ createApp({template:document.getElementById('console-view').innerHTML,components:{RelatedRecords},setup(){
+  const mode=ref('requirements'),selected=ref(''),openTask=ref(''),planStatus=ref(''),sort=ref('priority'),groupPlans=ref(true),diagramReady=ref(false),diagramNode=ref(null);
+  const filters=reactive(Object.fromEntries(tabs.map(([key])=>[key,{query:'',change:'',status:''}])));
+  const records=computed(()=>spec[mode.value]||[]);
+  const isApi=computed(()=>['apis','existingInterfaces'].includes(mode.value));
+  const catalogFilter=computed(()=>['apis','tables'].includes(mode.value));
+  function recordStatus(item){
+   const section=registry.sections[mode.value]||[];
+   return section.includes(item.status)?item.status:'待核实';
+  }
+  const statusNote=item=>[...new Set([item.statusNote,item.status!==recordStatus(item)?item.status:null].filter(present))].join(' · ');
+  function itemStatus(item){
+   if(!catalogFilter.value)return recordStatus(item);
+   return knownDevelopment.includes(item.developmentStatus)?item.developmentStatus:'待核实';
+  }
+  const changeTypes={
+   apis:['存量接口变更','存量接口复用','新增接口'],
+   tables:['存量表变更','存量表复用','新增数据表'],
+  };
+  const changes=computed(()=>changeTypes[mode.value]||[]);
+  const knownDevelopment=registry.sections.developmentStatus;
+  const developmentFilters=['已完成','未完成',...knownDevelopment.filter(status=>status!=='已完成'),'待核实'];
+  const verificationStatuses=computed(()=>[...new Set(records.value.map(itemStatus))]);
+  function matchesStatus(item,status){
+   if(!status)return true;
+   const actual=itemStatus(item);
+   if(catalogFilter.value&&status==='未完成')return actual==='部分完成'||actual==='未开发';
+   return actual===status;
+  }
+  const visible=computed(()=>{const {query,change,status}=filters[mode.value];return records.value.filter(item=>(!change||item.changeType===change)&&matchesStatus(item,status)&&[label(item),item.path,item.id,item.group].some(value=>String(value||'').toLowerCase().includes(query.trim().toLowerCase())))});
+  const catalog=computed(()=>groupBy(visible.value,item=>item.group));
+  const record=computed(()=>visible.value.find(item=>item.id===selected.value)||visible.value[0]);
+  const primary=computed(()=>(primaryKeys[mode.value]||[]).map(key=>[key,record.value?.[key]]).filter(([,value])=>present(value)));
+  const apiRules=computed(()=>isApi.value?resolve(record.value?.rules,'rules').filter(present):[]);
+  const more=computed(()=>record.value?extra(record.value,[...omitted,...(primaryKeys[mode.value]||[])]):[]);
+  function selectMode(key){mode.value=key;selected.value=''}
+  function jump(id){const hit=byId.get(id);if(!hit)return;selectMode(hit.mode);Object.assign(filters[hit.mode],{query:'',change:'',status:''});selected.value=id;if(hit.mode==='plans')openTask.value=id}
+  const numberedPlans=(()=>{const rows=spec.plans||[],used=new Set(rows.map(task=>task.sequence));let next=1;return rows.map(task=>{if(Number.isSafeInteger(task.sequence)&&task.sequence>0)return task;while(used.has(next))next++;return {...task,sequence:next++}})})();
+  const planRows=computed(()=>{const rank={P0:0,P1:1,P2:2};return numberedPlans.filter(task=>!planStatus.value||task.status===planStatus.value).sort((a,b)=>{const delta=(rank[a.priority]??3)-(rank[b.priority]??3);return (sort.value==='sequence'?0:sort.value==='reverse'?-delta:delta)||a.sequence-b.sequence})});
+  const schedule=computed(()=>groupPlans.value?groupBy(planRows.value,task=>task.module):[['全部任务',planRows.value]]);
+  let renderCount=0;
+  watch(record,async(item,_,cleanup)=>{let obsolete=false;cleanup(()=>obsolete=true);diagramReady.value=false;if(!item?.diagramSource||diagramEngine(item)!=='mermaid')return;try{const engine=await mermaid();if(obsolete)return;const {svg}=await engine.render('sdd-diagram-'+(++renderCount),item.diagramSource);if(obsolete)return;diagramReady.value=true;await nextTick();if(!obsolete&&diagramNode.value)diagramNode.value.innerHTML=svg}catch{diagramReady.value=false}});
+  return {spec,registry,tabs,mode,selected,openTask,planStatus,sort,groupPlans,filters,records,isApi,catalogFilter,itemStatus,recordStatus,statusNote,changes,developmentFilters,verificationStatuses,visible,catalog,record,primary,apiRules,more,selectMode,jump,planRows,schedule,byId,label,caption,readable,tone,planDetails,columns,fields,fieldText,nameFor,agentNames,taskNote,planColumns,readiness:spec.metadata.readiness,diagramReady,diagramNode,diagramEngine,diagramLabel,svgImage};
+ }}).mount('#app');
+});
+</script>
+</body>
+</html>

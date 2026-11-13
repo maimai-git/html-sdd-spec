@@ -43,10 +43,10 @@ class ScheduleControlsTest(unittest.TestCase):
         spec['plans'][0]['sequence']=1;spec['plans'][1]['sequence']=1
         self.assertTrue(any(i.code=='PLAN_SEQUENCE_DUPLICATE' for i in validate_spec(spec)))
 
-    def test_compact_table_has_eight_columns_and_task_expansion(self):
+    def test_compact_table_has_seven_columns_and_task_expansion(self):
         html=self.run_js('return renderPlan();',self.spec())
-        self.assertEqual(['序号','优先级','模块 / 任务','关联需求','执行人','预计完成','状态','备注'],re.findall(r'<th>(.*?)</th>',html))
-        self.assertIn('colspan="8"',html)
+        self.assertEqual(['序号','优先级','模块 / 任务','关联需求','执行人','状态','进展与备注'],re.findall(r'<th>(.*?)</th>',html))
+        self.assertIn('colspan="7"',html)
         self.assertRegex(html,r'<button[^>]*data-plan-toggle')
         self.assertNotIn('>详情</button>',html)
 
@@ -54,18 +54,22 @@ class ScheduleControlsTest(unittest.TestCase):
         result=self.run_js('return [planNote({blocker:"等待数据库",progress:"接口完成",note:"接口完成"}),planNote({}),planNote({status:"阻塞"})];',self.spec())
         self.assertEqual(['阻塞说明：等待数据库；接口完成','—','阻塞原因待补充'],result)
 
-    def test_main_row_uses_end_and_details_preserve_original_values(self):
+    def test_main_row_omits_dates_and_details_preserve_original_values(self):
         spec=self.spec();p=spec['plans'][0]
         p.update(main='历史文件查询',sub='核对分页',start='2026-11-01',end='2026-11-05',progress='查询已完成',note='需要验收',blocker='等待数据库',ownerPaths=['src/files'],deps='PLAN-B')
         html=self.run_js('return renderPlan();',spec)
         row=re.search(r'<tr data-plan-id="PLAN-A".*?</tr>',html).group()
-        self.assertIn('2026-11-05',row);self.assertNotIn('2026-11-01',row)
-        for text in ['核对分页','2026-11-01','查询已完成','需要验收','等待数据库','src/files','PLAN-B']:
+        self.assertNotIn('2026-11-05',row);self.assertNotIn('2026-11-01',row)
+        details=re.search(r'<tr id="plan-details-1".*?</tr>',html).group()
+        self.assertIn('<b>进展与备注</b><span>阻塞说明：等待数据库；查询已完成；需要验收</span>',details)
+        for label in ('最新进度','备注','状态说明','阻塞原因'):
+            self.assertNotIn(f'<b>{label}</b>',details)
+        for text in ['核对分页','2026-11-01','2026-11-05','查询已完成','需要验收','等待数据库','src/files','PLAN-B']:
             self.assertIn(text,html)
         self.assertNotIn('<b>批次</b>',html);self.assertNotIn('<b>预估</b>',html)
         p.pop('end')
         row=re.search(r'<tr data-plan-id="PLAN-A".*?</tr>',self.run_js('return renderPlan();',spec)).group()
-        self.assertIn('待定',row);self.assertNotIn('2026-11-01',row)
+        self.assertNotIn('待定',row);self.assertNotIn('2026-11-01',row)
 
     def test_requirement_names_and_notes_are_escaped(self):
         spec=self.spec();spec['requirements']=[dict(id='REQ-A',title='上传 <文件>')]
@@ -77,10 +81,10 @@ class ScheduleControlsTest(unittest.TestCase):
         self.assertIn('&lt;script&gt;',html);self.assertNotIn('<script>',html)
         self.assertNotIn('&amp;lt;',html)
 
-    def test_non_date_end_is_pending_and_original_stays_in_details(self):
+    def test_non_date_end_stays_in_details(self):
         for value in ['验收后再确认','2026-02-30','',None]:
             spec=self.spec();spec['plans'][0]['end']=value
             html=self.run_js('return renderPlan();',spec)
             row=re.search(r'<tr data-plan-id="PLAN-A".*?</tr>',html).group()
-            self.assertIn('<td>待定</td>',row)
+            self.assertNotIn('<td>待定</td>',row)
             if value:self.assertIn(value,html)

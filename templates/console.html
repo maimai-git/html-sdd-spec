@@ -51,8 +51,7 @@
     .plan-table th:nth-child(3),.plan-table td:nth-child(3){width:22%}
     .plan-table th:nth-child(4),.plan-table td:nth-child(4){width:170px}
     .plan-table th:nth-child(5),.plan-table td:nth-child(5){width:145px}
-    .plan-table th:nth-child(6),.plan-table td:nth-child(6){width:120px}
-    .plan-table th:nth-child(7),.plan-table td:nth-child(7){width:100px}
+    .plan-table th:nth-child(6),.plan-table td:nth-child(6){width:100px}
     .plan-task{display:grid;gap:5px;min-width:0}
     .plan-task strong{font-size:14px}
     .plan-preview{display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow-wrap:anywhere}
@@ -60,7 +59,7 @@
     .plan-req{display:inline-block;padding:2px 5px;border-radius:4px;background:#fff;color:#334155;font-family:inherit;font-size:12px;font-weight:400;text-align:left;border:1px solid var(--line);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
     button.plan-req{cursor:pointer}
     .plan-toggle{padding:0;border:0;background:transparent;color:var(--accent);font:inherit;text-align:left;cursor:pointer;overflow-wrap:anywhere;line-height:1.5}
-    .plan-toggle:hover{text-decoration:underline}
+    .plan-toggle:hover,button.plan-req:hover{color:var(--ink)}
     .plan-toggle:before{content:"▸ ";color:var(--muted)}
     .plan-toggle[aria-expanded="true"]:before{content:"▾ "}
     .plan-details-row[hidden]{display:none!important}
@@ -105,12 +104,31 @@
 .catalog-tag{display:inline-flex;align-items:center;max-width:100%;min-height:20px;padding:1px 6px;border:1px solid var(--line);border-radius:4px;background:#f1f5f9;color:#475569;font-size:12px;font-weight:600;line-height:18px;white-space:nowrap}
 .catalog-code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
 .catalog-tags .status,.catalog-tags .change-type{padding:1px 6px;border-radius:4px;font-size:12px;font-weight:600;line-height:18px;white-space:nowrap}
+.catalog-item.compact-record{gap:2px;margin:1px 0;padding:3px 8px}
+.compact-record .catalog-name{font-size:13px;line-height:17px}
+.compact-record .catalog-path{font-size:11px;line-height:15px}
+.compact-record .catalog-tags{gap:3px}
+.compact-record .catalog-tag,.compact-record .catalog-tags .status,.compact-record .catalog-tags .change-type{min-height:16px;padding:0 4px;font-size:11px;line-height:14px}
 .catalog-count{padding:0 6px;border:1px solid var(--line);border-radius:4px;background:#f1f5f9;color:#475569;line-height:18px}
 
     .record-id{color:#64748b;font:400 12px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
     .related .tag{padding:0 5px;border-color:#e2e8f0;border-radius:4px;background:transparent;color:#64748b;font:400 11px/18px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
     .plan-req{padding:1px 4px;background:transparent;color:#64748b;font:400 12px/18px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
     __HTML_SDD_STATUS_CSS__
+
+.param-scroll{max-width:100%;overflow-x:auto}
+.param-scroll table{min-width:540px}
+.param-scroll.request-params table{min-width:620px}
+/* Keep identifiers readable while leaving prose columns free to wrap. */
+.param-scroll td:first-child,.param-scroll td:nth-child(2),.param-scroll.request-params td:nth-child(3){white-space:nowrap;overflow-wrap:normal;word-break:normal}
+.param-scroll td:nth-last-child(2){min-width:15rem}
+.param-scroll td:last-child{min-width:6rem}
+@media print{
+ .param-scroll td:first-child,.param-scroll td:nth-child(2),.param-scroll.request-params td:nth-child(3){white-space:normal;overflow-wrap:anywhere}
+ .param-scroll td:nth-last-child(2),.param-scroll td:last-child{min-width:0}
+}
+.param-scroll:focus-visible{outline:2px solid #2465b2;outline-offset:2px}
+@media print{.param-scroll table,.param-scroll.request-params table{min-width:0}}
   </style>
 </head>
 <body>
@@ -297,6 +315,7 @@
     function renderCatalog(){
       const arr=allItems(state.mode),filter=catalogFilters[state.mode];
       const groups=[...new Set(arr.map(groupOf))];
+      const compact=["apis","existingInterfaces","tables"].includes(state.mode);
       document.getElementById("catalogTitle").textContent=state.mode==="plan"?"排期":"条目清单";
       document.getElementById("catalogCount").textContent=state.mode==="plan"?"":filter?arr.length+" / "+sourceItems(state.mode).length+" 项":arr.length+" 项";
       if(state.mode==="plan"){document.getElementById("catalog").innerHTML="";return}
@@ -306,15 +325,16 @@
         const note=[filter?developmentStatus(x):"",x.changeType,x.status,x.statusNote].filter(Boolean).join(" · ");
         const variant=state.mode==="existingInterfaces"?["原有","reuse"]:({new:["新增","new"],changed:["修改","existing"],reused:["复用","reuse"]}[changeKind(x)]);
         const tags="<span class=\"catalog-tag catalog-code\">"+esc(codeOf(x,state.mode))+"</span>"+(variant?"<span class=\"catalog-tag catalog-change change-type "+variant[1]+"\" title=\""+esc(x.changeType||"原有接口")+"\">"+variant[0]+"</span>":"")+"<span class=\"catalog-tag catalog-status status "+statusClass(filter?developmentStatus(x):x.status,filter?"developmentStatus":state.mode)+"\" title=\""+esc(note)+"\">"+esc(label)+"</span>";
-        return "<button class=\"catalog-item "+(hasPath?"has-path ":"")+(state.selectedId===x.id?"active":"")+"\" data-record=\""+esc(x.id)+"\"><span class=\"catalog-name\" title=\""+esc(titleOf(x,state.mode))+"\">"+esc(titleOf(x,state.mode))+"</span>"+(hasPath?"<span class=\"catalog-path\" title=\""+esc(x.path)+"\">"+esc(x.path)+"</span>":"")+"<span class=\"catalog-tags\">"+tags+"</span></button>";
+        return "<button class=\"catalog-item "+(compact?"compact-record ":"")+(hasPath?"has-path ":"")+(state.selectedId===x.id?"active":"")+"\" data-record=\""+esc(x.id)+"\"><span class=\"catalog-name\" title=\""+esc(titleOf(x,state.mode))+"\">"+esc(titleOf(x,state.mode))+"</span>"+(hasPath?"<span class=\"catalog-path\" title=\""+esc(x.path)+"\">"+esc(x.path)+"</span>":"")+"<span class=\"catalog-tags\">"+tags+"</span></button>";
       }).join("")+"</section>").join("");
       document.getElementById("catalog").innerHTML=renderCatalogFilters(state.mode)+rows+(filter&&!arr.length?"<div class=\"empty\">没有匹配条目</div>":"");
       document.querySelectorAll("[data-record]").forEach(b=>b.onclick=()=>{state.selectedId=b.dataset.record;render()});
       document.querySelectorAll("[data-catalog-filter]").forEach(select=>select.onchange=()=>{filter[select.dataset.catalogFilter]=select.value;state.selectedId=null;render()});
       document.querySelectorAll("[data-reset-filters]").forEach(button=>button.onclick=()=>{filter.status="";filter.type="";state.selectedId=null;render()});
     }
-    function relatedBlock(ids){
-      const values=list(ids);
+    function relatedBlock(record){
+      const linked=Object.values(record.links||{}).flatMap(list);
+      const values=[...new Set([...list(record.related),...linked].filter(id=>typeof id==="string"&&id.trim()))];
       if(!values.length)return "";
       return "<details class=\"disclosure related-disclosure\"><summary>关联记录（"+values.length+"）</summary><div class=\"disclosure-content\"><div class=\"related\"><div class=\"tag-list\">"+values.map(id=>"<span class=\"tag\">"+esc(id)+"</span>").join("")+"</div></div></div></details>";
     }
@@ -328,7 +348,7 @@
     function fieldTable(fields,isRequest){
       const rows=list(fields).map(f=>"<tr><td class=\"field-name\">"+esc(f.name)+"</td>"+(isRequest?"<td>"+esc(f.location||"")+"</td>":"")+"<td>"+esc(f.type||"")+"</td><td>"+esc(f.required??"")+"</td><td>"+esc(f.description||"")+"</td><td>"+esc(Object.prototype.hasOwnProperty.call(f,"example")?pretty(f.example):"")+"</td></tr>").join("");
       const head=isRequest?"<th>字段</th><th>位置</th><th>类型</th><th>必填</th><th>说明</th><th>示例</th>":"<th>字段</th><th>类型</th><th>必填</th><th>说明</th><th>示例</th>";
-      return "<div class=\"table-wrap\"><table><thead><tr>"+head+"</tr></thead><tbody>"+(rows||"<tr><td colspan=\""+(isRequest?6:5)+"\">待补充</td></tr>")+"</tbody></table></div>";
+      return "<div class=\"table-wrap param-scroll "+(isRequest?"request-params":"")+"\" tabindex=\"0\" role=\"region\" aria-label=\""+(isRequest?"请求参数":"返回参数")+"\"><table><thead><tr>"+head+"</tr></thead><tbody>"+(rows||"<tr><td colspan=\""+(isRequest?6:5)+"\">待补充</td></tr>")+"</tbody></table></div>";
     }
     function renderReadiness(){
       const known=Array.isArray(readiness.blockingItems),blocking=list(readiness.blockingItems);
@@ -338,9 +358,11 @@
       return "<details class=\"readiness-card\"><summary class=\"readiness-summary\">编码条件 · "+summary+"</summary><div class=\"card-body snapshot-panel\"><div class=\"section\"><h3>整体阻塞项</h3><div class=\"tag-list\">"+(blocks||"<span class=\"tag\">"+(known?"暂无":"未记录")+"</span>")+"</div></div><div class=\"section\"><h3>开始编码需要满足</h3><ul>"+(criteria||"<li>待补充</li>")+"</ul></div></div></details>";
     }
     function renderRequirements(x){
+      const exclusions=list(x.outOfScope).filter(item=>typeof item==="string"&&item.trim());
+      const outOfScope=exclusions.length?"<div class=\"section\"><h3>非范围</h3><ul>"+exclusions.map(item=>"<li>"+esc(item)+"</li>").join("")+"</ul></div>":"";
       const acceptance=list(x.acceptance);
       const rows=acceptance.map(a=>"<tr><td class=\"field-name record-id\">"+esc(a.id)+"</td><td>"+esc(a.text)+"</td><td>"+status(a.status,"acceptance",a.statusNote)+"</td><td>"+esc(a.evidence||"待验证")+"</td></tr>").join("");
-      return "<div class=\"card\"><div class=\"card-head\"><div><h1>"+esc(x.title)+"</h1><small><span class=\"record-id\">"+esc(x.id)+"</span> · "+esc(x.group||"")+"</small></div>"+status(x.status,"requirements",x.statusNote)+"</div><div class=\"card-body\">"+statusNoteBlock(x,"requirements")+"<div class=\"section\"><h3>要达成什么</h3><p>"+esc(x.summary)+"</p></div><div class=\"section\"><h3>范围</h3><p>"+esc(x.scope||"待补充")+"</p></div><details class=\"disclosure acceptance-disclosure\"><summary>验收标准（"+acceptance.length+" 项）</summary><div class=\"disclosure-content\"><div class=\"table-wrap\"><table><thead><tr><th>ID</th><th>标准</th><th>状态</th><th>证据</th></tr></thead><tbody>"+(rows||"<tr><td colspan=\"4\">待补充</td></tr>")+"</tbody></table></div></div></details>"+relatedBlock(x.related)+"</div></div>";
+      return "<div class=\"card\"><div class=\"card-head\"><div><h1>"+esc(x.title)+"</h1><small><span class=\"record-id\">"+esc(x.id)+"</span> · "+esc(x.group||"")+"</small></div>"+status(x.status,"requirements",x.statusNote)+"</div><div class=\"card-body\">"+statusNoteBlock(x,"requirements")+"<div class=\"section\"><h3>要达成什么</h3><p>"+esc(x.summary)+"</p></div><div class=\"section\"><h3>范围</h3><p>"+esc(x.scope||"待补充")+"</p></div>"+outOfScope+"<details class=\"disclosure acceptance-disclosure\"><summary>验收标准（"+acceptance.length+" 项）</summary><div class=\"disclosure-content\"><div class=\"table-wrap\"><table><thead><tr><th>ID</th><th>标准</th><th>状态</th><th>证据</th></tr></thead><tbody>"+(rows||"<tr><td colspan=\"4\">待补充</td></tr>")+"</tbody></table></div></div></details>"+relatedBlock(x)+"</div></div>";
     }
     function expandApi(record){
       const resolve=(items,category)=>{
@@ -375,7 +397,7 @@
     function renderApis(x){
       try{x=expandApi(x)}catch(error){return "<p class=\"empty\">无法展开接口合同："+esc(error.message)+"</p>"}
 
-      return "<div class=\"card\"><div class=\"card-head\"><div><h1>"+esc(x.name)+"</h1><small><span class=\"record-id\">"+esc(x.id)+"</span> · "+esc(x.method)+" <span class=\"mono\">"+esc(x.path)+"</span></small></div><div class=\"tag-list\">"+change(x.changeType)+developmentTag(x)+"</div></div><div class=\"card-body\"><p class=\"delivery-note\" title=\""+esc(statusDescription(x,"apis")||x.status||"未记录")+"\">范围/部署说明："+esc(statusDescription(x,"apis")||x.status||"未记录")+"</p>"+interfaceSummary(x)+"<div class=\"section\"><h3>当前代码现状</h3><div class=\"callout\">"+esc(x.current||"待核实")+"</div></div><div class=\"param-grid\"><div class=\"param-pane\"><h3>请求参数</h3>"+fieldTable(x.request,true)+"</div><div class=\"param-pane\"><h3>返回参数</h3>"+fieldTable(x.response,false)+"</div></div><div class=\"instance-grid\"><div class=\"instance-pane\"><details open class=\"disclosure example-disclosure\"><summary>请求实例</summary><div class=\"disclosure-content\"><pre class=\"instance-box\">"+esc(pretty(x.requestExample))+"</pre></div></details></div><div class=\"instance-pane\"><details open class=\"disclosure example-disclosure\"><summary>响应实例</summary><div class=\"disclosure-content\"><pre class=\"instance-box\">"+esc(pretty(x.responseExample))+"</pre></div></details></div></div>"+rulesBlock(x.rules)+relatedBlock(x.related)+"</div></div>";
+      return "<div class=\"card\"><div class=\"card-head\"><div><h1>"+esc(x.name)+"</h1><small><span class=\"record-id\">"+esc(x.id)+"</span> · "+esc(x.method)+" <span class=\"mono\">"+esc(x.path)+"</span></small></div><div class=\"tag-list\">"+change(x.changeType)+developmentTag(x)+"</div></div><div class=\"card-body\"><p class=\"delivery-note\" title=\""+esc(statusDescription(x,"apis")||x.status||"未记录")+"\">范围/部署说明："+esc(statusDescription(x,"apis")||x.status||"未记录")+"</p>"+interfaceSummary(x)+"<div class=\"section\"><h3>当前代码现状</h3><div class=\"callout\">"+esc(x.current||"待核实")+"</div></div><div class=\"param-grid\"><div class=\"param-pane\"><h3>请求参数</h3>"+fieldTable(x.request,true)+"</div><div class=\"param-pane\"><h3>返回参数</h3>"+fieldTable(x.response,false)+"</div></div><div class=\"instance-grid\"><div class=\"instance-pane\"><details open class=\"disclosure example-disclosure\"><summary>请求实例</summary><div class=\"disclosure-content\"><pre class=\"instance-box\">"+esc(pretty(x.requestExample))+"</pre></div></details></div><div class=\"instance-pane\"><details open class=\"disclosure example-disclosure\"><summary>响应实例</summary><div class=\"disclosure-content\"><pre class=\"instance-box\">"+esc(pretty(x.responseExample))+"</pre></div></details></div></div>"+rulesBlock(x.rules)+relatedBlock(x)+"</div></div>";
     }
     function renderExistingInterfaces(x){
       try{x=expandApi(x)}catch(error){return "<p class=\"empty\">无法展开接口合同："+esc(error.message)+"</p>"}
@@ -387,22 +409,22 @@
         ["代码位置",x.source||"待核实"]
       ].map(item=>"<div class=\"solution-section\"><h3>"+esc(item[0])+"</h3><p>"+esc(item[1])+"</p></div>").join("");
       const notes=list(x.notes).map(item=>"<li>"+esc(item)+"</li>").join("");
-      return "<div class=\"card\"><div class=\"card-head\"><div><h1>"+esc(x.name)+"</h1><small><span class=\"record-id\">"+esc(x.id)+"</span> · "+esc(x.method)+" <span class=\"mono\">"+esc(x.path)+"</span></small></div>"+status(x.status,"existingInterfaces",x.statusNote)+"</div><div class=\"card-body\">"+interfaceSummary(x)+"<div class=\"solution-grid\">"+facts+"</div><div class=\"param-grid\"><div class=\"param-pane\"><h3>请求参数</h3>"+fieldTable(x.request,true)+"</div><div class=\"param-pane\"><h3>返回参数</h3>"+fieldTable(x.response,false)+"</div></div><div class=\"instance-grid\"><div class=\"instance-pane\"><details open class=\"disclosure example-disclosure\"><summary>请求实例</summary><div class=\"disclosure-content\"><pre class=\"instance-box\">"+esc(pretty(x.requestExample))+"</pre></div></details></div><div class=\"instance-pane\"><details open class=\"disclosure example-disclosure\"><summary>响应实例</summary><div class=\"disclosure-content\"><pre class=\"instance-box\">"+esc(pretty(x.responseExample))+"</pre></div></details></div></div>"+rulesBlock(x.rules)+(notes?"<details class=\"disclosure\"><summary>现状边界</summary><div class=\"disclosure-content\"><ul>"+notes+"</ul></div></details>":"")+"</div></div>";
+      return "<div class=\"card\"><div class=\"card-head\"><div><h1>"+esc(x.name)+"</h1><small><span class=\"record-id\">"+esc(x.id)+"</span> · "+esc(x.method)+" <span class=\"mono\">"+esc(x.path)+"</span></small></div>"+status(x.status,"existingInterfaces",x.statusNote)+"</div><div class=\"card-body\">"+interfaceSummary(x)+"<div class=\"solution-grid\">"+facts+"</div><div class=\"param-grid\"><div class=\"param-pane\"><h3>请求参数</h3>"+fieldTable(x.request,true)+"</div><div class=\"param-pane\"><h3>返回参数</h3>"+fieldTable(x.response,false)+"</div></div><div class=\"instance-grid\"><div class=\"instance-pane\"><details open class=\"disclosure example-disclosure\"><summary>请求实例</summary><div class=\"disclosure-content\"><pre class=\"instance-box\">"+esc(pretty(x.requestExample))+"</pre></div></details></div><div class=\"instance-pane\"><details open class=\"disclosure example-disclosure\"><summary>响应实例</summary><div class=\"disclosure-content\"><pre class=\"instance-box\">"+esc(pretty(x.responseExample))+"</pre></div></details></div></div>"+rulesBlock(x.rules)+(notes?"<details class=\"disclosure\"><summary>现状边界</summary><div class=\"disclosure-content\"><ul>"+notes+"</ul></div></details>":"")+relatedBlock(x)+"</div></div>";
     }
     function renderTables(x){
-      return "<div class=\"card\"><div class=\"card-head\"><div><h1>"+esc(tableTitle(x))+"</h1><small><span class=\"record-id\">"+esc(x.id)+"</span></small></div><div class=\"tag-list\">"+change(x.changeType)+developmentTag(x)+"</div></div><div class=\"card-body\"><details open class=\"disclosure text-disclosure\"><summary>查看 DDL</summary><div class=\"disclosure-content\"><pre class=\"text-box\">"+esc(x.ddl||"-- 待补充")+"</pre></div></details>"+relatedBlock(x.related)+"</div></div>";
+      return "<div class=\"card\"><div class=\"card-head\"><div><h1>"+esc(tableTitle(x))+"</h1><small><span class=\"record-id\">"+esc(x.id)+"</span></small></div><div class=\"tag-list\">"+change(x.changeType)+developmentTag(x)+"</div></div><div class=\"card-body\"><details open class=\"disclosure text-disclosure\"><summary>查看 DDL</summary><div class=\"disclosure-content\"><pre class=\"text-box\">"+esc(x.ddl||"-- 待补充")+"</pre></div></details>"+relatedBlock(x)+"</div></div>";
     }
     function renderArchitecture(x){
       if(x.type==="solution"){
-        return "<div class=\"card\"><div class=\"card-head\"><div><h1>"+esc(x.title)+"</h1><small><span class=\"record-id\">"+esc(x.id)+"</span> · "+esc(x.group)+"</small></div>"+status(x.status,"architecture",x.statusNote)+"</div><div class=\"card-body\">"+statusNoteBlock(x,"architecture")+"<div class=\"solution-grid\"><div class=\"solution-section\"><h3>怎么做</h3><p>"+esc(x.conclusion)+"</p></div><div class=\"solution-section\"><h3>现在的情况</h3><p>"+esc(x.current)+"</p></div><div class=\"solution-section\"><h3>主要做法</h3><ol>"+list(x.steps).map(s=>"<li>"+esc(s)+"</li>").join("")+"</ol></div><div class=\"solution-section\"><h3>涉及哪些内容</h3><p>"+esc(x.impact)+"</p></div><div class=\"solution-section\"><h3>注意事项</h3><p>"+esc(x.risks)+"</p></div></div>"+relatedBlock(x.related)+"</div></div>";
+        return "<div class=\"card\"><div class=\"card-head\"><div><h1>"+esc(x.title)+"</h1><small><span class=\"record-id\">"+esc(x.id)+"</span> · "+esc(x.group)+"</small></div>"+status(x.status,"architecture",x.statusNote)+"</div><div class=\"card-body\">"+statusNoteBlock(x,"architecture")+"<div class=\"solution-grid\"><div class=\"solution-section\"><h3>怎么做</h3><p>"+esc(x.conclusion)+"</p></div><div class=\"solution-section\"><h3>现在的情况</h3><p>"+esc(x.current)+"</p></div><div class=\"solution-section\"><h3>主要做法</h3><ol>"+list(x.steps).map(s=>"<li>"+esc(s)+"</li>").join("")+"</ol></div><div class=\"solution-section\"><h3>涉及哪些内容</h3><p>"+esc(x.impact)+"</p></div><div class=\"solution-section\"><h3>注意事项</h3><p>"+esc(x.risks)+"</p></div></div>"+relatedBlock(x)+"</div></div>";
       }
       const engine=x.diagramEngine||(x.diagramSource?"mermaid":"svg/fallback");
       const useMermaid=x.diagramSource&&engine==="mermaid";
       const diagram=x.diagramSvg&&engine!=="mermaid"?"<div class=\"diagram-view\">"+x.diagramSvg+"</div>":useMermaid?mermaidDiagram(x.diagramSource,x.fallback):"<div class=\"diagram-view\"><pre class=\"diagram-fallback\">"+esc(x.fallback||"待补充图形或文字说明")+"</pre></div>";
-      return "<div class=\"card\"><div class=\"card-head\"><div><h1>"+esc(x.title)+"</h1><small><span class=\"record-id\">"+esc(x.id)+"</span> · "+esc(x.diagramType||"diagram")+" · "+esc(engine)+" · "+esc(x.group)+"</small></div>"+status(x.status,"architecture",x.statusNote)+"</div><div class=\"card-body\">"+statusNoteBlock(x,"architecture")+"<div class=\"section\"><h3>图要表达什么</h3><p>"+esc(x.summary||"待补充")+"</p></div><div class=\"diagram-panel\"><div class=\"diagram-label\">图形</div>"+diagram+"<div class=\"diagram-label\">图源（网络不可用时可读）</div><pre class=\"text-box\">"+esc(x.diagramSource||x.fallback||"待补充")+"</pre></div>"+relatedBlock(x.related)+"</div></div>";
+      return "<div class=\"card\"><div class=\"card-head\"><div><h1>"+esc(x.title)+"</h1><small><span class=\"record-id\">"+esc(x.id)+"</span> · "+esc(x.diagramType||"diagram")+" · "+esc(engine)+" · "+esc(x.group)+"</small></div>"+status(x.status,"architecture",x.statusNote)+"</div><div class=\"card-body\">"+statusNoteBlock(x,"architecture")+"<div class=\"section\"><h3>图要表达什么</h3><p>"+esc(x.summary||"待补充")+"</p></div><div class=\"diagram-panel\"><div class=\"diagram-label\">图形</div>"+diagram+"<div class=\"diagram-label\">图源（网络不可用时可读）</div><pre class=\"text-box\">"+esc(x.diagramSource||x.fallback||"待补充")+"</pre></div>"+relatedBlock(x)+"</div></div>";
     }
     function renderConfigs(x){
-      return "<div class=\"card\"><div class=\"card-head\"><div><h1>"+esc(x.title)+"</h1><small><span class=\"record-id\">"+esc(x.id)+"</span> · "+esc(x.kind)+" · "+esc(x.environment)+"</small></div>"+status(x.status,"configs",x.statusNote)+"</div><div class=\"card-body\">"+statusNoteBlock(x,"configs")+""+(x.source?"<p class=\"delivery-note\" title=\""+esc(x.source)+"\">执行来源：<code>"+esc(x.source)+"</code></p>":"")+"<div class=\"section\"><h3>上线配置内容</h3><pre class=\"text-box\">"+esc(x.content||"-- 待补充")+"</pre></div>"+relatedBlock(x.related)+"</div></div>";
+      return "<div class=\"card\"><div class=\"card-head\"><div><h1>"+esc(x.title)+"</h1><small><span class=\"record-id\">"+esc(x.id)+"</span> · "+esc(x.kind)+" · "+esc(x.environment)+"</small></div>"+status(x.status,"configs",x.statusNote)+"</div><div class=\"card-body\">"+statusNoteBlock(x,"configs")+""+(x.source?"<p class=\"delivery-note\" title=\""+esc(x.source)+"\">执行来源：<code>"+esc(x.source)+"</code></p>":"")+"<div class=\"section\"><h3>上线配置内容</h3><pre class=\"text-box\">"+esc(x.content||"-- 待补充")+"</pre></div>"+relatedBlock(x)+"</div></div>";
     }
     const scheduleState={status:"",sort:"priority",group:true};
     function scheduleRows(){
@@ -418,11 +440,6 @@
     function scheduleControls(count){
       const option=(value,label,current)=>"<option value=\""+esc(value)+"\""+(value===current?" selected":"")+">"+esc(label)+"</option>";
       return "<div class=\"schedule-controls\"><label>状态<select aria-label=\"排期状态\" data-schedule=\"status\">"+[["","全部状态"],...PLAN_STATUS_ENUM.map(x=>[x,x])].map(([v,l])=>option(v,l,scheduleState.status)).join("")+"</select></label><label>排序<select aria-label=\"排期排序\" data-schedule=\"sort\">"+[["priority","优先级高到低，再按序号"],["reverse","优先级低到高，再按序号"],["sequence","序号从小到大"]].map(([v,l])=>option(v,l,scheduleState.sort)).join("")+"</select></label><label class=\"schedule-group\" title=\"归类时在模块内排序；任务序号保持不变\"><input type=\"checkbox\" aria-label=\"按模块归类\" data-schedule=\"group\""+(scheduleState.group?" checked":"")+">按模块归类</label><span>"+count+" / "+plans.length+" 项</span><button type=\"button\" data-schedule-reset>恢复默认</button></div>";
-    }
-    function planEnd(value){
-      if(typeof value!=="string"||!/^\d{4}-\d{2}-\d{2}$/.test(value))return "待定";
-      const date=new Date(value+"T00:00:00Z");
-      return Number.isFinite(date.getTime())&&date.toISOString().slice(0,10)===value?value:"待定";
     }
     function planNote(p){
       const values=[p.blocker,p.progress,p.note,p.statusNote].filter(v=>typeof v==="string"&&v.trim()).map(v=>v.trim());
@@ -446,12 +463,13 @@
           return r?"<button type=\"button\" class=\"plan-req\" data-plan-requirement=\""+esc(id)+"\" title=\""+esc(requirementLabel(id))+"\">"+esc(r.title)+"</button>":"<span class=\"plan-req\">"+esc(id)+"</span>";
         }).join("");
         const paths=Array.isArray(p.ownerPaths)?p.ownerPaths.join("、"):(p.ownerPaths||"—");
-        const detailItems=[["任务编号",p.id],["子任务",p.sub,true],["关联需求",requirementIds.map(requirementLabel).join("、"),true],["负责人",agentName(p.owner)],["审核人",roleNames(p.reviewer,p.reviewerIds)],["执行人",roleNames(p.executor,p.executorIds)],["批次",p.batch],["预估",p.effort],["计划开始",p.start],["预计完成",p.end||"待定"],["依赖",p.deps],["文件范围",paths,true],["最新进度",p.progress,true],["备注",p.note,true],["状态说明",p.statusNote,true],["阻塞原因",p.blocker,true],["验收标准",p.acceptanceCriteria,true],["验证结果",p.verification,true]];
+        const note=planNote(p);
+        const detailItems=[["任务编号",p.id],["子任务",p.sub,true],["关联需求",requirementIds.map(requirementLabel).join("、"),true],["负责人",agentName(p.owner)],["审核人",roleNames(p.reviewer,p.reviewerIds)],["执行人",roleNames(p.executor,p.executorIds)],["批次",p.batch],["预估",p.effort],["计划开始",p.start],["预计完成",p.end||"待定"],["依赖",p.deps],["文件范围",paths,true],["进展与备注",note==="—"?null:note,true],["验收标准",p.acceptanceCriteria,true],["验证结果",p.verification,true]];
         const details=detailItems.filter(item=>item[1]!==undefined&&item[1]!==null&&item[1]!==""&&!(Array.isArray(item[1])&&!item[1].length)).map(item=>"<div class=\"plan-detail"+(item[2]?" wide":"")+"\"><b>"+esc(item[0])+"</b><span>"+esc(typeof item[1]==="string"?item[1]:pretty(item[1]))+"</span></div>").join("");
-        const note=planNote(p),detailId="plan-details-"+p.sequence;
-        return "<tr data-plan-id=\""+esc(p.id)+"\" class=\""+groupClass+(scheduleState.group&&(i===0||visible[i-1].module!==p.module)?" plan-module-start":"")+"\"><td class=\"mono\">"+p.sequence+"</td><td><strong>"+esc(p.priority||"—")+"</strong></td><td><div class=\"plan-task\"><strong>"+esc(p.module||"未分组")+"</strong><button class=\"plan-toggle\" type=\"button\" data-plan-toggle aria-expanded=\"false\" aria-controls=\""+detailId+"\">"+esc(p.main||"未填写")+"</button></div></td><td><div class=\"plan-reqs\">"+(reqChips||"—")+"</div></td><td><span class=\"plan-preview\" title=\""+esc(roleNames(p.executor,p.executorIds))+"\">"+esc(roleNames(p.executor,p.executorIds))+"</span></td><td>"+esc(planEnd(p.end))+"</td><td>"+planStatus(p.status)+"</td><td><span class=\"plan-preview\" title=\""+esc(note)+"\">"+esc(note)+"</span></td></tr><tr id=\""+detailId+"\" class=\"plan-details-row "+groupClass+"\" hidden><td colspan=\"8\"><div class=\"plan-details-grid\">"+details+"</div></td></tr>";
+        const detailId="plan-details-"+p.sequence;
+        return "<tr data-plan-id=\""+esc(p.id)+"\" class=\""+groupClass+(scheduleState.group&&(i===0||visible[i-1].module!==p.module)?" plan-module-start":"")+"\"><td class=\"mono\">"+p.sequence+"</td><td><strong>"+esc(p.priority||"—")+"</strong></td><td><div class=\"plan-task\"><strong>"+esc(p.module||"未分组")+"</strong><button class=\"plan-toggle\" type=\"button\" data-plan-toggle aria-expanded=\"false\" aria-controls=\""+detailId+"\">"+esc(p.main||"未填写")+"</button></div></td><td><div class=\"plan-reqs\">"+(reqChips||"—")+"</div></td><td><span class=\"plan-preview\" title=\""+esc(roleNames(p.executor,p.executorIds))+"\">"+esc(roleNames(p.executor,p.executorIds))+"</span></td><td>"+planStatus(p.status)+"</td><td><span class=\"plan-preview\" title=\""+esc(note)+"\">"+esc(note)+"</span></td></tr><tr id=\""+detailId+"\" class=\"plan-details-row "+groupClass+"\" hidden><td colspan=\"7\"><div class=\"plan-details-grid\">"+details+"</div>"+relatedBlock(p)+"</td></tr>";
       }).join("");
-      return scheduleControls(visible.length)+"<div class=\"summary-grid\"><div class=\"summary\"><div class=\"summary-label\">全部任务</div><div class=\"summary-value\">"+plans.length+"</div><div class=\"summary-note\">已完成 "+done+" 项</div></div><div class=\"summary\"><div class=\"summary-label\">进行中</div><div class=\"summary-value\">"+doing+"</div><div class=\"summary-note\">按当前排期状态</div></div><div class=\"summary\"><div class=\"summary-label\">存在阻塞</div><div class=\"summary-value\">"+blocked+"</div><div class=\"summary-note\">点击任务查看原因</div></div></div><div class=\"plan-wrap\"><table class=\"plan-table\"><thead><tr><th>序号</th><th>优先级</th><th>模块 / 任务</th><th>关联需求</th><th>执行人</th><th>预计完成</th><th>状态</th><th>备注</th></tr></thead><tbody>"+(rows||"<tr><td colspan=\"8\">没有匹配任务</td></tr>")+"</tbody></table></div>";
+      return scheduleControls(visible.length)+"<div class=\"summary-grid\"><div class=\"summary\"><div class=\"summary-label\">全部任务</div><div class=\"summary-value\">"+plans.length+"</div><div class=\"summary-note\">已完成 "+done+" 项</div></div><div class=\"summary\"><div class=\"summary-label\">进行中</div><div class=\"summary-value\">"+doing+"</div><div class=\"summary-note\">按当前排期状态</div></div><div class=\"summary\"><div class=\"summary-label\">存在阻塞</div><div class=\"summary-value\">"+blocked+"</div><div class=\"summary-note\">点击任务查看原因</div></div></div><div class=\"plan-wrap\"><table class=\"plan-table\"><thead><tr><th>序号</th><th>优先级</th><th>模块 / 任务</th><th>关联需求</th><th>执行人</th><th>状态</th><th>进展与备注</th></tr></thead><tbody>"+(rows||"<tr><td colspan=\"7\">没有匹配任务</td></tr>")+"</tbody></table></div>";
     }
     function render(){
       renderTabs();renderSnapshot();renderCatalog();

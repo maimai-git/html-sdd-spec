@@ -27,17 +27,43 @@ jobs:
           /tmp/html-sdd-venv/bin/html-sdd --version
           /tmp/html-sdd-venv/bin/html-sdd check examples/asset-library/sdd.json
           /tmp/html-sdd-venv/bin/html-sdd context examples/asset-library/sdd.json REQ-001 --role executor --full --json > /tmp/html-sdd-context.json
-      - name: Validate and render example
+      - name: Run the quick-start example with the installed CLI
         run: |
-          html-sdd --version
-          html-sdd check examples/asset-library/sdd.json
-          html-sdd render examples/asset-library/sdd.json --output /tmp/html-sdd-index.html
+          sample="$PWD/examples/订单状态筛选/方案事实源.json"
+          cd "$(mktemp -d)"
+          cli=/tmp/html-sdd-venv/bin/html-sdd
+          "$cli" init html-sdd-spec/订单状态筛选
+          cd html-sdd-spec/订单状态筛选
+          "$cli" check 方案事实源.json
+          grep -q "vue.global.prod.js" 方案对齐.html
+          cp "$sample" 方案事实源.json
+          "$cli" check 方案事实源.json
+          "$cli" summary 方案事实源.json --json > summary.json
+          "$cli" render 方案事实源.json --output 方案对齐.html
+          "$cli" render 方案事实源.json --template classic --output Classic版.html
           python - <<'PY'
-          import pathlib
+          import json
           import re
+          from pathlib import Path
 
-          html = pathlib.Path('/tmp/html-sdd-index.html').read_text(encoding='utf-8')
-          scripts = re.findall(r'<script(?:\s[^>]*)?>(.*?)</script>', html, flags=re.I | re.S)
-          pathlib.Path('/tmp/html-sdd-script.js').write_text('\n'.join(scripts), encoding='utf-8')
+          summary = json.loads(Path("summary.json").read_text(encoding="utf-8"))
+          for key, record_id in (
+              ("pendingPlans", "PLAN-002"),
+              ("acceptanceGaps", "AC-002"),
+              ("deliveryGaps", "API-001"),
+          ):
+              assert [item["id"] for item in summary[key]] == [record_id], summary[key]
+
+          source = json.loads(Path("方案事实源.json").read_text(encoding="utf-8"))
+          for stem in ("方案对齐", "Classic版"):
+              html = Path(stem + ".html").read_text(encoding="utf-8")
+              assert ("vue.global.prod.js" in html) == (stem == "方案对齐"), stem
+              payload = re.search(r'<script id="html-sdd-spec" type="application/json">(.*?)</script>', html, re.S)
+              assert payload is not None, stem
+              assert json.loads(payload[1]) == source, stem
+              scripts = re.findall(r"<script>(.*?)</script>", html, re.S)
+              assert scripts, stem
+              Path(stem + ".js").write_text("\n".join(scripts), encoding="utf-8")
           PY
-          node --check /tmp/html-sdd-script.js
+          node --check 方案对齐.js
+          node --check Classic版.js
