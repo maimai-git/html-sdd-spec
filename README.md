@@ -14,6 +14,14 @@
 | 架构与上线配置 | 按模块查看技术方案、架构图、时序图和上线需要配置的项目 |
 | 变更与 AI 协作 | 比较两版方案，按需求或任务读取相关内容，支持单 Agent 或多人分工 |
 
+## 示例截图
+
+![接口参数和请求、响应示例](docs/images/html-sdd-console.png)
+
+![按模块组织的八列排期](docs/images/html-sdd-schedule.png)
+
+![架构设计中的时序图](docs/images/html-sdd-mermaid.png)
+
 ## 怎么用
 
 **先看效果。** 下载仓库后，直接用浏览器打开 `examples/asset-library/index.html`。

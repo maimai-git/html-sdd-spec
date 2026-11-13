@@ -14,6 +14,14 @@ Bring a requirement's **goals, current implementation, design, and progress** to
 | Architecture and rollout | Design notes by module, architecture and sequence diagrams, and rollout configuration |
 | Changes and AI collaboration | Compare revisions and retrieve the context for a specific requirement or task. Work with one agent or split the work across agents. |
 
+## Screenshots
+
+![API parameters and request and response examples](docs/images/html-sdd-console.png)
+
+![Eight-column schedule grouped by module](docs/images/html-sdd-schedule.png)
+
+![Sequence diagram in the architecture view](docs/images/html-sdd-mermaid.png)
+
 ## Quick start
 
 **View the example.** Download the repository and open `examples/asset-library/index.html` in your browser.
