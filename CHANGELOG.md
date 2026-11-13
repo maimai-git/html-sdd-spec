@@ -2,7 +2,7 @@
 
 所有重要变更都会记录在这里。
 
-## [Unreleased]
+## [0.4.0] - 2026-11-13
 
 - 新增整单盘点命令 `html-sdd summary` 和订单状态筛选小示例。
 
@@ -19,6 +19,8 @@
 - Classic 和 Vue 排期统一为七列，按业务模块分组，计划日期和批次放入任务详情。
 
 - `html-sdd init` 和 `html-sdd render` 默认生成 Vue CDN 页面，支持现有接口、架构图与接口/表开发状态筛选。可用 `render --template classic` 生成 Classic 版。
+
+- 修复 Linux CI 中长脚本超过 Node 单参数长度限制的问题。模板测试通过标准输入执行。
 
 ## [0.3.0] - 2026-11-13
 

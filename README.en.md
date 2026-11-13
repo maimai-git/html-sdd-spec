@@ -33,7 +33,7 @@ Bring a requirement's **goals, current implementation, design, and progress** to
 **Use the CLI.** With Python 3.9 or later, run these commands in your project:
 
 ```bash
-python -m pip install "https://github.com/maimai-git/html-sdd-spec/releases/download/v0.3.0/html_sdd_spec-0.3.0-py3-none-any.whl"
+python -m pip install "https://github.com/maimai-git/html-sdd-spec/releases/download/v0.4.0/html_sdd_spec-0.4.0-py3-none-any.whl"
 html-sdd init html-sdd-spec/batch-shipping
 ```
 
