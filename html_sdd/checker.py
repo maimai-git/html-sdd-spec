@@ -303,6 +303,11 @@ def _check_claims_and_links(spec: dict[str, Any]) -> list[Issue]:
                 continue
             base = f"{section}[{index}]"
 
+            if section == "tables" and "displayName" in record:
+                label=record["displayName"]
+                if not isinstance(label,str) or not label.strip():
+                    issues.append(Issue("error", "TABLE_DISPLAY_NAME_INVALID", f"{base}.displayName", "中文表名必须为非空字符串；未知时省略"))
+
             if section == "configs" and "source" in record and not isinstance(record["source"], str):
                 issues.append(Issue("error", "CONFIG_SOURCE_INVALID", f"{base}.source", "配置执行源 source 必须为字符串路径；未知时省略"))
 

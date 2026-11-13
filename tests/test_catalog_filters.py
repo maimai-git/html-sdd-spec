@@ -64,16 +64,16 @@ const document={addEventListener(){},querySelectorAll:()=>[],getElementById:id=>
         result = self.run_js('return {api:renderApis(apis[1]),table:renderTables(tables[2])};')
         for html in result.values():
             self.assertIn("部分完成", html)
-            self.assertIn("delivery-note", html)
+        self.assertIn("delivery-note", result["api"])
         self.assertIn("代码已实现，迁移待执行", result["api"])
-        self.assertIn("执行情况待核实", result["table"])
+        self.assertNotIn("执行情况待核实", result["table"])
         self.assertIn("待核实", self.run_js('return renderApis(apis[3]);'))
 
     def test_examples_and_ddl_are_open_but_other_details_stay_collapsible(self):
         result = self.run_js('return {api:renderApis(apis[0]),table:renderTables(tables[0])};')
         self.assertEqual(2, result["api"].count('<details open class="disclosure example-disclosure"'))
         self.assertIn('<details open class="disclosure text-disclosure"', result["table"])
-        self.assertIn('<details class="disclosure"><summary>结构差异', result["table"])
+        self.assertNotIn("结构差异", result["table"])
 
     def test_response_parameter_columns_include_required_heading(self):
         html = self.run_js('return fieldTable([{name:"items",type:"array",required:"是",description:"示意结果",example:[]}],false);')

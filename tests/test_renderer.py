@@ -33,6 +33,26 @@ class RendererTest(unittest.TestCase):
         self.assertNotIn("</script><SCRIPT>", html)
         self.assertEqual(decode_html_payload(html), spec)
 
+    def test_document_title_has_product_prefix_and_escapes_requirement_name(self):
+        from html.parser import HTMLParser
+        class TitleParser(HTMLParser):
+            def __init__(self):
+                super().__init__();self.inside=False;self.value=''
+            def handle_starttag(self,tag,attrs):
+                if tag=='title':self.inside=True
+            def handle_endtag(self,tag):
+                if tag=='title':self.inside=False
+            def handle_data(self,data):
+                if self.inside:self.value+=data
+        for title in ('资产库引用','需求 <草稿> & "核对" __HTML_SDD_SPEC_JSON__','</title><script>alert(1)</script>'):
+            with self.subTest(title=title):
+                spec=json.loads(json.dumps(EXAMPLE));spec['metadata']['title']=title
+                spec['metadata']['summary']='__HTML_SDD_DOCUMENT_TITLE__'
+                html=render_spec(spec,TEMPLATE);parser=TitleParser();parser.feed(html)
+                self.assertEqual(f"HTML SDD Spec {title}",parser.value)
+                self.assertEqual(spec,decode_html_payload(html))
+                self.assertNotIn('</title><script>alert(1)',html)
+
     def test_render_requires_template_placeholder(self):
         with tempfile.TemporaryDirectory() as tmp:
             path = Path(tmp) / "bad.html"

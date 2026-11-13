@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import re
+from html import escape
 from pathlib import Path
 from typing import Any
 
@@ -21,4 +23,10 @@ def render_spec(spec: dict[str, Any], template_path: Path) -> str:
     # Escape HTML-sensitive characters while keeping the decoded JSON unchanged.
     payload = payload.replace("<", "\\u003c").replace(">", "\\u003e").replace("&", "\\u0026")
     statuses=json.dumps(registry(),ensure_ascii=False,separators=(',',':'))
-    return template.replace('__HTML_SDD_STATUSES__',statuses).replace('__HTML_SDD_STATUS_CSS__',status_css()).replace(PLACEHOLDER, payload, 1)
+    metadata=spec.get('metadata',{})
+    title=metadata.get('title') if isinstance(metadata,dict) else None
+    title=title.strip() if isinstance(title,str) and title.strip() else '需求方案'
+    document_title = f"HTML SDD Spec {title}"
+    replacements={PLACEHOLDER:payload,'__HTML_SDD_DOCUMENT_TITLE__':escape(document_title),'__HTML_SDD_STATUSES__':statuses,'__HTML_SDD_STATUS_CSS__':status_css()}
+    # Insert each value once, without interpreting placeholder-like text inside user content.
+    return re.sub('|'.join(re.escape(key) for key in replacements),lambda match:replacements[match.group()],template)

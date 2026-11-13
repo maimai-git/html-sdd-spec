@@ -874,6 +874,11 @@
             },
             "difference": {
               "type": "string"
+            },
+            "displayName": {
+              "type": "string",
+              "pattern": "\\S",
+              "description": "中文表名，显示在英文表名后；不是长用途说明。"
             }
           }
         }
