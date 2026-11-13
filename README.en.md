@@ -1,127 +1,40 @@
 # HTML SDD Spec
 
-HTML SDD Spec is a lightweight format for aligning product requirements, the current codebase, technical design, Agent work plans, and verification evidence in one document.
+[中文](README.md) · [Asset library example](examples/asset-library/README.md) · [Setup guide](docs/安装使用.md) · [Downloads](https://github.com/maimai-git/html-sdd-spec/releases/latest)
 
-`方案事实源.json` is the machine-readable source of truth. The generated HTML is a single-file reader for people and AI agents; Mermaid is loaded from a pinned CDN only when a diagram needs it, with source text available as a fallback.
+Bring a requirement's **goals, current implementation, design, and progress** together in a shareable HTML page. Product managers, developers, and reviewers can see what needs to change, who owns the work, and how to verify it.
+
+## Features
+
+| Area | What you can see |
+| --- | --- |
+| Requirements and acceptance | Goals, scope, existing behavior, open questions, and acceptance criteria |
+| Schedule | Tasks by module, priority, assignee, target date, and status. Filter, sort, and expand each task for details. |
+| APIs and data tables | New and changed APIs and tables, request and response examples, and database change SQL |
+| Architecture and rollout | Design notes by module, architecture and sequence diagrams, and rollout configuration |
+| Changes and AI collaboration | Compare revisions and retrieve the context for a specific requirement or task. Work with one agent or split the work across agents. |
 
 ## Quick start
 
-Requires Python 3.9+.
-The page embeds plain JSON without gzip or Base64; architecture diagrams load Mermaid on demand when the network is available. Use a current Chrome, Edge, Firefox, or Safari.
+**View the example.** Download the repository and open `examples/asset-library/index.html` in your browser.
+
+**Use Codex.** Install the CLI and Skill using the setup guide, then ask Codex to work on a requirement in your project. [Setup guide](docs/安装使用.md#4-作为-codex-skill-使用)
+
+> Use HTML SDD to plan batch shipping. Review the current code and document the affected APIs, tables, schedule, and acceptance criteria for review.
+
+**Use the CLI.** With Python 3.9 or later, run these commands in your project:
 
 ```bash
-python3 -m pip install -e .
-html-sdd check examples/asset-library/sdd.json
-html-sdd render examples/asset-library/sdd.json \
-  --output examples/asset-library/index.html
+python -m pip install "https://github.com/maimai-git/html-sdd-spec/releases/download/v0.3.0/html_sdd_spec-0.3.0-py3-none-any.whl"
+html-sdd init html-sdd-spec/batch-shipping
 ```
 
-Open `examples/asset-library/index.html` in a browser. The page has six sections: requirements, schedule, APIs, data tables, architecture, and release configuration.
-
-Without installing the CLI, or when using an older local setup, run `python3 -m html_sdd ...` from the repository root.
-
-## Minimal invocation
-
-You do not need to write separate prompts for the owner, reviewer, and executor. One sentence is normally enough:
-
-```text
-Use HTML SDD to implement this requirement: add batch shipment to order fulfillment, using the current codebase to define APIs, tables, schedule, and release configuration.
-```
-
-The Agent reads project rules and source code, builds the current baseline, and generates or updates `html-sdd-spec/<requirement-directory>/方案事实源.json` and the single-file HTML. It asks only about business rules, permissions, migrations, external integrations, or execution authority that would change the plan. Routine technical details are derived from code evidence and marked as assumptions when needed.
-The generated HTML embeds compressed data. Mermaid is requested only for architecture records that use `diagramEngine=mermaid`; if the CDN is unavailable, the page keeps the Mermaid source visible. Agents should read the human-readable `方案事实源.json` by relevant IDs instead of loading the full HTML into context.
-
-For a project without an SDD, say:
-
-```text
-Use HTML SDD to map this project first. Do not change code.
-```
-
-The first pass delivers the current snapshot, APIs, tables, architecture, configuration, evidence, and open questions. Unconfirmed items keep `codingReady=false`.
-
-HTML SDD can stay with the work through the full lifecycle: requirements, baseline, design, review and schedule, coding, testing, release preparation, deployment, and post-release acceptance. Each phase records status, owner, update time, next step, and evidence. Source code, full logs, secrets, and raw deployment-system data stay in their original systems; SDD keeps references, summaries, and results.
-
-## Choosing the Agent mode
-
-The default is automatic. Use one Agent for a single-module change, no API/data impact, documentation, or a small fix. Use multiple Agents when work crosses modules, changes both APIs and data, has independent tasks that can run in parallel, or needs an independent review. One SDD has one owner; each plan has one primary reviewer and one primary executor, with optional `reviewerIds` and `executorIds` collaborators. You can override this with “single Agent” or “parallel Agents”. If sub-agents are unavailable, the owner performs the three roles sequentially.
-
-## What the document aligns
-
-- Current repository snapshot and evidence;
-- Requirements, acceptance criteria, and stable IDs;
-- Module schedule, priority, dependencies, and Agent ownership;
-- API change type, parameters, request/response examples, and current route evidence;
-- Data table purpose, migration status, and DDL text;
-- Architecture notes, diagrams, sequence diagrams, Mermaid source text, and fallbacks;
-- Environment variables, Apollo values, and manual release steps;
-- Open questions and a `metadata.readiness` coding gate.
-
-A route or class existing in the codebase is evidence of current code only. Top-level sections remain present in `方案事实源.json`, but their arrays may be empty when a section is not relevant or has not been split yet. The HTML shows “not applicable” or “to be completed” instead of inventing records. `codingReady` remains false while applicable migrations, external providers, Chat integration, or real acceptance evidence are missing.
-
-Use `metadata.sectionCoverage` to explain empty sections, and `impact.apis` or `impact.tables` to state that a requirement explicitly does not affect APIs or data tables.
-
-## When the plan changes
-
-HTML SDD is a living source of alignment. If architecture, APIs, tables, configuration, acceptance criteria, or schedule changes, update the JSON source first, then run `check`, `render`, and `diff`. Pause affected tasks for a reviewer re-check; set `codingReady=false` when the previous plan no longer holds. Do not hand-edit generated HTML. Optionally keep the reason and before/after values in `metadata.changeLog`.
-`html-sdd diff --json` includes changes across metadata, baseline, agents, requirements, plans, APIs, tables, architecture, configuration, evidence, and questions, with before/after values for machine review.
-
-## Artifact layout
-
-The project root is `html-sdd-spec/`, with one complete development process per child directory. A large product requirement such as asset-library references can keep model, style, and reference sub-requirements/modules in the same JSON and HTML. Use Chinese names for requirement directories and documents, with English such as `HTML-SDD` allowed in the name:
-
-```text
-html-sdd-spec/资产库引用/
-├── 方案事实源.json
-├── 方案对齐.html
-├── 使用说明.md
-├── 变更记录/说明.md
-└── .gitignore
-```
-
-Tool source, tests, and executable scripts may keep English names; the root directory `html-sdd-spec/` is the agreed English exception. If an existing project already has an SDD elsewhere, record it and migrate only after checking for duplicate sources.
-
-## Agent roles
-
-- **Owner** aligns goals with the user, maintains the SDD, assigns work, and reports progress.
-- **Reviewer** inspects the codebase, decomposes requirements, and reviews API/data/design readiness.
-- **Executor** takes only aligned tasks, implements backend changes, verifies them, and records evidence.
-
-## CLI
+`init` creates `方案事实源.json` (the editable spec) and `方案对齐.html` (the generated page). Update the JSON yourself or with an agent, then check it and regenerate the page:
 
 ```bash
-html-sdd init
-html-sdd check ./html-sdd-spec/资产库引用/方案事实源.json
-html-sdd check ./html-sdd-spec/资产库引用/方案事实源.json --json
-html-sdd context ./html-sdd-spec/资产库引用/方案事实源.json REQ-001 --role reviewer --json
-html-sdd context ./html-sdd-spec/资产库引用/方案事实源.json REQ-001 --role executor --full
-html-sdd render ./html-sdd-spec/资产库引用/方案事实源.json \
-  --output ./html-sdd-spec/资产库引用/方案对齐.html
-html-sdd diff before.json after.json
-html-sdd diff before.json after.json --json
+cd html-sdd-spec/batch-shipping
+html-sdd check 方案事实源.json
+html-sdd render 方案事实源.json --output 方案对齐.html
 ```
 
-`context` returns a compact target and related summaries filtered by role (`owner`, `reviewer`, or `executor`). Blockers and evidence are returned separately with counts for omitted items. `--full` expands only the target, in both text and JSON output; query a related ID for its full contract. Existing `related` links remain supported.
-
-Records can optionally include lifecycle `state`, a concrete `claim.statement` with kind (`fact`, `proposal`, `pending`) and confidence, `evidenceIds`, and typed `links`. Claims describe specific assertions, while state describes work progress. Evidence can record a locator, capture time, reviewer, and commit. These fields do not replace verification.
-
-## Example
-
-The [asset-library example](examples/asset-library/index.html) is based on a real sample-asset-service snapshot. It includes file assets, personal/enterprise spaces, styles, models, generation tasks, Chat `asset_refs`, 42 APIs, 17 tables, 9 schedule tasks, and 6 architecture entries.
-
-The example deliberately separates implemented code, manual migrations, pending integrations, and unverified runtime evidence. It never executes DDL.
-
-## Safety and scope
-
-HTML SDD is an offline planning and alignment artifact. It does not connect to production databases, execute DDL, apply deployment configuration, or store tokens, passwords, cookies, private keys, or connection strings.
-
-See [CONTRIBUTING.md](CONTRIBUTING.md), [CHANGELOG.md](CHANGELOG.md), [SECURITY.md](SECURITY.md), the [release checklist](docs/release-checklist.md), and the [MIT License](LICENSE).
-
-API and table catalogs support independent development-status and change-type filters. Optional `developmentStatus` is explicit; missing values stay unverified. Deployment notes remain separate. Examples and DDL start expanded; version and readiness details use compact popups. See the [small illustrative catalog example](examples/目录筛选/使用说明.md).
-
-Evidence directories are not created by default. Optional local `证据/` and `证据索引/` materials are Git-ignored; keep concise results and shareable commit/CI references in JSON. Existing tracked files need a separate migration.
-
-Read context by task ID: 8 related summaries and a 12,000-character output budget by default. Use `--offset` for pagination and `--full` for the target contract. `browser-check` reports a short summary and keeps full logs locally.
-
-Optional `definitions.fields` / `definitions.rules` reuse identical contracts via local `$ref` entries. Detail views and `context --full` resolve them on demand; HTML retains the compact references. `html-sdd reuse <JSON>` previews savings; `--output <candidate.json>` writes a separate candidate. Inline contracts remain supported.
-
-Status labels, per-section subsets and semantic colors share one packaged registry. New documents use strict validation; legacy free text stays available as notes with an unverified badge. Query a subset with `html-sdd statuses --section plans`.
+[Specification](SPEC.md) · [Changelog](CHANGELOG.md) · [Contributing](CONTRIBUTING.md) · [MIT License](LICENSE)
