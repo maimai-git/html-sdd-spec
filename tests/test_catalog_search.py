@@ -26,9 +26,8 @@ const state={mode:MODE,selectedId:'API-0'};
 const nodes={};
 const document={querySelectorAll:()=>[],getElementById:id=>(nodes[id]??={innerHTML:'',textContent:'',querySelectorAll:()=>[]})};
 """.replace("RECORDS", json.dumps(records)).replace("MODE", json.dumps(mode))
-        result = subprocess.run(["node", "-e", prelude + esc + code +
-                                 "renderCatalog(); console.log(JSON.stringify(nodes.catalog.innerHTML));"],
-                                capture_output=True, text=True)
+        script = prelude + esc + code + "renderCatalog(); console.log(JSON.stringify(nodes.catalog.innerHTML));"
+        result = subprocess.run(["node", "-"], input=script, capture_output=True, text=True)
         self.assertEqual(0, result.returncode, result.stderr)
         return json.loads(result.stdout)
 

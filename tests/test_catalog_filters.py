@@ -39,7 +39,8 @@ const window={};
 const nodes={};
 const document={addEventListener(){},querySelectorAll:()=>[],getElementById:id=>(nodes[id]??={innerHTML:'',textContent:'',className:'',querySelectorAll:()=>[],classList:{add(){},remove(){},toggle(){}}})};
 """.replace("SPEC", json.dumps(spec if spec is not None else fixture(), ensure_ascii=False))
-        result = subprocess.run(["node", "-e", prelude+code+"\nconsole.log(JSON.stringify((()=>{"+expression+"})()));"], capture_output=True, text=True)
+        script = prelude + code + "\nconsole.log(JSON.stringify((()=>{" + expression + "})()));"
+        result = subprocess.run(["node", "-"], input=script, capture_output=True, text=True)
         self.assertEqual(0, result.returncode, result.stderr)
         return json.loads(result.stdout)
 
