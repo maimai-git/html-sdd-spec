@@ -12,7 +12,6 @@ STANDARD_SDD_DIRECTORY = STANDARD_SDD_ROOT / "新开发需求"
 SOURCE_FILE_NAME = "方案事实源.json"
 HTML_FILE_NAME = "方案对齐.html"
 GUIDE_FILE_NAME = "使用说明.md"
-CHANGELOG_DIRECTORY_NAME = "变更记录"
 
 
 def skeleton_spec() -> dict[str, Any]:
@@ -77,7 +76,6 @@ def init_project(target: Path, template_path: Path) -> None:
     if target.exists() and any(target.iterdir()):
         raise FileExistsError(f"目标目录非空：{target}")
     target.mkdir(parents=True, exist_ok=True)
-    (target / CHANGELOG_DIRECTORY_NAME).mkdir(parents=True, exist_ok=True)
     spec = skeleton_spec()
     (target / SOURCE_FILE_NAME).write_text(json.dumps(spec, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
     (target / GUIDE_FILE_NAME).write_text(
@@ -85,20 +83,20 @@ def init_project(target: Path, template_path: Path) -> None:
         f"编辑 `{SOURCE_FILE_NAME}`，然后运行：\n\n"
         f"html-sdd check '{SOURCE_FILE_NAME}'\n"
         f"html-sdd render '{SOURCE_FILE_NAME}' --output '{HTML_FILE_NAME}'\n\n"
-        "一个开发过程使用一个目录；多个子需求登记在同一份事实源中。这份 JSON 是唯一事实源，HTML 由它生成，不要直接修改 HTML。变更记录/、证据索引/、证据/ 用于本地归档，已由 .gitignore 排除。JSON 保留当前结论、简短验收结果和可访问的引用。\n",
+        "一个开发过程使用一个目录，多个子需求登记在同一份事实源中。先更新 JSON，再生成 HTML。\n\n"
+        "## 记录变更和验收\n\n"
+        "记录规则默认生效，有实际内容时创建文件。两个归档目录均由 Git 忽略。\n\n"
+        "- 影响交付的变更写入 `变更记录/变更记录.md`。每条写日期、结论、原因、影响、关联编号和验证。\n"
+        "- 验收时在事实源的 `evidence[]` 记录证据编号、环境和结果。需要保留原件时，按 "
+        "`证据/<证据编号>-<环境>-<验证事项>.<扩展名>` 保存脱敏文件。同一编号有多份材料时，建同名目录集中保存。\n"
+        "- 单凭编号无法快速找齐多个批次的文件时，建立 `证据/索引.md`，"
+        "登记编号、环境、批次和需求目录内的相对路径。\n\n"
+        "过程草案、调研笔记和实施计划按需放在 `临时文件/`，由 Git 忽略。已确认的方案和交付合同保存在共享文档。\n\n"
+        "上线时按需创建 上线配置清单/ 和 上线SQL清单/。配置只记录本期新增且上线必需的条目，填写核实过的本地实际非敏感值。发布人按目标环境填写工单值。配置和 SQL 各放一份。配置固定写入 上线配置清单/上线配置.properties，每项键值上一行用 # 写中文配置名。SQL 固定写入 上线SQL清单/上线SQL.sql。文件顶部注释写清提交位置、适用条件、操作顺序和验收。\n",
         encoding="utf-8",
     )
     (target / HTML_FILE_NAME).write_text(render_spec(spec, template_path), encoding="utf-8")
-    (target / CHANGELOG_DIRECTORY_NAME / "说明.md").write_text(
-        "# 本地变更记录\n\n"
-        "每条只记一件影响交付的事。先写结论，再用短句说明原因、影响和验证。"
-        "需要追溯时附记录编号或提交。\n\n"
-        "## YYYY-MM-DD｜一句话说明改动\n\n"
-        "- 原因：为什么要改。\n"
-        "- 影响：涉及哪些需求、接口或任务。\n"
-        "- 验证：在哪个环境核对了什么，结果如何。缺证据时写待核实。\n",
-        encoding="utf-8",
-    )
     (target / ".gitignore").write_text(
-        "# 本地变更记录与证据归档\n/变更记录/\n/证据索引/\n/证据/\n", encoding="utf-8"
+        "# 本地记录与过程文档\n/变更记录/\n/证据/\n/临时文件/\n"
+        "# 兼容旧版归档路径\n/证据索引/\n", encoding="utf-8"
     )

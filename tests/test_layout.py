@@ -25,8 +25,9 @@ class StandardLayoutTest(unittest.TestCase):
             self.assertTrue((target / "方案事实源.json").exists())
             self.assertTrue((target / "方案对齐.html").exists())
             self.assertTrue((target / "使用说明.md").exists())
-            self.assertTrue((target / "变更记录" / "说明.md").exists())
-            self.assertFalse((target / "证据索引").exists())
+            for name in ("变更记录", "证据", "证据索引", "临时文件"):
+                with self.subTest(directory=name):
+                    self.assertFalse((target / name).exists())
             self.assertTrue((target / ".gitignore").exists())
             self.assertIn("子需求", (target / "使用说明.md").read_text())
             self.assertFalse((target / "sdd.json").exists())
@@ -38,7 +39,7 @@ class StandardLayoutTest(unittest.TestCase):
             subprocess.run(["git", "init", "-q", str(project)], check=True)
             target = project / "需求"
             subprocess.run([sys.executable, "-m", "html_sdd", "init", str(target)], cwd=ROOT, check=True, capture_output=True)
-            for name in ("变更记录/说明.md", "证据索引/回执.json", "证据/截图.png"):
+            for name in ("变更记录/变更记录.md", "证据/索引.md", "证据索引/历史回执.json", "证据/EVID-001-验收截图.png", "临时文件/对接草案.md"):
                 result = subprocess.run(["git", "check-ignore", "-q", "需求/" + name], cwd=project)
                 self.assertEqual(0, result.returncode)
             for name in ("方案事实源.json", "方案对齐.html", "使用说明.md", ".gitignore"):
