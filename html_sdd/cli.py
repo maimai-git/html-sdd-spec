@@ -23,7 +23,7 @@ def _print_issues(issues, as_json: bool = False) -> None:
         print(f"{issue.level.upper()} {issue.code} {issue.path}: {issue.message}")
 
 
-def check_command(path: Path, as_json: bool = False) -> int:
+def check_command(path: Path, as_json: bool = False, release: bool = False) -> int:
     try:
         spec = load_spec(str(path))
     except (OSError, ValueError, json.JSONDecodeError) as exc:
@@ -46,6 +46,10 @@ def check_command(path: Path, as_json: bool = False) -> int:
         print(f"ERROR INPUT {path}: {exc}")
         return 1
     issues = validate_spec(spec)
+    if release:
+        from .release_check import validate_release
+
+        issues.extend(validate_release(spec, path))
     if as_json:
         _print_issues(issues, True)
     else:
@@ -112,6 +116,7 @@ def build_parser() -> argparse.ArgumentParser:
     check = sub.add_parser("check", help="检查 JSON 规范")
     check.add_argument("path", type=Path)
     check.add_argument("--json", action="store_true", dest="as_json")
+    check.add_argument("--release", action="store_true", help="额外检查发布文件、目标分段和配置值")
     summary = sub.add_parser("summary", help="盘点整个需求的剩余任务、验收和发布缺口")
     summary.add_argument("path", type=Path, help="方案事实源 JSON 文件")
     summary.add_argument("--json", action="store_true", dest="as_json")
@@ -222,7 +227,7 @@ def main(argv=None) -> int:
         print(output)
         return code
     if args.command == "check":
-        return check_command(args.path, args.as_json)
+        return check_command(args.path, args.as_json, args.release)
     if args.command == "context":
         return context_command(args.path, args.record_id, args.role, args.as_json, args.full, args.limit, args.offset, args.max_chars)
     if args.command == "render":
