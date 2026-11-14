@@ -4,9 +4,10 @@ from dataclasses import dataclass
 import json
 import re
 from typing import Any, Iterable, Optional
+from urllib.parse import urlsplit
 
 from .references import DefinitionError, field_change_errors, validate_references
-from .statuses import registry, status_issues
+from .statuses import question_is_open, registry, status_issues
 
 RECORD_SECTIONS = (
     "agents",
@@ -641,63 +642,167 @@ def _check_integrity(spec: dict[str, Any]) -> list[Issue]:
     return issues
 
 
-def _check_ready_gate(spec: dict[str, Any]) -> list[Issue]:
+def _objects(value: Any) -> Iterable[dict[str, Any]]:
+    if isinstance(value, list):
+        yield from (item for item in value if isinstance(item, dict))
+
+
+def _list_section(spec: dict[str, Any], section: str) -> list:
+    value = spec.get(section)
+    return value if isinstance(value, list) else []
+
+
+def section_is_not_applicable(metadata: dict[str, Any], section: str) -> bool:
+    coverage = metadata.get("sectionCoverage")
+    item = coverage.get(section) if isinstance(coverage, dict) else None
+    return (
+        isinstance(item, dict) and item.get("status") == "not_applicable"
+        and _has_text(item.get("reason"))
+    )
+
+
+def _has_text(value: Any) -> bool:
+    return isinstance(value, str) and bool(value.strip())
+
+
+def check_ready_gate(spec: dict[str, Any]) -> list[Issue]:
     issues: list[Issue] = []
     section_names = ("apis", "tables", "architecture", "configs")
+    metadata = spec.get("metadata")
+    metadata = metadata if isinstance(metadata, dict) else {}
+    readiness = metadata.get("readiness")
+    project_ready = isinstance(readiness, dict) and readiness.get("codingReady") is True
+    active = [
+        (index, record) for index, record in enumerate(_list_section(spec, "requirements"))
+        if isinstance(record, dict) and record.get("status") != "已取消"
+    ]
+    if project_ready:
+        blockers = readiness.get("blockingItems")
+        if not active:
+            issues.append(Issue("error", "READY_PROJECT_INCOMPLETE", "metadata.readiness.codingReady",
+                                "整单可编码至少需要一条未取消的需求"))
+        if not isinstance(blockers, list) or any(not _has_text(item) for item in blockers):
+            issues.append(Issue("error", "READY_PROJECT_INCOMPLETE", "metadata.readiness.blockingItems",
+                                "整单可编码时须明确记录编码阻塞，无阻塞填空数组"))
+        elif blockers:
+            issues.append(Issue("error", "READY_PROJECT_BLOCKED", "metadata.readiness.blockingItems",
+                                "仍有编码阻塞，整单不可标为可编码"))
+        for index, question in enumerate(_list_section(spec, "questions")):
+            if isinstance(question, dict) and question_is_open(question) and (
+                question.get("status") == "阻塞" or question.get("state") == "blocked"
+            ):
+                issues.append(Issue("error", "READY_PROJECT_BLOCKED", f"questions[{index}]",
+                                    "仍有未关闭的阻塞问题"))
+
     records_by_section = {
-        section: {
-            record.get("id"): record
-            for record in spec.get(section, [])
-            if isinstance(record, dict) and record.get("id")
-        }
+        section: {record["id"] for record in _objects(spec.get(section)) if isinstance(record.get("id"), str)}
         for section in section_names
     }
-    evidence_ids = {
-        record.get("id")
-        for record in spec.get("evidence", [])
-        if isinstance(record, dict) and record.get("id")
+    if project_ready:
+        for section, ids in records_by_section.items():
+            if not ids and not section_is_not_applicable(metadata, section):
+                issues.append(Issue("error", "READY_IMPACT_MISSING", f"metadata.sectionCoverage.{section}",
+                                    "空板块须确认不涉及并写明原因，或补齐适用记录"))
+    verified_evidence = {
+        record["id"] for record in _objects(spec.get("evidence"))
+        if isinstance(record.get("id"), str) and record.get("status") == "已验证"
     }
     plan_requirement_ids = {
-        requirement_id
-        for plan in spec.get("plans", [])
-        if isinstance(plan, dict)
-        for requirement_id in (plan.get("requirementIds") or [])
+        requirement_id for plan in _objects(spec.get("plans")) if plan.get("status") != "已取消"
+        for requirement_id in (plan["requirementIds"] if isinstance(plan.get("requirementIds"), list) else [])
+        if isinstance(requirement_id, str)
     }
-    for index, requirement in enumerate(spec.get("requirements", [])):
-        if not isinstance(requirement, dict) or requirement.get("status") != "编码 READY":
+    ready_statuses = ("编码 READY", "进行中", "待复核", "待验收", "已完成")
+    for index, requirement in active:
+        if not project_ready and requirement.get("status") != "编码 READY":
             continue
-        acceptance = requirement.get("acceptance") or []
-        related = requirement.get("related") or []
+        base = f"requirements[{index}]"
+        if project_ready and requirement.get("status") not in ready_statuses:
+            issues.append(Issue("error", "READY_INCOMPLETE", base, "子需求的方案仍待确认或受阻"))
+        if project_ready and not all(_has_text(requirement.get(key)) for key in ("summary", "scope")):
+            issues.append(Issue("error", "READY_INCOMPLETE", base, "整单可编码时子需求须写明目标和范围"))
         if requirement.get("id") not in plan_requirement_ids:
-            issues.append(Issue("error", "READY_INCOMPLETE", f"requirements[{index}]", "编码 READY 必须关联至少一个排期计划"))
-        if not acceptance or not related:
-            issues.append(Issue("error", "READY_INCOMPLETE", f"requirements[{index}]", "编码 READY 至少需要验收项和关联记录"))
-        for acceptance_index, item in enumerate(acceptance):
-            if not isinstance(item, dict) or not item.get("evidence"):
-                issues.append(Issue("error", "READY_INCOMPLETE", f"requirements[{index}].acceptance[{acceptance_index}]", "编码 READY 的验收项必须有证据"))
-            elif not isinstance(item.get("evidence"), str) or item.get("evidence") not in evidence_ids:
-                issues.append(
-                    Issue(
-                        "error",
-                        "READY_EVIDENCE_UNLINKED",
-                        f"requirements[{index}].acceptance[{acceptance_index}].evidence",
-                        "编码 READY 的验收证据必须引用 evidence 中已有的 EVID-* 记录",
-                    )
-                )
-        impact = requirement.get("impact") or {}
-        related_ids = set(related)
-        for section in section_names:
-            if impact.get(section) == "not_applicable":
+            issues.append(Issue("error", "READY_INCOMPLETE", base, "可编码的需求必须关联至少一个未取消的排期"))
+        acceptance = requirement.get("acceptance")
+        if not isinstance(acceptance, list) or not any(
+            isinstance(item, dict) and _has_text(item.get("text")) and item.get("status") != "不适用"
+            for item in acceptance
+        ):
+            issues.append(Issue("error", "READY_INCOMPLETE", base, "可编码的需求至少需要一个可执行的验收例子"))
+        for acceptance_index, item in enumerate(acceptance if isinstance(acceptance, list) else []):
+            if not isinstance(item, dict) or not _has_text(item.get("text")):
+                issues.append(Issue("error", "READY_INCOMPLETE", f"{base}.acceptance[{acceptance_index}]",
+                                    "验收例子须写明预期"))
                 continue
-            if not related_ids.intersection(records_by_section[section]):
-                issues.append(
-                    Issue(
-                        "error",
-                        "READY_IMPACT_MISSING",
-                        f"requirements[{index}].impact.{section}",
-                        f"编码 READY 需要在 related 中关联至少一条 {section} 记录，或明确标记 not_applicable",
-                    )
-                )
+            evidence = item.get("evidence")
+            if item.get("status") == "已通过" and (
+                not isinstance(evidence, str) or evidence not in verified_evidence
+            ):
+                issues.append(Issue("error", "READY_EVIDENCE_UNLINKED", f"{base}.acceptance[{acceptance_index}].evidence",
+                                    "已通过的验收必须引用已验证的证据记录"))
+
+        impact = requirement.get("impact")
+        impact = impact if isinstance(impact, dict) else {}
+        related = requirement.get("related")
+        related_ids = {item for item in related if isinstance(item, str)} if isinstance(related, list) else set()
+        links = requirement.get("links")
+        links = links if isinstance(links, dict) else {}
+        for section in section_names:
+            declared = impact.get(section)
+            available = records_by_section[section]
+            if declared == "not_applicable" or (
+                declared is None and not available and section_is_not_applicable(metadata, section)
+            ):
+                continue
+            section_links = links.get(section)
+            ids = related_ids.copy()
+            if isinstance(section_links, list):
+                ids.update(item for item in section_links if isinstance(item, str))
+            if declared not in (None, "required") or not ids.intersection(available):
+                issues.append(Issue("error", "READY_IMPACT_MISSING", f"{base}.impact.{section}",
+                                    f"须确认 {section} 的影响并关联相应记录，或明确声明不适用"))
+    return issues
+
+
+def _is_portable_source(value: Any) -> bool:
+    if not _has_text(value) or value != value.strip() or re.search(r"[\x00-\x1f\x7f]", value):
+        return False
+    try:
+        url = urlsplit(value)
+    except ValueError:
+        return False
+    if url.scheme in ("https", "http"):
+        return bool(url.hostname) and url.username is None and url.password is None
+    return not (url.scheme or url.netloc or re.search(r"[\\?#:]", value)) and all(
+        part not in (".", "..", "", "~") for part in value.split("/")
+    )
+
+
+def _check_previous_specs(spec: dict[str, Any]) -> list[Issue]:
+    metadata = spec.get("metadata")
+    if not isinstance(metadata, dict) or "previousSpecs" not in metadata:
+        return []
+    references = metadata["previousSpecs"]
+    if not isinstance(references, list):
+        return [Issue("error", "PREVIOUS_SPEC_INVALID", "metadata.previousSpecs", "旧方案引用须为数组")]
+    issues = []
+    for index, reference in enumerate(references):
+        base = f"metadata.previousSpecs[{index}]"
+        if not isinstance(reference, dict):
+            issues.append(Issue("error", "PREVIOUS_SPEC_INVALID", base, "旧方案引用须为对象"))
+            continue
+        if not _is_portable_source(reference.get("source")):
+            issues.append(Issue("error", "PREVIOUS_SPEC_INVALID", f"{base}.source",
+                                "旧方案来源须为仓库根目录相对路径或可访问的 HTTP(S) 链接"))
+        ids = reference.get("recordIds", [])
+        if not isinstance(ids, list) or any(not isinstance(item, str) or not ID_PATTERN.fullmatch(item) for item in ids):
+            issues.append(Issue("error", "PREVIOUS_SPEC_INVALID", f"{base}.recordIds", "旧记录编号须为稳定 ID 的数组"))
+        if "commit" in reference and (
+            not isinstance(reference["commit"], str) or not re.fullmatch(r"[0-9a-fA-F]{40}(?:[0-9a-fA-F]{24})?", reference["commit"])
+        ):
+            issues.append(Issue("error", "PREVIOUS_SPEC_INVALID", f"{base}.commit", "旧提交须为完整 SHA"))
+        if not _has_text(reference.get("summary")):
+            issues.append(Issue("error", "PREVIOUS_SPEC_INVALID", f"{base}.summary", "须简述本轮沿用或变更的内容"))
     return issues
 
 
@@ -745,7 +850,8 @@ def validate_spec(spec: dict[str, Any]) -> list[Issue]:
     issues.extend(_check_claims_and_links(spec))
     issues.extend(_check_references(spec, set(known_ids)))
     issues.extend(_check_integrity(spec))
-    issues.extend(_check_ready_gate(spec))
+    issues.extend(check_ready_gate(spec))
+    issues.extend(_check_previous_specs(spec))
     issues.extend(_check_sensitive(spec))
     issues.extend(_check_local_machine_paths(spec))
     return issues

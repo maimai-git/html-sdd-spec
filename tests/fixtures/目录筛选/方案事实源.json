@@ -206,7 +206,7 @@
       "environment": "演示",
       "status": "待核实",
       "content": "demo.files.enabled=true\n",
-      "source": "examples/目录筛选/上线配置.txt",
+      "source": "tests/fixtures/目录筛选/上线配置.txt",
       "related": ["REQ-001"],
       "statusNote": "人工确认后执行"
     },
@@ -218,7 +218,7 @@
       "environment": "演示",
       "status": "待核实",
       "content": "-- 仅为交互示意，非生产迁移\nCREATE TABLE demo_file (id BIGINT PRIMARY KEY);\n",
-      "source": "examples/目录筛选/最终SQL.sql",
+      "source": "tests/fixtures/目录筛选/最终SQL.sql",
       "related": ["REQ-001"],
       "statusNote": "人工确认后执行"
     }

@@ -40,6 +40,54 @@ class CheckerTest(unittest.TestCase):
         codes = {i.code for i in issues}
         self.assertIn("READY_INCOMPLETE", codes)
 
+    def test_whole_project_ready_requires_all_active_requirements(self):
+        from html_sdd.scaffold import skeleton_spec
+
+        spec = skeleton_spec()
+        spec["metadata"]["readiness"]["codingReady"] = True
+        self.assertIn("READY_PROJECT_INCOMPLETE", {i.code for i in validate_spec(spec)})
+
+        spec = json.loads((ROOT / "examples/订单状态筛选/方案事实源.json").read_text())
+        self.assertFalse([i for i in validate_spec(spec) if i.level == "error"])
+        spec["plans"][0]["status"] = "已取消"
+        spec["plans"][1]["status"] = "已取消"
+        self.assertTrue(any(i.code == "READY_INCOMPLETE" and i.path == "requirements[0]" for i in validate_spec(spec)))
+        spec["plans"][0]["status"] = "待开始"
+        coverage = spec["metadata"]["sectionCoverage"].pop("tables")
+        self.assertTrue(any(i.path == "metadata.sectionCoverage.tables" for i in validate_spec(spec)))
+        spec["metadata"]["sectionCoverage"]["tables"] = coverage
+        spec["requirements"].append({
+            **spec["requirements"][0], "id": "REQ-002", "status": "待确认",
+            "acceptance": [{"id": "AC-NEW", "text": "边界待确认", "status": "待验证"}],
+        })
+        issues = validate_spec(spec)
+        self.assertTrue(any(i.code == "READY_INCOMPLETE" and i.path == "requirements[1]" for i in issues))
+
+    def test_draft_acceptance_needs_no_test_result_but_coding_blockers_must_close(self):
+        spec = json.loads((ROOT / "examples/订单状态筛选/方案事实源.json").read_text())
+        requirement = spec["requirements"][0]
+        requirement["status"] = "编码 READY"
+        spec["questions"] = [{"id": "Q-BLOCK", "question": "权限边界", "status": "阻塞"}]
+        self.assertTrue(any(i.code == "READY_PROJECT_BLOCKED" for i in validate_spec(spec)))
+        spec["questions"][0]["status"] = "已解决"
+        self.assertFalse([i for i in validate_spec(spec) if i.level == "error"])
+
+    def test_previous_spec_references_are_optional_and_portable(self):
+        spec = copy.deepcopy(EXAMPLE)
+        ref = {
+            "source": "html-sdd-spec/上一期/方案事实源.json",
+            "recordIds": ["REQ-OLD"],
+            "commit": "a" * 40,
+            "summary": "沿用上传限制。",
+        }
+        spec["metadata"]["previousSpecs"] = [ref]
+        self.assertFalse([i for i in validate_spec(spec) if i.level == "error"])
+        for value in ("/Users/example/方案事实源.json", "../other/方案事实源.json", "file:///tmp/foo"):
+            with self.subTest(value=value):
+                ref["source"] = value
+                self.assertTrue(any(i.path == "metadata.previousSpecs[0].source" and i.level == "error"
+                                    for i in validate_spec(spec)))
+
     def test_machine_path_warning_uses_field_locations_without_path_values(self):
         spec = copy.deepcopy(EXAMPLE)
         spec["baseline"]["repository"] = "/Users/example/project"
@@ -73,6 +121,7 @@ class CheckerTest(unittest.TestCase):
             "configs": "required",
         }
         requirement["related"] = ["PLAN-001", "EVID-001"]
+        requirement.pop("links", None)
         for item in requirement["acceptance"]:
             item["evidence"] = "EVID-001"
         issues = validate_spec(spec)
@@ -94,6 +143,7 @@ class CheckerTest(unittest.TestCase):
             "configs": "required",
         }
         for item in requirement["acceptance"]:
+            item["status"] = "已通过"
             item["evidence"] = "tests/acceptance.py"
         issues = validate_spec(spec)
         self.assertTrue(any(issue.code == "READY_EVIDENCE_UNLINKED" for issue in issues))

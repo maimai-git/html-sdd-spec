@@ -31,7 +31,7 @@ def fixture():
 class CatalogFiltersTest(unittest.TestCase):
     def run_js(self, expression, spec=None):
         from html_sdd.statuses import registry
-        source = (ROOT / "templates/console.html").read_text().replace("__HTML_SDD_STATUSES__",json.dumps(registry(),ensure_ascii=False))
+        source = (ROOT / "html_sdd/assets/console.html").read_text().replace("__HTML_SDD_STATUSES__",json.dumps(registry(),ensure_ascii=False))
         code = source[source.index("    const statusRegistry="):source.rindex("    render();")]
         prelude = """
 const spec=SPEC;

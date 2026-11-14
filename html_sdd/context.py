@@ -6,8 +6,7 @@ import json
 from typing import Any, Iterable, Optional
 
 from .references import expand_api
-from .statuses import registry
-CLOSED_QUESTION_STATUSES = frozenset(registry()["closedQuestions"])
+from .statuses import question_is_open
 
 
 SECTION_ORDER = (
@@ -195,16 +194,9 @@ def _inbound_relations(record: dict[str, Any], target_id: str) -> set[str]:
 def _is_open_blocker(section: str, record: dict[str, Any]) -> bool:
     state = record.get("state")
     status = str(record.get("status") or "")
-    if section == "questions" and (
-        state in {"verified", "accepted", "cancelled"}
-        or status in CLOSED_QUESTION_STATUSES
-    ):
-        return False
-    if state == "blocked" or "阻塞" in status or record.get("blocker"):
-        return True
-    if section == "questions" and status not in CLOSED_QUESTION_STATUSES:
-        return True
-    return False
+    if section == "questions":
+        return question_is_open(record)
+    return state == "blocked" or "阻塞" in status or bool(record.get("blocker"))
 
 
 def _blocker_entry(record_id: str, section: str, record: dict[str, Any]) -> dict[str, Any]:

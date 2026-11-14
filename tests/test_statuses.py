@@ -69,7 +69,7 @@ class StatusTest(unittest.TestCase):
         from html_sdd.renderer import render_spec
         from pathlib import Path
         spec=copy.deepcopy(EXAMPLE);spec['metadata']['statusPolicy']='legacy';spec['apis'][0]['developmentStatus']='完成一半'
-        with self.assertRaises(ValueError):render_spec(spec,Path(__file__).resolve().parents[1]/'templates/console.html')
+        with self.assertRaises(ValueError):render_spec(spec,Path(__file__).resolve().parents[1]/'html_sdd/assets/console.html')
 
     def test_legacy_tooltips_keep_both_old_text_and_note(self):
         spec=copy.deepcopy(EXAMPLE);spec['metadata'].update(status='旧阶段说明',statusNote='额外说明',statusPolicy='legacy')

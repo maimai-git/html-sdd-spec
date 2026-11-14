@@ -9,7 +9,7 @@ from html_sdd.renderer import render_spec
 
 ROOT = Path(__file__).resolve().parents[1]
 EXAMPLE = json.loads((ROOT / "examples/asset-library/sdd.json").read_text())
-TEMPLATE = ROOT / "templates" / "console.html"
+TEMPLATE = ROOT / "html_sdd" / "assets" / "console.html"
 
 
 class MermaidContractTest(unittest.TestCase):

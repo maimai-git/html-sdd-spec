@@ -79,8 +79,26 @@ pre{margin:0;overflow:auto;max-height:560px;padding:13px 15px;border-radius:6px;
  <main>
   <div v-if="mode==='requirements'" class="overview tools">
    <details><summary>版本信息</summary><dl class="facts"><template v-for="[key,value] in Object.entries(spec.baseline||{})" :key="key"><dt>{{ caption(key) }}</dt><dd>{{ readable(value) }}</dd></template></dl></details>
-   <details v-if="readiness"><summary>编码条件 · {{ readiness.codingReady ? '可开始' : '待确认' }}</summary><p v-for="line in readiness.exitCriteria" :key="line">{{ line }}</p><small>{{ readable(readiness.blockingItems) }}</small></details>
-   <details v-if="spec.questions?.length"><summary>待确认事项 · {{ spec.questions.length }}</summary><p v-for="item in spec.questions" :key="item.id">{{ item.question }} <small>{{ item.status }}</small></p></details>
+   <details v-if="readiness"><summary>编码条件 · {{ summary.codingReady === true ? '可开始' : summary.codingReady === false ? '待确认' : '未记录' }}</summary>
+    <p v-for="line in readiness.exitCriteria" :key="line">{{ line }}</p>
+    <p v-for="issue in summary.readinessIssues" :key="issue.path + issue.message"><small>{{ issue.path }} · {{ issue.message }}</small></p>
+    <small v-if="!Array.isArray(readiness.blockingItems)">编码阻塞未记录</small>
+   </details>
+   <details v-if="todoCount" data-summary="todo"><summary>剩余事项 · {{ todoCount }} 项</summary>
+    <div v-for="[key,title] in todoGroups" :key="key">
+     <details v-if="summary[key]?.length" :data-summary="key"><summary>{{ title }}（{{ summary[key].length }}）</summary>
+      <ul><li v-for="item in summary[key]" :key="item.id || item" :data-id="item.id">
+       <template v-if="typeof item === 'string'">{{ caption(item) }}</template>
+       <template v-else>{{ item.title }} <small>· {{ item.id }} · {{ item.status }}<template v-if="key==='openQuestions'"> · {{ questionKind(item) }}</template></small>
+        <div v-if="item.blocker || item.note || item.reason"><small>{{ [item.blocker,item.note,item.reason].filter(Boolean).join(' · ') }}</small></div>
+       </template>
+      </li></ul>
+     </details>
+    </div>
+   </details>
+   <details v-if="spec.metadata.previousSpecs?.length"><summary>旧方案引用</summary><ul>
+    <li v-for="(item,index) in spec.metadata.previousSpecs" :key="index">{{ item.summary }}<br><small>{{ item.source }}<template v-if="item.recordIds?.length"> · {{ item.recordIds.join('、') }}</template><template v-if="item.commit"> · {{ item.commit }}</template></small></li>
+   </ul></details>
   </div>
   <section v-if="mode==='plans'" class="plan surface">
    <h1>需求排期</h1>
@@ -160,7 +178,7 @@ pre{margin:0;overflow:auto;max-height:560px;padding:13px 15px;border-radius:6px;
    <details v-if="!isApi && more.length" class="block"><summary>更多信息</summary><dl class="facts"><template v-for="[key,value] in more" :key="key"><dt>{{ caption(key) }}</dt><dd>{{ readable(value) }}</dd></template></dl></details>
    <related-records :record="record" @jump="jump"></related-records>
   </article>
-  <p v-else class="empty">{{ records.length ? '没有符合条件的条目' : (spec.metadata.sectionCoverage?.[mode]?.reason || '本次未涉及') }}</p>
+  <p v-else class="empty">{{ records.length ? '没有符合条件的条目' : emptySection(mode) }}</p>
  </main>
 </div>
 </template>
@@ -176,12 +194,27 @@ pre{margin:0;overflow:auto;max-height:560px;padding:13px 15px;border-radius:6px;
  </details>
 </template>
 <script id="html-sdd-spec" type="application/json">__HTML_SDD_SPEC_JSON__</script>
+<script id="html-sdd-summary" type="application/json">__HTML_SDD_SUMMARY__</script>
 <script id="html-sdd-field-diff" type="application/json">__HTML_SDD_FIELD_DIFF__</script>
 <script>
 window.addEventListener('DOMContentLoaded',()=>{
  if(!window.Vue){document.getElementById('app').textContent='Vue 加载失败，请检查网络后刷新页面。';return}
  const {createApp,ref,reactive,computed,watch,nextTick}=Vue;
  const spec=JSON.parse(document.getElementById('html-sdd-spec').textContent);
+ const summary=JSON.parse(document.getElementById('html-sdd-summary').textContent);
+ const todoGroups=[
+  ['pendingPlans','未完成任务'],['acceptanceGaps','验收缺口'],['deliveryGaps','部署与验证待办'],
+  ['blockingItems','其他阻塞'],['openQuestions','未关闭问题'],['unverified','待核实'],['missingCoverage','待补充范围'],
+ ];
+ const todoCount=todoGroups.reduce((total,[key])=>total+(summary[key]?.length||0),0);
+ const questionKind=item=>item.requiresUserDecision===true?'等用户决定':item.requiresUserDecision===false?'AI 继续核实':'待分类';
+ function emptySection(mode){
+  const coverage=spec.metadata.sectionCoverage?.[mode];
+  const reason=typeof coverage?.reason==='string'?coverage.reason.trim():'';
+  if(!['requirements','plans'].includes(mode)&&coverage?.status==='not_applicable'&&reason)return '本期不涉及 · '+reason;
+  if(coverage?.status==='pending')return reason?'待补充 · '+reason:'待补充';
+  return '尚未判断';
+ }
  const fieldDiff=JSON.parse(document.getElementById("html-sdd-field-diff").textContent);
  const fieldLabels={added:"新增",changed:"修改",removed:"删除"};
  const statusKind=field=>Object.keys(fieldLabels).find(key=>fieldLabels[key]===field.changeStatus);
@@ -194,7 +227,7 @@ window.addEventListener('DOMContentLoaded',()=>{
  const agentMap=new Map((spec.agents||[]).map(agent=>[agent.id,agent.name]));
  const byId=new Map(tabs.flatMap(([mode])=>(spec[mode]||[]).map(item=>[item.id,{mode,item}])));
  const label=item=>item.title||(item.displayName?`${item.name}（${item.displayName}）`:item.name)||item.main||item.id;
- const caption=key=>labels[key]||key;
+ const caption=key=>tabs.find(([id])=>id===key)?.[1]||labels[key]||key;
  const readable=value=>value==null?'—':typeof value==='string'?value:typeof value==='object'?JSON.stringify(value,null,2):String(value);
  const columnFacts=column=>[
   ['类型',column.type],['可空',column.nullable==null?null:column.nullable?'是':'否'],
@@ -311,7 +344,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   const schedule=computed(()=>groupPlans.value?groupBy(planRows.value,task=>task.module):[['全部任务',planRows.value]]);
   let renderCount=0;
   watch(record,async(item,_,cleanup)=>{let obsolete=false;cleanup(()=>obsolete=true);diagramReady.value=false;if(!item?.diagramSource||diagramEngine(item)!=='mermaid')return;try{const engine=await mermaid();if(obsolete)return;const {svg}=await engine.render('sdd-diagram-'+(++renderCount),item.diagramSource);if(obsolete)return;diagramReady.value=true;await nextTick();if(!obsolete&&diagramNode.value)diagramNode.value.innerHTML=svg}catch{diagramReady.value=false}});
-  return {spec,registry,tabs,mode,fieldChanges,fieldLabels,statusKind,markedColumns,hasMarkedFields,columnFacts,onlyChanged,fieldChangeKind,visibleFields,selected,openTask,planStatus,sort,groupPlans,filters,records,isApi,catalogFilter,itemStatus,recordStatus,statusNote,changes,developmentFilters,verificationStatuses,visible,catalog,record,primary,apiRules,more,selectMode,jump,planRows,schedule,byId,label,caption,readable,tone,planDetails,columns,fields,fieldText,nameFor,agentNames,taskNote,planColumns,readiness:spec.metadata.readiness,diagramReady,diagramNode,diagramEngine,diagramLabel,svgImage};
+  return {spec,summary,todoGroups,todoCount,questionKind,emptySection,registry,tabs,mode,fieldChanges,fieldLabels,statusKind,markedColumns,hasMarkedFields,columnFacts,onlyChanged,fieldChangeKind,visibleFields,selected,openTask,planStatus,sort,groupPlans,filters,records,isApi,catalogFilter,itemStatus,recordStatus,statusNote,changes,developmentFilters,verificationStatuses,visible,catalog,record,primary,apiRules,more,selectMode,jump,planRows,schedule,byId,label,caption,readable,tone,planDetails,columns,fields,fieldText,nameFor,agentNames,taskNote,planColumns,readiness:spec.metadata.readiness,diagramReady,diagramNode,diagramEngine,diagramLabel,svgImage};
  }}).mount('#app');
 });
 </script>

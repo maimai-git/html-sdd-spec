@@ -56,14 +56,14 @@ class IntegrityLintTest(unittest.TestCase):
         issues = validate_spec(spec)
         self.assertTrue(any(issue.code == "LINT_OWNER_PATH_OVERLAP" for issue in issues))
 
-    def test_ready_requirement_requires_plan_and_acceptance_evidence(self):
+    def test_ready_requirement_requires_plan_and_acceptance_example(self):
         spec = copy.deepcopy(EXAMPLE)
         requirement = spec["requirements"][0]
         requirement["status"] = "编码 READY"
         requirement["acceptance"][0]["evidence"] = "EVID-REQ"
         for plan in spec["plans"]:
             plan["requirementIds"] = [item for item in plan["requirementIds"] if item != requirement["id"]]
-        requirement["acceptance"][1].pop("evidence", None)
+        requirement["acceptance"][1]["text"] = "  "
         issues = validate_spec(spec)
         ready_issues = [issue for issue in issues if issue.code == "READY_INCOMPLETE"]
         self.assertGreaterEqual(len(ready_issues), 2)

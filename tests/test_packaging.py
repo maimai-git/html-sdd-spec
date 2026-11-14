@@ -29,9 +29,7 @@ class PackagingTest(unittest.TestCase):
 
     def test_package_contains_the_offline_console_asset(self):
         asset = ROOT / "html_sdd" / "assets" / "console.html"
-        template = ROOT / "templates" / "console.html"
         self.assertTrue(asset.exists())
-        self.assertEqual(template.read_text(), asset.read_text())
 
     def test_skeleton_has_a_readiness_gate(self):
         from html_sdd.scaffold import skeleton_spec

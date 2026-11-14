@@ -7,7 +7,7 @@ from html_sdd.scaffold import skeleton_spec
 
 
 ROOT = Path(__file__).resolve().parents[1]
-TEMPLATE = ROOT / "templates" / "console.html"
+TEMPLATE = ROOT / "html_sdd" / "assets" / "console.html"
 
 
 class MultiAgentRolesTest(unittest.TestCase):

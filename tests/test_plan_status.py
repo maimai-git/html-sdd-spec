@@ -7,7 +7,7 @@ from html_sdd.checker import validate_spec
 
 ROOT = Path(__file__).resolve().parents[1]
 EXAMPLE = json.loads((ROOT / "examples/asset-library/sdd.json").read_text())
-TEMPLATE = ROOT / "templates" / "console.html"
+TEMPLATE = ROOT / "html_sdd" / "assets" / "console.html"
 PLAN_STATUS = {
     "待拆分", "待确认", "编码 READY", "待开始", "进行中", "待接入",
     "待执行", "待复核", "待验收", "阻塞", "已完成", "已取消",

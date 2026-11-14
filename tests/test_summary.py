@@ -62,3 +62,39 @@ class SummaryTest(unittest.TestCase):
             result["missingCoverage"],
         )
         self.assertFalse(result["codingReady"])
+
+    def test_summary_uses_same_pending_items_as_vue(self):
+        import re
+
+        from html_sdd.renderer import render_spec
+
+        spec = skeleton_spec()
+        spec["metadata"]["sectionCoverage"].pop("apis")
+        spec["metadata"]["sectionCoverage"]["tables"] = {
+            "status": "not_applicable", "reason": "沿用当前表",
+        }
+        spec["questions"] = [
+            {"id": "Q-USER", "question": "决定业务边界", "status": "待确认", "requiresUserDecision": True},
+            {"id": "Q-AI", "question": "查测试环境", "status": "待确认", "requiresUserDecision": False},
+            {"id": "Q-LEGACY", "question": "未分类", "status": "待确认"},
+            {"id": "Q-CLOSED", "question": "已关闭", "status": "已解决"},
+            {"id": "Q-CANCEL", "question": "已撤销", "status": "待确认", "state": "cancelled"},
+        ]
+        result = self.run_summary(spec)
+        self.assertEqual(["Q-USER", "Q-AI", "Q-LEGACY"], [item["id"] for item in result["openQuestions"]])
+        self.assertEqual([True, False, None], [item.get("requiresUserDecision") for item in result["openQuestions"]])
+        self.assertIn("apis", result["missingCoverage"])
+        self.assertNotIn("tables", result["missingCoverage"])
+        html = render_spec(spec, ROOT / "html_sdd" / "assets" / "console-vue.html")
+        payload = re.search(r'<script id="html-sdd-summary" type="application/json">(.*?)</script>', html, re.S)
+        self.assertIsNotNone(payload)
+        embedded = json.loads(payload[1])
+        for key in ("openQuestions", "pendingPlans", "deliveryGaps", "missingCoverage", "blockingItems", "acceptanceGaps", "unverified"):
+            self.assertEqual(result[key], embedded[key])
+
+    def test_invalid_ready_flag_does_not_make_summary_ready(self):
+        spec = skeleton_spec()
+        spec["metadata"]["readiness"]["codingReady"] = True
+        result = self.run_summary(spec)
+        self.assertFalse(result["codingReady"])
+        self.assertIn("READY_PROJECT_INCOMPLETE", [item["code"] for item in result["readinessIssues"]])

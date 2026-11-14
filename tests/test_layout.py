@@ -24,12 +24,11 @@ class StandardLayoutTest(unittest.TestCase):
             target = project_root / "html-sdd-spec" / "新开发需求"
             self.assertTrue((target / "方案事实源.json").exists())
             self.assertTrue((target / "方案对齐.html").exists())
-            self.assertTrue((target / "使用说明.md").exists())
+            self.assertFalse((target / "使用说明.md").exists())
             for name in ("变更记录", "证据", "证据索引", "临时文件"):
                 with self.subTest(directory=name):
                     self.assertFalse((target / name).exists())
             self.assertTrue((target / ".gitignore").exists())
-            self.assertIn("子需求", (target / "使用说明.md").read_text())
             self.assertFalse((target / "sdd.json").exists())
             self.assertFalse((target / "rendered" / "index.html").exists())
 

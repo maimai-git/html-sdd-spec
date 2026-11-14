@@ -10,6 +10,7 @@ from .diffing import diff_specs
 
 from .references import field_change_errors, validate_references
 from .statuses import registry, status_css, status_issues
+from .summary import build_summary
 
 PLACEHOLDER = "__HTML_SDD_SPEC_JSON__"
 
@@ -48,5 +49,10 @@ def render_spec(
     title=title.strip() if isinstance(title,str) and title.strip() else '需求方案'
     document_title = f"HTML SDD Spec {title}"
     replacements={PLACEHOLDER:payload,'__HTML_SDD_FIELD_DIFF__':_script_data(field_diff),'__HTML_SDD_DOCUMENT_TITLE__':escape(document_title),'__HTML_SDD_STATUSES__':statuses,'__HTML_SDD_STATUS_CSS__':status_css()}
+    if "__HTML_SDD_SUMMARY__" in template:
+        summary = build_summary(spec)
+        keys = ("codingReady", "readinessIssues", "pendingPlans", "acceptanceGaps",
+                "deliveryGaps", "blockingItems", "openQuestions", "unverified", "missingCoverage")
+        replacements["__HTML_SDD_SUMMARY__"] = _script_data({key: summary[key] for key in keys if key in summary})
     # Insert each value once, without interpreting placeholder-like text inside user content.
     return re.sub('|'.join(re.escape(key) for key in replacements),lambda match:replacements[match.group()],template)

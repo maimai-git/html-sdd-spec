@@ -24,7 +24,7 @@
 
 ## 怎么用
 
-**先看效果。** 下载仓库后，用浏览器打开 `examples/asset-library/index.html`。页面使用 Vue CDN，需要联网。
+**先看效果。** 下载仓库后，用浏览器直接打开本地文件 `examples/asset-library/index.html`，无需预览服务。页面使用 Vue CDN，需要联网。
 
 **交给 Codex。** 按指南安装 CLI 和 Skill，然后在你的项目里直接说下面这句话。[安装指南](docs/安装使用.md#4-作为-codex-skill-使用)
 
@@ -33,7 +33,7 @@
 **用命令行。** 需要 Python 3.9 或更高版本。在项目目录里执行：
 
 ```bash
-python -m pip install "https://github.com/maimai-git/html-sdd-spec/releases/download/v0.4.0/html_sdd_spec-0.4.0-py3-none-any.whl"
+python -m pip install "https://github.com/maimai-git/html-sdd-spec/releases/download/v0.5.0/html_sdd_spec-0.5.0-py3-none-any.whl"
 html-sdd init html-sdd-spec/批量发货
 ```
 

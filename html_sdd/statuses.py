@@ -18,6 +18,13 @@ def status_info(value, section):
     label=value if valid else '待核实'
     return {'label':label,'tone':data['statuses'][label], 'note':'' if valid else (value if isinstance(value,str) else '')}
 
+def question_is_open(record):
+    return (
+        record.get("state") not in ("verified", "accepted", "cancelled")
+        and record.get("status") not in _registry()["closedQuestions"]
+    )
+
+
 def status_records(spec):
     if isinstance(spec.get('metadata'),dict):yield 'metadata','metadata',spec['metadata']
     for section in _registry()['sections']:

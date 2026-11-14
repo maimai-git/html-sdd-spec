@@ -3,7 +3,8 @@ from __future__ import annotations
 
 from typing import Any, Iterable
 
-from .statuses import registry, status_info
+from .checker import check_ready_gate, section_is_not_applicable
+from .statuses import question_is_open, registry, status_info
 
 
 def _records(value: Any) -> Iterable[dict]:
@@ -48,18 +49,20 @@ def build_summary(spec: dict) -> dict:
         "deliveryGaps": [], "blockingItems": [], "openQuestions": [],
         "unverified": [], "missingCoverage": [],
     }
+    if result["codingReady"]:
+        issues = check_ready_gate(spec)
+        if issues:
+            result["codingReady"] = False
+            result["readinessIssues"] = [issue.as_dict() for issue in issues]
     agents = {
         _brief(agent.get("id")): _brief(agent.get("name"))
         for agent in _records(spec.get("agents"))
     }
-    coverage = metadata.get("sectionCoverage")
-    coverage = coverage if isinstance(coverage, dict) else {}
     for section in ("requirements", "plans"):
         if not list(_records(spec.get(section))):
             result["missingCoverage"].append(section)
     for section in ("apis", "tables", "configs", "architecture"):
-        item = coverage.get(section)
-        if isinstance(item, dict) and item.get("status") == "pending" and not list(_records(spec.get(section))):
+        if not list(_records(spec.get(section))) and not section_is_not_applicable(metadata, section):
             result["missingCoverage"].append(section)
 
     for plan in _records(spec.get("plans")):
@@ -104,7 +107,7 @@ def build_summary(spec: dict) -> dict:
     for section in ("apis", "tables", "configs"):
         for record in _records(spec.get(section)):
             entry = _entry(record, section)
-            if entry["status"] == "不适用":
+            if entry["status"] in ("不适用", "已取消"):
                 continue
             development = record.get("developmentStatus")
             if isinstance(development, str) and development in unfinished_development:
@@ -114,10 +117,13 @@ def build_summary(spec: dict) -> dict:
             category = "unverified" if entry["status"] == "待核实" else "deliveryGaps"
             result[category].append(entry)
 
-    closed_questions = registry()["closedQuestions"]
     for question in _records(spec.get("questions")):
-        if question.get("status") not in closed_questions:
-            result["openQuestions"].append(_entry(question, "questions"))
+        if question_is_open(question):
+            entry = _entry(question, "questions")
+            decision = question.get("requiresUserDecision")
+            if isinstance(decision, bool):
+                entry["requiresUserDecision"] = decision
+            result["openQuestions"].append(entry)
 
     blockers = readiness.get("blockingItems")
     if isinstance(blockers, list):
@@ -132,6 +138,8 @@ def build_summary(spec: dict) -> dict:
 def format_summary(summary: dict) -> str:
     coding_status = {True: "已就绪", False: "待就绪", None: "未记录"}
     lines = [summary["title"] or "需求盘点", f'编码条件 · {coding_status[summary["codingReady"]]}']
+    for issue in summary.get("readinessIssues", []):
+        lines.append(f'- {issue["path"]}：{issue["message"]}')
     for key, label in (
         ("pendingPlans", "未完成任务"), ("acceptanceGaps", "验收缺口"),
         ("deliveryGaps", "部署与验证待办"), ("blockingItems", "其他阻塞"),
@@ -144,7 +152,11 @@ def format_summary(summary: dict) -> str:
             if isinstance(entry, str):
                 lines.append(f"- {entry}")
                 continue
-            detail = " · ".join(filter(None, (
+            decision = entry.get("requiresUserDecision")
+            question_kind = (
+                "等用户决定" if decision is True else "AI 继续核实" if decision is False else "待分类"
+            ) if key == "openQuestions" else ""
+            detail = " · ".join(filter(None, (question_kind,
                 entry.get("module"), entry.get("requirementId"), entry["id"],
                 entry["title"] if entry["title"] != entry["id"] else None, entry["status"],
                 entry.get("developmentStatus"), entry.get("executor"), entry.get("blocker"),

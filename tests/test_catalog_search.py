@@ -10,7 +10,7 @@ ROOT = Path(__file__).resolve().parents[1]
 @unittest.skipUnless(shutil.which("node"), "模板函数回归需要 Node")
 class CatalogSearchTest(unittest.TestCase):
     def render_catalog(self, mode):
-        source = (ROOT / "templates/console.html").read_text()
+        source = (ROOT / "html_sdd/assets/console.html").read_text()
         code = source[source.index("const statusInfo="):source.index("function relatedBlock")]
         esc = "const esc=s=>" + source.split("const esc=s=>", 1)[1].splitlines()[0]
         paths = ["/api/files/{file_id}", '/api/<script>&"quote', "/api/long/" + "segment/" * 20]

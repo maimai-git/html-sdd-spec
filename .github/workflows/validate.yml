@@ -67,3 +67,18 @@ jobs:
           PY
           node --check 方案对齐.js
           node --check Classic版.js
+
+  vue-browser:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Build and install the wheel and Playwright
+        run: |
+          python -m pip wheel . --no-deps -w /tmp/html-sdd-wheel
+          python -m pip install /tmp/html-sdd-wheel/*.whl playwright==1.59.0
+          python -m playwright install --with-deps chromium
+      - name: Compare Vue with the CLI summary
+        run: python tests/browser/summary.py

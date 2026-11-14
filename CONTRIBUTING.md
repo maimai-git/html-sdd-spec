@@ -11,7 +11,7 @@ python3 -m html_sdd check examples/asset-library/sdd.json
 python3 -m html_sdd render examples/asset-library/sdd.json --output /tmp/html-sdd-index.html
 ~~~
 
-3. 检查生成的 HTML 可以离线打开。
+3. 在浏览器打开 Vue 页面。需要离线查看时，用 `render --template classic` 生成 Classic 页面。
 4. Pull Request 说明改变了哪些字段、兼容性影响和验证结果。
 
 ## 设计原则

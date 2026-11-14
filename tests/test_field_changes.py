@@ -48,7 +48,7 @@ class FieldChangesTest(unittest.TestCase):
         before = {"apis": [{"id": "API-1", "request": []}]}
         after = {"apis": [{"id": "API-1", "request": [{"name": "</script>"}]}]}
         for name in ("console.html", "console-vue.html"):
-            template = ROOT / "templates" / name
+            template = ROOT / "html_sdd" / "assets" / name
             html = render_spec(after, template, baseline=before)
             self.assertIn('"kind":"added"', html)
             self.assertIn(r"\u003c/script\u003e", html)
@@ -58,7 +58,6 @@ class FieldChangesTest(unittest.TestCase):
         for name in ("console.html", "console-vue.html"):
             with self.subTest(template=name):
                 template = (ROOT / "html_sdd" / "assets" / name).read_text()
-                self.assertEqual(template, (ROOT / "templates" / name).read_text())
                 self.assertNotIn("查看字段详情", template)
                 self.assertNotIn("field-change-list", template)
                 self.assertIn("column-diff-table", template)
@@ -89,4 +88,4 @@ class FieldChangesTest(unittest.TestCase):
         spec["tables"] = [{"id": "DATA-1", "columns": [{"name": "id", "changeStatus": "待确认"}]}]
         self.assertTrue(any(issue.code == "FIELD_CHANGE_STATUS_INVALID" for issue in validate_spec(spec)))
         with self.assertRaisesRegex(ValueError, "changeStatus"):
-            render_spec(spec, ROOT / "templates/console.html")
+            render_spec(spec, ROOT / "html_sdd/assets/console.html")

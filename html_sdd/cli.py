@@ -101,12 +101,8 @@ DEFAULT_TEMPLATE = "vue"
 
 
 def _template_path(template: str) -> Path:
-    """Return the bundled template, with a source-tree fallback for development."""
     filename = "console-vue.html" if template == "vue" else "console.html"
-    bundled = Path(__file__).resolve().parent / "assets" / filename
-    if bundled.exists():
-        return bundled
-    return Path(__file__).resolve().parents[1] / "templates" / filename
+    return Path(__file__).resolve().parent / "assets" / filename
 
 
 def build_parser() -> argparse.ArgumentParser:

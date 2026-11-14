@@ -1,7 +1,7 @@
 // Playwright CLI run-code；仅针对目录筛选示意数据，支持 file: 离线回归。
 async page => {
   const demoUrl=page.url();
-  if(!decodeURIComponent(new URL(demoUrl).pathname).endsWith("/目录筛选/方案对齐.html"))throw new Error("请先打开 examples/目录筛选/方案对齐.html");
+  if(!decodeURIComponent(new URL(demoUrl).pathname).endsWith("/目录筛选/方案对齐.html"))throw new Error("请先打开 tests/fixtures/目录筛选/方案对齐.html");
   await page.setViewportSize({width:1440,height:1000});
   let checks=0;const errors=[];page.on('pageerror',e=>errors.push(e.message));
   const verify=(condition,message)=>{checks++;if(!condition)throw new Error(message)};

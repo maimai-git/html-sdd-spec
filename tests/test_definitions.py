@@ -53,7 +53,7 @@ class DefinitionTest(unittest.TestCase):
                 issues = validate_spec(spec)
                 self.assertTrue(any(i.level == 'error' and i.code == 'DEFINITION_ERROR' for i in issues), issues)
                 with self.assertRaises(ValueError):
-                    render_spec(spec, ROOT/'templates/console.html')
+                    render_spec(spec, ROOT/'html_sdd/assets/console.html')
 
     def test_definitions_are_not_recursive_and_validate_unused_values(self):
         for bad in ({'$ref': '#/definitions/fields/分页'}, [], None, 3):
@@ -63,7 +63,7 @@ class DefinitionTest(unittest.TestCase):
 
     def test_html_stores_refs_and_full_context_expands_only_target(self):
         spec = fixture()
-        html = render_spec(spec, ROOT/'templates/console.html')
+        html = render_spec(spec, ROOT/'html_sdd/assets/console.html')
         self.assertEqual(spec, decode_html_payload(html))
         context = build_context(spec, spec['apis'][0]['id'], 'executor', full=True)
         self.assertEqual('Authorization', context['record']['request'][0]['field'])

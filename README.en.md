@@ -24,7 +24,7 @@ Bring a requirement's **goals, current implementation, design, and progress** to
 
 ## Quick start
 
-**View the example.** Download the repository and open `examples/asset-library/index.html` in your browser. The page loads Vue from a CDN.
+**View the example.** Download the repository and open the local `examples/asset-library/index.html` file in your browser. No preview server is needed. The page loads Vue from a CDN.
 
 **Use Codex.** Install the CLI and Skill using the setup guide, then ask Codex to work on a requirement in your project. [Setup guide](docs/安装使用.md#4-作为-codex-skill-使用)
 
@@ -33,7 +33,7 @@ Bring a requirement's **goals, current implementation, design, and progress** to
 **Use the CLI.** With Python 3.9 or later, run these commands in your project:
 
 ```bash
-python -m pip install "https://github.com/maimai-git/html-sdd-spec/releases/download/v0.4.0/html_sdd_spec-0.4.0-py3-none-any.whl"
+python -m pip install "https://github.com/maimai-git/html-sdd-spec/releases/download/v0.5.0/html_sdd_spec-0.5.0-py3-none-any.whl"
 html-sdd init html-sdd-spec/batch-shipping
 ```
 

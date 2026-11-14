@@ -9,7 +9,7 @@ from tests.rendered_payload import decode_html_payload
 
 
 ROOT = Path(__file__).resolve().parents[1]
-TEMPLATE = ROOT / "templates" / "console.html"
+TEMPLATE = ROOT / "html_sdd" / "assets" / "console.html"
 
 
 class OptionalSectionsTest(unittest.TestCase):
@@ -26,9 +26,9 @@ class OptionalSectionsTest(unittest.TestCase):
             "title": "统一日志格式",
             "summary": "调整日志输出格式",
             "status": "编码 READY",
-            "acceptance": [{"id": "AC-001", "text": "日志格式符合约定", "status": "待验证", "evidence": "测试用例已列出"}],
+            "acceptance": [{"id": "AC-001", "text": "日志格式符合约定", "status": "待验证"}],
             "related": ["PLAN-001"],
-            "impact": {"apis": "not_applicable", "tables": "not_applicable"},
+            "impact": dict.fromkeys(("apis", "tables", "architecture", "configs"), "not_applicable"),
         }]
         spec["plans"] = [{
             "id": "PLAN-001",
@@ -43,7 +43,7 @@ class OptionalSectionsTest(unittest.TestCase):
             "status": "待开始",
         }]
         issues = validate_spec(spec)
-        self.assertEqual([], [issue for issue in issues if issue.code == "READY_INCOMPLETE"])
+        self.assertEqual([], [issue for issue in issues if issue.level == "error"])
 
     def test_empty_section_renders_coverage_reason(self):
         spec = skeleton_spec()

@@ -19,7 +19,7 @@ class ScaffoldTest(unittest.TestCase):
             )
             self.assertEqual(0, result.returncode, result.stderr)
             self.assertTrue((target / "方案事实源.json").exists())
-            self.assertTrue((target / "使用说明.md").exists())
+            self.assertFalse((target / "使用说明.md").exists())
             self.assertTrue((target / "方案对齐.html").exists())
             spec = json.loads((target / "方案事实源.json").read_text())
             self.assertEqual("0.1", spec["specVersion"])
