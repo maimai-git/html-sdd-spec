@@ -1,11 +1,13 @@
 """Read-only checks for the release files attached to an SDD."""
 from __future__ import annotations
 
+import os
 import re
 from pathlib import Path
 from typing import Iterator, Optional
+from urllib.parse import quote
 
-from .checker import Issue
+from .checker import Issue, check_sensitive
 
 PROPERTIES = Path("上线配置清单/上线配置.properties")
 SQL = Path("上线SQL清单/上线SQL.sql")
@@ -136,11 +138,70 @@ def _check_layout(text: str, relative: Path, location: str) -> Iterator[Issue]:
             yield from _check_properties(body, location, line)
 
 
+def _read_release_file(source, directory: Path, relative: Path, field_path: str) -> str:
+    expected = (directory / relative).relative_to(_repo_root(directory)).as_posix()
+    if source != expected:
+        raise ReleaseFileError(Issue("error", "RELEASE_SOURCE_INVALID", field_path, f"执行文件应指向 {expected}"))
+    file = directory / relative
+    try:
+        if not file.resolve().is_relative_to(directory):
+            raise ReleaseFileError(Issue("error", "RELEASE_SOURCE_INVALID", field_path, "执行文件须位于当前需求目录"))
+        if not file.is_file():
+            raise FileNotFoundError(file)
+        text = file.read_text(encoding="utf-8")
+    except (OSError, UnicodeError, RuntimeError):
+        raise ReleaseFileError(Issue("error", "RELEASE_FILE_MISSING", field_path, "发布文件不存在或无法按 UTF-8 读取")) from None
+    if not text.strip():
+        raise ReleaseFileError(Issue("error", "RELEASE_FILE_EMPTY", field_path, "发布文件没有正文"))
+    if check_sensitive({"content": text}):
+        raise ReleaseFileError(Issue("error", "SENSITIVE_VALUE", field_path, "发布文件疑似包含敏感值，请改成占位符"))
+    return text
+
+
+class ReleaseFileError(ValueError):
+    def __init__(self, issue: Issue):
+        super().__init__(f"{issue.code} {issue.path}: {issue.message}")
+        self.issue = issue
+
+
+def release_path_records(
+    spec: dict, source_path: Optional[Path], output_path: Optional[Path],
+) -> tuple[dict, dict[str, str]]:
+    """Keep the canonical release files outside the rendered payload."""
+    configs = spec.get("configs")
+    if not isinstance(configs, list):
+        return spec, {}
+    rendered_configs = []
+    paths = {}
+    for index, record in enumerate(configs):
+        if not isinstance(record, dict):
+            rendered_configs.append(record)
+            continue
+        source = record.get("source")
+        # Legacy notes and demonstration snippets may still use inline content.
+        official = isinstance(source, str) and source.rsplit("/", 1)[-1] in (PROPERTIES.name, SQL.name)
+        if not official and "content" in record:
+            rendered_configs.append(record)
+            continue
+        field_path = f"configs[{index}].source"
+        relative = _release_file(record)
+        if relative is None or source_path is None:
+            raise ReleaseFileError(Issue("error", "RELEASE_SOURCE_INVALID", field_path, "仅支持从事实源所在需求目录引用正式发布文件"))
+        directory = source_path.parent.resolve()
+        _read_release_file(source, directory, relative, field_path)
+        destination = (output_path or source_path).parent.resolve()
+        href = Path(os.path.relpath(directory / relative, destination)).as_posix()
+        paths[source] = quote(href, safe="/")
+        rendered_configs.append({key: value for key, value in record.items() if key != "content"})
+    return {**spec, "configs": rendered_configs}, paths
+
+
 def validate_release(spec: dict, path: Path) -> list[Issue]:
     directory = path.parent.resolve()
-    root = _repo_root(directory)
     issues = []
-    seen = set()
+    linked = set()
+    checked = set()
+    root = _repo_root(directory)
     configs = spec.get("configs")
     if not isinstance(configs, list):
         return issues
@@ -148,30 +209,27 @@ def validate_release(spec: dict, path: Path) -> list[Issue]:
         if not isinstance(record, dict) or record.get("status") == "不适用":
             continue
         relative = _release_file(record)
-        if relative is None:
-            continue
         field_path = f"configs[{index}].source"
-        source = record.get("source")
+        if relative is None:
+            if "content" not in record:
+                issues.append(Issue("error", "RELEASE_SOURCE_INVALID", field_path, "仅支持引用正式发布文件"))
+            continue
         expected = (directory / relative).relative_to(root).as_posix()
-        if source != expected:
-            issues.append(Issue("error", "RELEASE_SOURCE_INVALID", field_path, f"执行文件应指向 {expected}"))
-            continue
-        file = root / expected
+        if record.get("source") == expected:
+            linked.add(relative)
         try:
-            if not file.resolve().is_relative_to(directory):
-                issues.append(Issue("error", "RELEASE_SOURCE_INVALID", field_path, "执行文件须位于当前需求目录"))
-                continue
-            text = file.read_text(encoding="utf-8")
-        except (OSError, UnicodeError, RuntimeError):
-            issues.append(Issue("error", "RELEASE_FILE_MISSING", field_path, "发布文件不存在或无法按 UTF-8 读取"))
+            text = _read_release_file(record.get("source"), directory, relative, field_path)
+        except ReleaseFileError as exc:
+            issues.append(exc.issue)
             continue
-        content = record.get("content")
-        if not isinstance(content, str) or text.rstrip("\n") != content.replace("\r\n", "\n").rstrip("\n"):
-            issues.append(Issue("error", "RELEASE_CONTENT_STALE", f"configs[{index}].content", "事实源与发布文件不一致，更新副本后重新生成 HTML"))
-        if relative not in seen:
+        if "content" in record:
+            content = record["content"]
+            if not isinstance(content, str) or text.rstrip("\n") != content.replace("\r\n", "\n").rstrip("\n"):
+                issues.append(Issue("error", "RELEASE_CONTENT_STALE", f"configs[{index}].content", "旧版内嵌正文与发布文件不一致"))
+        if relative not in checked:
             issues.extend(_check_layout(text, relative, expected))
-            seen.add(relative)
+            checked.add(relative)
     for relative in (PROPERTIES, SQL):
-        if (directory / relative).is_file() and relative not in seen:
+        if (directory / relative).is_file() and relative not in linked:
             issues.append(Issue("error", "RELEASE_FILE_UNLINKED", relative.as_posix(), "发布文件缺少对应的配置执行源记录"))
     return issues

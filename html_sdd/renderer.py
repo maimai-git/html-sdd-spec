@@ -8,9 +8,10 @@ from typing import Any, Optional
 
 from .diffing import diff_specs
 
+from .release_check import release_path_records
 from .references import field_change_errors, validate_references
 from .statuses import registry, status_css, status_issues
-from .summary import build_summary
+from .summary import build_page_summary
 
 PLACEHOLDER = "__HTML_SDD_SPEC_JSON__"
 
@@ -21,7 +22,8 @@ def _script_data(value: Any) -> str:
 
 
 def render_spec(
-    spec: dict[str, Any], template_path: Path, *, baseline: Optional[dict] = None
+    spec: dict[str, Any], template_path: Path, *, baseline: Optional[dict] = None,
+    source_path: Optional[Path] = None, output_path: Optional[Path] = None,
 ) -> str:
     validate_references(spec)
     invalid = next(field_change_errors(spec), None)
@@ -32,7 +34,8 @@ def render_spec(
     template = Path(template_path).read_text(encoding="utf-8")
     if PLACEHOLDER not in template:
         raise ValueError(f"template must contain {PLACEHOLDER}")
-    payload = _script_data(spec)
+    rendered_spec, release_paths = release_path_records(spec, source_path, output_path)
+    payload = _script_data(rendered_spec)
     field_diff = {}
     if baseline is not None:
         for change in diff_specs(baseline, spec):
@@ -49,10 +52,8 @@ def render_spec(
     title=title.strip() if isinstance(title,str) and title.strip() else '需求方案'
     document_title = f"HTML SDD Spec {title}"
     replacements={PLACEHOLDER:payload,'__HTML_SDD_FIELD_DIFF__':_script_data(field_diff),'__HTML_SDD_DOCUMENT_TITLE__':escape(document_title),'__HTML_SDD_STATUSES__':statuses,'__HTML_SDD_STATUS_CSS__':status_css()}
+    replacements["__HTML_SDD_RELEASE_PATHS__"] = _script_data(release_paths)
     if "__HTML_SDD_SUMMARY__" in template:
-        summary = build_summary(spec)
-        keys = ("codingReady", "readinessIssues", "pendingPlans", "acceptanceGaps",
-                "deliveryGaps", "blockingItems", "openQuestions", "unverified", "missingCoverage")
-        replacements["__HTML_SDD_SUMMARY__"] = _script_data({key: summary[key] for key in keys if key in summary})
+        replacements["__HTML_SDD_SUMMARY__"] = _script_data(build_page_summary(spec))
     # Insert each value once, without interpreting placeholder-like text inside user content.
     return re.sub('|'.join(re.escape(key) for key in replacements),lambda match:replacements[match.group()],template)

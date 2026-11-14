@@ -94,3 +94,61 @@ class ReuseTest(unittest.TestCase):
                 self.assertEqual(1,code)
             self.assertEqual('人工修改，请勿覆盖',output.read_text())
             self.assertEqual(before,path.read_bytes())
+
+    def test_reuse_drops_only_new_field_markers_repeated_by_the_parent(self):
+        from html_sdd.reuse import reuse_spec
+
+        spec = {
+            'apis': [
+                {'id': 'API-NEW', 'changeType': '新增接口',
+                 'request': [{'$ref': '#/definitions/fields/shared', 'changeStatus': '新增'}],
+                 'response': [{'field': 'id', 'changeStatus': '新增'},
+                              {'field': 'legacy', 'changeStatus': '删除'}],
+                 'responseExample': {'changeStatus': '新增'}},
+                {'id': 'API-OLD', 'changeType': '存量接口变更',
+                 'request': [{'field': 'value', 'changeStatus': '新增'}]},
+            ],
+            'tables': [
+                {'id': 'DATA-NEW', 'changeType': '新增数据表', 'ddl': 'CREATE TABLE sample (id bigint)',
+                 'columns': [{'name': 'id', 'type': 'bigint', 'changeStatus': '新增'}]},
+                {'id': 'DATA-OLD', 'changeType': '存量表变更',
+                 'columns': [{'name': 'value', 'changeStatus': '新增'}]},
+            ],
+            'definitions': {'fields': {'shared': {'field': 'Authorization'}}},
+        }
+        original = copy.deepcopy(spec)
+        compact = reuse_spec(spec)
+        self.assertEqual([{'$ref': '#/definitions/fields/shared'}], compact['apis'][0]['request'])
+        self.assertEqual([{'field': 'id'}, {'field': 'legacy', 'changeStatus': '删除'}],
+                         compact['apis'][0]['response'])
+        self.assertEqual({'changeStatus': '新增'}, compact['apis'][0]['responseExample'])
+        self.assertEqual([{'name': 'id', 'type': 'bigint'}], compact['tables'][0]['columns'])
+        self.assertEqual(spec['apis'][1], compact['apis'][1])
+        self.assertEqual(spec['tables'][1], compact['tables'][1])
+        self.assertEqual(original, spec)
+        self.assertEqual(compact, reuse_spec(compact))
+
+    def test_reuse_shares_interface_notes_without_turning_them_into_rules(self):
+        from html_sdd.reuse import reuse_spec
+
+        shared = "这段补充说明适用于多条接口。" * 20
+        spec = {"apis": [{"notes": [shared, "本接口的例外"]}] * 2,
+                "existingInterfaces": [{"notes": [shared], "rules": ["保持原规则"]}]}
+        compact = reuse_spec(spec)
+        self.assertIn("$ref", compact["apis"][0]["notes"][0])
+        self.assertNotIn("rules", compact["apis"][0])
+        self.assertEqual(spec, expanded_spec(compact, drop_definitions=True))
+        self.assertEqual(compact, reuse_spec(compact))
+
+    def test_format_command_compacts_json_without_changing_values(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "source.json"
+            output = Path(tmp) / "compact.json"
+            spec = {"apis": [{"id": "API-1", "request": [{"field": "状态", "example": False}]}]}
+            original = json.dumps(spec, indent=4, ensure_ascii=False)
+            path.write_text(original, encoding="utf-8")
+            with redirect_stdout(StringIO()):
+                self.assertEqual(0, main(["format", str(path), "--output", str(output)]))
+            self.assertEqual(spec, json.loads(output.read_text(encoding="utf-8")))
+            self.assertLess(output.stat().st_size, path.stat().st_size)
+            self.assertEqual(original, path.read_text(encoding="utf-8"))

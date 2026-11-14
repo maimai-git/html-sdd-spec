@@ -42,6 +42,16 @@
               },
               "rules": {
                 "$ref": "#/$defs/ruleList"
+              },
+              "notes": {
+                "anyOf": [
+                  {
+                    "type": "string"
+                  },
+                  {
+                    "$ref": "#/$defs/ruleList"
+                  }
+                ]
               }
             }
           }
@@ -884,6 +894,16 @@
             },
             "evidence": {
               "type": "string"
+            },
+            "notes": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "$ref": "#/$defs/ruleList"
+                }
+              ]
             }
           }
         }
@@ -1160,13 +1180,25 @@
             "kind",
             "title",
             "environment",
-            "status",
-            "content"
+            "status"
+          ],
+          "anyOf": [
+            {
+              "required": [
+                "source"
+              ]
+            },
+            {
+              "required": [
+                "content"
+              ]
+            }
           ],
           "properties": {
             "source": {
               "type": "string",
-              "description": "本阶段实际配置或SQL文件的路径；content是阅读快照，执行以源文件为准。"
+              "pattern": "\\S",
+              "description": "本期正式发布文件的仓库根目录相对路径。"
             },
             "group": {
               "type": "string"
@@ -1184,7 +1216,8 @@
               "type": "string"
             },
             "content": {
-              "type": "string"
+              "type": "string",
+              "pattern": "\\S"
             }
           }
         }

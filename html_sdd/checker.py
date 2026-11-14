@@ -246,7 +246,7 @@ def _check_required_fields(spec: dict[str, Any]) -> list[Issue]:
         "apis": ("group", "name", "method", "path", "changeType", "status", "summary", "request", "response", "requestExample", "responseExample"),
         "tables": ("group", "name", "changeType", "status", "purpose", "ddl"),
         "architecture": ("group", "type", "title", "status"),
-        "configs": ("group", "kind", "title", "environment", "status", "content"),
+        "configs": ("group", "kind", "title", "environment", "status"),
     }.items():
         records = spec.get(section, [])
         if not isinstance(records, list):
@@ -264,6 +264,11 @@ def _check_required_fields(spec: dict[str, Any]) -> list[Issue]:
                         "error", "OUT_OF_SCOPE_INVALID", f"{section}[{index}].outOfScope",
                         "非范围必须为非空字符串组成的数组，可省略或留空",
                     ))
+            if section == "configs":
+                if "content" in record and not _has_text(record["content"]):
+                    issues.append(Issue("error", "FIELD_MISSING", f"{section}[{index}].content", "内嵌正文须为非空字符串"))
+                elif "content" not in record and not _has_text(record.get("source")):
+                    issues.append(Issue("error", "FIELD_MISSING", f"{section}[{index}].source", "配置须填写发布文件路径或内嵌正文"))
             for field in required:
                 if field not in record or record[field] in (None, "", []):
                     issues.append(Issue("error", "FIELD_MISSING", f"{section}[{index}].{field}", f"缺少必填字段：{field}"))
@@ -806,7 +811,7 @@ def _check_previous_specs(spec: dict[str, Any]) -> list[Issue]:
     return issues
 
 
-def _check_sensitive(spec: dict[str, Any]) -> list[Issue]:
+def check_sensitive(spec: dict[str, Any]) -> list[Issue]:
     issues: list[Issue] = []
     for path, value in _walk_strings(spec):
         for pattern in SENSITIVE_PATTERNS:
@@ -852,7 +857,7 @@ def validate_spec(spec: dict[str, Any]) -> list[Issue]:
     issues.extend(_check_integrity(spec))
     issues.extend(check_ready_gate(spec))
     issues.extend(_check_previous_specs(spec))
-    issues.extend(_check_sensitive(spec))
+    issues.extend(check_sensitive(spec))
     issues.extend(_check_local_machine_paths(spec))
     return issues
 

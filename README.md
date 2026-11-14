@@ -33,7 +33,7 @@
 **用命令行。** 需要 Python 3.9 或更高版本。在项目目录里执行：
 
 ```bash
-python -m pip install "https://github.com/maimai-git/html-sdd-spec/releases/download/v0.5.0/html_sdd_spec-0.5.0-py3-none-any.whl"
+python -m pip install "https://github.com/maimai-git/html-sdd-spec/releases/download/v0.6.0/html_sdd_spec-0.6.0-py3-none-any.whl"
 html-sdd init html-sdd-spec/批量发货
 ```
 

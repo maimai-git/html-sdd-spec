@@ -157,6 +157,11 @@ pre{margin:0;overflow:auto;max-height:560px;padding:13px 15px;border-radius:6px;
    <div v-if="isApi" class="twocol">
     <details open class="block" v-for="[slot,title] in [['requestExample','请求示例'],['responseExample','响应示例']]" :key="slot"><summary>{{ title }}</summary><pre>{{ readable(record[slot]) }}</pre></details>
    </div>
+   <section v-if="mode==='configs' && record.source" class="block">
+    <h2>上线文件路径</h2>
+    <a v-if="releasePath(record.source)" :href="releasePath(record.source)" target="_blank" rel="noopener"><code>{{ record.source }}</code></a>
+    <code v-else>{{ record.source }}</code>
+   </section>
    <section v-for="[key,value] in primary" :key="key" class="block"><h2>{{ caption(key) }}</h2><pre v-if="['ddl','content'].includes(key)">{{ readable(value) }}</pre><ol v-else-if="Array.isArray(value)"><li v-for="(line,i) in value" :key="i">{{ readable(line) }}</li></ol><p v-else>{{ readable(value) }}</p></section>
    <section v-if="record.type==='diagram' && (record.diagramSource || record.diagramSvg || record.fallback)" class="block">
     <h2>{{ diagramLabel(record) }}</h2>
@@ -174,6 +179,10 @@ pre{margin:0;overflow:auto;max-height:560px;padding:13px 15px;border-radius:6px;
    <details v-if="apiRules.length" class="block">
     <summary>调用规则（{{ apiRules.length }}）</summary>
     <ul class="api-rules"><li v-for="(rule,i) in apiRules" :key="i">{{ rule }}</li></ul>
+   </details>
+   <details v-if="apiNotes.length" class="block">
+    <summary>补充说明（{{ apiNotes.length }}）</summary>
+    <ul class="api-rules"><li v-for="(note,i) in apiNotes" :key="i">{{ note }}</li></ul>
    </details>
    <details v-if="!isApi && more.length" class="block"><summary>更多信息</summary><dl class="facts"><template v-for="[key,value] in more" :key="key"><dt>{{ caption(key) }}</dt><dd>{{ readable(value) }}</dd></template></dl></details>
    <related-records :record="record" @jump="jump"></related-records>
@@ -195,18 +204,55 @@ pre{margin:0;overflow:auto;max-height:560px;padding:13px 15px;border-radius:6px;
 </template>
 <script id="html-sdd-spec" type="application/json">__HTML_SDD_SPEC_JSON__</script>
 <script id="html-sdd-summary" type="application/json">__HTML_SDD_SUMMARY__</script>
+<script id="html-sdd-release-paths" type="application/json">__HTML_SDD_RELEASE_PATHS__</script>
 <script id="html-sdd-field-diff" type="application/json">__HTML_SDD_FIELD_DIFF__</script>
 <script>
 window.addEventListener('DOMContentLoaded',()=>{
+ if(window.location.protocol!=='file:'){
+  document.getElementById('app').textContent='请直接用浏览器打开本地 HTML 文件。';
+  return;
+ }
  if(!window.Vue){document.getElementById('app').textContent='Vue 加载失败，请检查网络后刷新页面。';return}
  const {createApp,ref,reactive,computed,watch,nextTick}=Vue;
  const spec=JSON.parse(document.getElementById('html-sdd-spec').textContent);
+ const registry=__HTML_SDD_STATUSES__;
+ const releasePaths=JSON.parse(document.getElementById('html-sdd-release-paths').textContent);
+ const releasePath=source=>Object.hasOwn(releasePaths,source)?releasePaths[source]:'';
  const summary=JSON.parse(document.getElementById('html-sdd-summary').textContent);
  const todoGroups=[
   ['pendingPlans','未完成任务'],['acceptanceGaps','验收缺口'],['deliveryGaps','部署与验证待办'],
   ['blockingItems','其他阻塞'],['openQuestions','未关闭问题'],['unverified','待核实'],['missingCoverage','待补充范围'],
  ];
  const todoCount=todoGroups.reduce((total,[key])=>total+(summary[key]?.length||0),0);
+ const todoRecords=new Map();
+ for(const section of ['plans','apis','tables','configs','questions']){
+  for(const item of spec[section]||[])todoRecords.set(item.id,{item,section});
+ }
+ for(const requirement of spec.requirements||[]){
+  for(const item of requirement.acceptance||[])todoRecords.set(item.id,{item,section:'acceptance'});
+ }
+ const brief=value=>{
+  if(typeof value!=='string')return '';
+  const text=Array.from(value.trim().replace(/\s+/gu,' '));
+  return text.length>240?text.slice(0,239).join('')+'…':text.join('');
+ };
+ for(const [key] of todoGroups){
+  if(key==='blockingItems'||key==='missingCoverage')continue;
+  summary[key]=(summary[key]||[]).map(entry=>{
+   const id=typeof entry==='string'?entry:entry.id;
+   const match=todoRecords.get(id);
+   if(!match)return entry;
+   const {item,section}=match;
+   const status=typeof entry==='string'?item.status:entry.status??item.status;
+   const legacyStatus=registry.sections[section].includes(item.status)?'':item.status;
+   const notes=[item.note,item.progress,item.statusNote,legacyStatus].map(brief).filter(Boolean);
+   return {
+    id,status,title:[item.title,item.main,item.name,item.question,item.text].map(brief).find(Boolean)||id,
+    note:brief([...new Set(notes)].join('；')),blocker:section==='plans'?brief(item.blocker):'',
+    reason:entry.reason,requiresUserDecision:item.requiresUserDecision,
+   };
+  });
+ }
  const questionKind=item=>item.requiresUserDecision===true?'等用户决定':item.requiresUserDecision===false?'AI 继续核实':'待分类';
  function emptySection(mode){
   const coverage=spec.metadata.sectionCoverage?.[mode];
@@ -218,7 +264,6 @@ window.addEventListener('DOMContentLoaded',()=>{
  const fieldDiff=JSON.parse(document.getElementById("html-sdd-field-diff").textContent);
  const fieldLabels={added:"新增",changed:"修改",removed:"删除"};
  const statusKind=field=>Object.keys(fieldLabels).find(key=>fieldLabels[key]===field.changeStatus);
- const registry=__HTML_SDD_STATUSES__;
  const tabs=[['requirements','需求'],['plans','排期'],['apis','接口'],['existingInterfaces','现有接口'],['tables','数据表'],['architecture','架构设计'],['configs','上线配置']];
  const labels={name:'字段',location:'位置',type:'类型',required:'必填',description:'说明',example:'示例',summary:'概述',scope:'范围',outOfScope:'非范围',current:'当前情况',conclusion:'方案',steps:'主要做法',impact:'涉及内容',risks:'注意事项',rules:'规则',ddl:'DDL',content:'配置内容',statusNote:'状态说明',repository:'仓库',branch:'分支',commit:'提交',inspectedAt:'检查时间',timezone:'时区',worktreeState:'工作区',relevantDirtyPaths:'相关改动',sub:'子任务',start:'计划开始',end:'预计完成',owner:'负责人',reviewer:'审核人',executor:'执行人',batch:'批次',effort:'预估',deps:'依赖',progress:'进展',note:'备注',blocker:'阻塞原因',acceptanceCriteria:'验收标准',verification:'验证结果',ownerPaths:'文件范围',environment:'环境',kind:'类别',purpose:'用途',difference:'差异',evidence:'证据',notes:'补充说明',fallback:'文字说明',diagramType:'图类型',diagramEngine:'渲染方式'};
  const primaryKeys={requirements:['summary','scope','outOfScope'],tables:['ddl'],architecture:['summary','conclusion','current','steps','impact','risks'],configs:['content']};
@@ -321,14 +366,15 @@ window.addEventListener('DOMContentLoaded',()=>{
   const catalog=computed(()=>groupBy(visible.value,item=>item.group));
   const record=computed(()=>visible.value.find(item=>item.id===selected.value)||visible.value[0]);
   const fieldChanges=computed(()=>fieldDiff[mode.value]?.[record.value?.id]);
-  const markedColumns=computed(()=>(record.value?.columns||[]).filter(statusKind));
+  const markedColumns=computed(()=>(record.value?.columns||[]).filter(column=>
+   statusKind(column) && !(record.value.changeType==='新增数据表' && column.changeStatus==='新增')));
   const hasMarkedFields=computed(()=>['request','response'].some(slot=>
    fields(record.value?.[slot]).some(field=>fieldChangeKind(slot,field))));
   const onlyChanged=ref(false);
   watch(record,()=>{onlyChanged.value=false});
   function fieldChangeKind(slot,field){
    const explicit=statusKind(field);
-   if(explicit)return explicit;
+   if(explicit)return explicit==='added' && mode.value==='apis' && record.value?.changeType==='新增接口' ? undefined : explicit;
    const name=field.name||field.field;
    const location=slot==='request'?(field.location||field.where||''):'';
    return fieldChanges.value?.rows.find(row=>row.area===slot&&row.name===name&&row.location===location)?.kind;
@@ -336,7 +382,12 @@ window.addEventListener('DOMContentLoaded',()=>{
   const visibleFields=slot=>fields(record.value?.[slot]).filter(field=>!onlyChanged.value||fieldChangeKind(slot,field));
   const primary=computed(()=>(primaryKeys[mode.value]||[]).map(key=>[key,record.value?.[key]]).filter(([,value])=>present(value)));
   const apiRules=computed(()=>isApi.value?resolve(record.value?.rules,'rules').filter(present):[]);
-  const more=computed(()=>record.value?extra(record.value,[...omitted,...(primaryKeys[mode.value]||[])]):[]);
+  const apiNotes=computed(()=>{
+   if(!isApi.value)return [];
+   const notes=record.value?.notes;
+   return typeof notes==='string'?[notes].filter(present):resolve(notes,'rules').filter(present);
+  });
+  const more=computed(()=>record.value?extra(record.value,[...omitted,...(primaryKeys[mode.value]||[]),...(mode.value==='configs'?['source']:[])]):[]);
   function selectMode(key){mode.value=key;selected.value=''}
   function jump(id){const hit=byId.get(id);if(!hit)return;selectMode(hit.mode);Object.assign(filters[hit.mode],{query:'',change:'',status:''});selected.value=id;if(hit.mode==='plans')openTask.value=id}
   const numberedPlans=(()=>{const rows=spec.plans||[],used=new Set(rows.map(task=>task.sequence));let next=1;return rows.map(task=>{if(Number.isSafeInteger(task.sequence)&&task.sequence>0)return task;while(used.has(next))next++;return {...task,sequence:next++}})})();
@@ -344,7 +395,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   const schedule=computed(()=>groupPlans.value?groupBy(planRows.value,task=>task.module):[['全部任务',planRows.value]]);
   let renderCount=0;
   watch(record,async(item,_,cleanup)=>{let obsolete=false;cleanup(()=>obsolete=true);diagramReady.value=false;if(!item?.diagramSource||diagramEngine(item)!=='mermaid')return;try{const engine=await mermaid();if(obsolete)return;const {svg}=await engine.render('sdd-diagram-'+(++renderCount),item.diagramSource);if(obsolete)return;diagramReady.value=true;await nextTick();if(!obsolete&&diagramNode.value)diagramNode.value.innerHTML=svg}catch{diagramReady.value=false}});
-  return {spec,summary,todoGroups,todoCount,questionKind,emptySection,registry,tabs,mode,fieldChanges,fieldLabels,statusKind,markedColumns,hasMarkedFields,columnFacts,onlyChanged,fieldChangeKind,visibleFields,selected,openTask,planStatus,sort,groupPlans,filters,records,isApi,catalogFilter,itemStatus,recordStatus,statusNote,changes,developmentFilters,verificationStatuses,visible,catalog,record,primary,apiRules,more,selectMode,jump,planRows,schedule,byId,label,caption,readable,tone,planDetails,columns,fields,fieldText,nameFor,agentNames,taskNote,planColumns,readiness:spec.metadata.readiness,diagramReady,diagramNode,diagramEngine,diagramLabel,svgImage};
+  return {spec,releasePath,summary,todoGroups,todoCount,questionKind,emptySection,registry,tabs,mode,fieldChanges,fieldLabels,statusKind,markedColumns,hasMarkedFields,columnFacts,onlyChanged,fieldChangeKind,visibleFields,selected,openTask,planStatus,sort,groupPlans,filters,records,isApi,catalogFilter,itemStatus,recordStatus,statusNote,changes,developmentFilters,verificationStatuses,visible,catalog,record,primary,apiRules,apiNotes,more,selectMode,jump,planRows,schedule,byId,label,caption,readable,tone,planDetails,columns,fields,fieldText,nameFor,agentNames,taskNote,planColumns,readiness:spec.metadata.readiness,diagramReady,diagramNode,diagramEngine,diagramLabel,svgImage};
  }}).mount('#app');
 });
 </script>

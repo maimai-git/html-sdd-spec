@@ -161,9 +161,14 @@
     <main><article class="detail" id="detail" aria-live="polite"></article></main>
   </div>
   <script id="html-sdd-spec" type="application/json">__HTML_SDD_SPEC_JSON__</script>
+  <script id="html-sdd-release-paths" type="application/json">__HTML_SDD_RELEASE_PATHS__</script>
   <script id="html-sdd-field-diff" type="application/json">__HTML_SDD_FIELD_DIFF__</script>
   <script>
     (async function(){
+    if(window.location.protocol!=="file:"){
+      document.body.textContent="请直接用浏览器打开本地 HTML 文件。";
+      return;
+    }
     /*
      * 使用方法：
      * 1. 先填写 baseline，再把每条记录的 ID、证据和关联 ID 补齐。
@@ -359,8 +364,8 @@
       const values=[primary,...list(ids).filter(id=>id!==primary)].filter(Boolean);
       return values.length?values.map((id,index)=>agentName(id)+(index===0?"（主）":"")).join("、"):"未安排";
     }
-    function fieldTable(fields,isRequest){
-      const rows=list(fields).map(f=>"<tr><td class=\"field-name\">"+esc(f.name)+fieldStatusBadge(f.changeStatus)+"</td>"+(isRequest?"<td>"+esc(f.location||"")+"</td>":"")+"<td>"+esc(f.type||"")+"</td><td>"+esc(f.required??"")+"</td><td>"+esc(f.description||"")+"</td><td>"+esc(Object.prototype.hasOwnProperty.call(f,"example")?pretty(f.example):"")+"</td></tr>").join("");
+    function fieldTable(fields,isRequest,wholeInterfaceIsNew=false){
+      const rows=list(fields).map(f=>"<tr><td class=\"field-name\">"+esc(f.name)+fieldStatusBadge(wholeInterfaceIsNew && f.changeStatus==="新增" ? "" : f.changeStatus)+"</td>"+(isRequest?"<td>"+esc(f.location||"")+"</td>":"")+"<td>"+esc(f.type||"")+"</td><td>"+esc(f.required??"")+"</td><td>"+esc(f.description||"")+"</td><td>"+esc(Object.prototype.hasOwnProperty.call(f,"example")?pretty(f.example):"")+"</td></tr>").join("");
       const head=isRequest?"<th>字段</th><th>位置</th><th>类型</th><th>必填</th><th>说明</th><th>示例</th>":"<th>字段</th><th>类型</th><th>必填</th><th>说明</th><th>示例</th>";
       return "<div class=\"table-wrap param-scroll "+(isRequest?"request-params":"")+"\" tabindex=\"0\" role=\"region\" aria-label=\""+(isRequest?"请求参数":"返回参数")+"\"><table><thead><tr>"+head+"</tr></thead><tbody>"+(rows||"<tr><td colspan=\""+(isRequest?6:5)+"\">待补充</td></tr>")+"</tbody></table></div>";
     }
@@ -398,11 +403,11 @@
         if(!rows.length||rows.some(row=>category==="fields"?(!row||typeof row!=="object"||Array.isArray(row)||("$ref" in row)||typeof row.field!=="string"||!row.field.trim()):(typeof row!=="string"||!row.trim())))throw new Error("公共定义类型错误："+ref);
         return item.changeStatus?rows.map(row=>({...row,changeStatus:item.changeStatus})):rows;
       })};
-      return {...record,request:normalizeInterfaceFields(resolve(record.request,"fields")),response:normalizeInterfaceFields(resolve(record.response,"fields")),rules:resolve(record.rules,"rules")};
+      return {...record,request:normalizeInterfaceFields(resolve(record.request,"fields")),response:normalizeInterfaceFields(resolve(record.response,"fields")),rules:resolve(record.rules,"rules"),notes:typeof record.notes==="string"?[record.notes]:resolve(record.notes,"rules")};
     }
-    function rulesBlock(rules){
+    function rulesBlock(rules,title="业务规则"){
       const rows=list(rules);
-      return rows.length?"<details class=\"disclosure rules-disclosure\"><summary>业务规则（"+rows.length+"）</summary><div class=\"disclosure-content\"><ul>"+rows.map(row=>"<li>"+esc(row)+"</li>").join("")+"</ul></div></details>":"";
+      return rows.length?"<details class=\"disclosure rules-disclosure\"><summary>"+esc(title)+"（"+rows.length+"）</summary><div class=\"disclosure-content\"><ul>"+rows.map(row=>"<li>"+esc(row)+"</li>").join("")+"</ul></div></details>":"";
     }
     function interfaceSummary(x){
       const text=typeof x.summary==="string"?x.summary.trim():"";
@@ -424,7 +429,8 @@
         ? '<span class="field-change-badge field-change-'+kinds[status]+'">'+status+'</span>' : "";
     }
     function columnChangesBlock(x){
-      const marked=list(x.columns).filter(column=>fieldStatusBadge(column.changeStatus));
+      const marked=list(x.columns).filter(column=>fieldStatusBadge(column.changeStatus)
+        && !(x.changeType==="新增数据表" && column.changeStatus==="新增"));
       if(marked.length){
         const rows=marked.map(column=>"<tr><th scope=\"row\"><code>"+esc(column.name)+"</code></th><td>"
           +fieldStatusBadge(column.changeStatus)+"</td><td>"+esc(column.type||"—")+"</td></tr>").join("");
@@ -447,7 +453,7 @@
     function renderApis(x){
       try{x=expandApi(x)}catch(error){return "<p class=\"empty\">无法展开接口合同："+esc(error.message)+"</p>"}
 
-      return "<div class=\"card\"><div class=\"card-head\"><div><h1>"+esc(x.name)+"</h1><small><span class=\"record-id\">"+esc(x.id)+"</span> · "+esc(x.method)+" <span class=\"mono\">"+esc(x.path)+"</span></small></div><div class=\"tag-list\">"+change(x.changeType)+developmentTag(x)+"</div></div><div class=\"card-body\"><p class=\"delivery-note\" title=\""+esc(statusDescription(x,"apis")||x.status||"未记录")+"\">范围/部署说明："+esc(statusDescription(x,"apis")||x.status||"未记录")+"</p>"+interfaceSummary(x)+"<div class=\"section\"><h3>当前代码现状</h3><div class=\"callout\">"+esc(x.current||"待核实")+"</div></div><div class=\"param-grid\"><div class=\"param-pane\"><h3>请求参数</h3>"+fieldTable(x.request,true)+"</div><div class=\"param-pane\"><h3>返回参数</h3>"+fieldTable(x.response,false)+"</div></div><div class=\"instance-grid\"><div class=\"instance-pane\"><details open class=\"disclosure example-disclosure\"><summary>请求实例</summary><div class=\"disclosure-content\"><pre class=\"instance-box\">"+esc(pretty(x.requestExample))+"</pre></div></details></div><div class=\"instance-pane\"><details open class=\"disclosure example-disclosure\"><summary>响应实例</summary><div class=\"disclosure-content\"><pre class=\"instance-box\">"+esc(pretty(x.responseExample))+"</pre></div></details></div></div>"+rulesBlock(x.rules)+relatedBlock(x)+"</div></div>";
+      return "<div class=\"card\"><div class=\"card-head\"><div><h1>"+esc(x.name)+"</h1><small><span class=\"record-id\">"+esc(x.id)+"</span> · "+esc(x.method)+" <span class=\"mono\">"+esc(x.path)+"</span></small></div><div class=\"tag-list\">"+change(x.changeType)+developmentTag(x)+"</div></div><div class=\"card-body\"><p class=\"delivery-note\" title=\""+esc(statusDescription(x,"apis")||x.status||"未记录")+"\">范围/部署说明："+esc(statusDescription(x,"apis")||x.status||"未记录")+"</p>"+interfaceSummary(x)+"<div class=\"section\"><h3>当前代码现状</h3><div class=\"callout\">"+esc(x.current||"待核实")+"</div></div><div class=\"param-grid\"><div class=\"param-pane\"><h3>请求参数</h3>"+fieldTable(x.request,true,x.changeType==="新增接口")+"</div><div class=\"param-pane\"><h3>返回参数</h3>"+fieldTable(x.response,false,x.changeType==="新增接口")+"</div></div><div class=\"instance-grid\"><div class=\"instance-pane\"><details open class=\"disclosure example-disclosure\"><summary>请求实例</summary><div class=\"disclosure-content\"><pre class=\"instance-box\">"+esc(pretty(x.requestExample))+"</pre></div></details></div><div class=\"instance-pane\"><details open class=\"disclosure example-disclosure\"><summary>响应实例</summary><div class=\"disclosure-content\"><pre class=\"instance-box\">"+esc(pretty(x.responseExample))+"</pre></div></details></div></div>"+rulesBlock(x.rules)+rulesBlock(x.notes,"补充说明")+relatedBlock(x)+"</div></div>";
     }
     function renderExistingInterfaces(x){
       try{x=expandApi(x)}catch(error){return "<p class=\"empty\">无法展开接口合同："+esc(error.message)+"</p>"}
@@ -474,7 +480,12 @@
       return "<div class=\"card\"><div class=\"card-head\"><div><h1>"+esc(x.title)+"</h1><small><span class=\"record-id\">"+esc(x.id)+"</span> · "+esc(x.diagramType||"diagram")+" · "+esc(engine)+" · "+esc(x.group)+"</small></div>"+status(x.status,"architecture",x.statusNote)+"</div><div class=\"card-body\">"+statusNoteBlock(x,"architecture")+"<div class=\"section\"><h3>图要表达什么</h3><p>"+esc(x.summary||"待补充")+"</p></div><div class=\"diagram-panel\"><div class=\"diagram-label\">图形</div>"+diagram+"<div class=\"diagram-label\">图源（网络不可用时可读）</div><pre class=\"text-box\">"+esc(x.diagramSource||x.fallback||"待补充")+"</pre></div>"+relatedBlock(x)+"</div></div>";
     }
     function renderConfigs(x){
-      return "<div class=\"card\"><div class=\"card-head\"><div><h1>"+esc(x.title)+"</h1><small><span class=\"record-id\">"+esc(x.id)+"</span> · "+esc(x.kind)+" · "+esc(x.environment)+"</small></div>"+status(x.status,"configs",x.statusNote)+"</div><div class=\"card-body\">"+statusNoteBlock(x,"configs")+""+(x.source?"<p class=\"delivery-note\" title=\""+esc(x.source)+"\">执行来源：<code>"+esc(x.source)+"</code></p>":"")+"<div class=\"section\"><h3>上线配置内容</h3><pre class=\"text-box\">"+esc(x.content||"-- 待补充")+"</pre></div>"+relatedBlock(x)+"</div></div>";
+      const releasePaths=JSON.parse(document.getElementById("html-sdd-release-paths")?.textContent || "{}");
+      const href=Object.hasOwn(releasePaths,x.source)?releasePaths[x.source]:"";
+      const path="<code>"+esc(x.source)+"</code>";
+      const source=x.source?"<p class=\"delivery-note\">执行来源："+(href?"<a href=\""+esc(href)+"\" target=\"_blank\" rel=\"noopener\">"+path+"</a>":path)+"</p>":"";
+      const body=x.content?'<div class="section"><h3>上线配置内容</h3><pre class="text-box">'+esc(x.content)+'</pre></div>':"";
+      return "<div class=\"card\"><div class=\"card-head\"><div><h1>"+esc(x.title)+"</h1><small><span class=\"record-id\">"+esc(x.id)+"</span> · "+esc(x.kind)+" · "+esc(x.environment)+"</small></div>"+status(x.status,"configs",x.statusNote)+"</div><div class=\"card-body\">"+statusNoteBlock(x,"configs")+source+body+relatedBlock(x)+"</div></div>";
     }
     const scheduleState={status:"",sort:"priority",group:true};
     function scheduleRows(){

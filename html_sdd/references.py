@@ -1,4 +1,4 @@
-"""Local, single-hop definitions for API fields and rules; examples stay opaque."""
+"""Local, single-hop definitions for API fields, rules, and notes; examples stay opaque."""
 from __future__ import annotations
 
 import copy
@@ -6,7 +6,7 @@ import re
 from typing import Any
 
 API_SECTIONS = ('apis', 'existingInterfaces')
-SLOTS = {'request': 'fields', 'response': 'fields', 'rules': 'rules'}
+SLOTS = {'request': 'fields', 'response': 'fields', 'rules': 'rules', 'notes': 'rules'}
 FIELD_CHANGE_STATUSES = ('新增', '修改', '删除')
 
 
@@ -67,17 +67,17 @@ def expand_api(spec: dict, record: dict, path: str = 'api', *, _defs=None) -> di
     defs = definitions(spec) if _defs is None else _defs
     result = copy.deepcopy(record)
     for slot, category in SLOTS.items():
-        if slot not in result:
+        if slot not in result or (slot == "notes" and isinstance(result[slot], str)):
             continue
         if not isinstance(result[slot], list):
-            raise DefinitionError(path + '.' + slot, '参数和规则必须为数组；引用也必须放在数组中')
+            raise DefinitionError(path + '.' + slot, '参数、规则和说明的引用必须放在数组中')
         rows = []
         for index, item in enumerate(result[slot]):
             if isinstance(item, dict) and '$ref' in item:
                 rows.extend(_resolve(item, category, defs, f'{path}.{slot}[{index}]'))
             else:
                 if not isinstance(item, dict if category == 'fields' else str):
-                    raise DefinitionError(f'{path}.{slot}[{index}]', '字段必须为对象，规则必须为字符串或纯引用')
+                    raise DefinitionError(f'{path}.{slot}[{index}]', '字段必须为对象，规则和说明必须为字符串或纯引用')
                 rows.append(item)
         result[slot] = rows
     return result

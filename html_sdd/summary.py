@@ -135,6 +135,34 @@ def build_summary(spec: dict) -> dict:
     return result
 
 
+def build_page_summary(spec: dict) -> dict:
+    """Keep CLI-selected IDs and derived exceptions in the HTML summary."""
+    summary = build_summary(spec)
+    records = {record.get("id"): record
+               for section in ("plans", "apis", "tables", "configs", "questions")
+               for record in _records(spec.get(section)) if isinstance(record.get("id"), str)}
+    for requirement in _records(spec.get("requirements")):
+        for item in _records(requirement.get("acceptance")):
+            if isinstance(item.get("id"), str):
+                records[item["id"]] = item
+    for key in ("pendingPlans", "acceptanceGaps", "deliveryGaps", "openQuestions", "unverified"):
+        entries = []
+        for item in summary[key]:
+            record = records.get(item["id"])
+            if record is None:
+                entries.append(item)
+                continue
+            extra = {}
+            if item["status"] != record.get("status"):
+                extra["status"] = item["status"]
+            if "reason" in item:
+                extra["reason"] = item["reason"]
+            entries.append({"id": item["id"], **extra} if extra else item["id"])
+        summary[key] = entries
+    del summary["title"], summary["cancelledPlans"]
+    return summary
+
+
 def format_summary(summary: dict) -> str:
     coding_status = {True: "已就绪", False: "待就绪", None: "未记录"}
     lines = [summary["title"] or "需求盘点", f'编码条件 · {coding_status[summary["codingReady"]]}']

@@ -132,9 +132,12 @@ def build_parser() -> argparse.ArgumentParser:
     statuses = sub.add_parser("statuses", help="查询统一状态及颜色字典")
     statuses.add_argument("--section", help="板块，例如 plans、apis、metadata")
     statuses.add_argument("--json", action="store_true", dest="as_json")
-    reuse = sub.add_parser("reuse", help="预览完全相同参数/规则的公共定义提取；--output 写候选文件")
+    reuse = sub.add_parser("reuse", help="预览重复字段标记清理和公共参数、规则、说明提取；--output 写候选文件")
     reuse.add_argument("path", type=Path)
     reuse.add_argument("--output", type=Path)
+    formatter = sub.add_parser("format", help="生成可读的紧凑 JSON，保留所有数据")
+    formatter.add_argument("path", type=Path)
+    formatter.add_argument("--output", type=Path, required=True, help="新建候选 JSON 文件")
     browser = sub.add_parser("browser-check", help="运行已有 Playwright 会话脚本，仅回传摘要；完整日志留本地")
     browser.add_argument("script", type=Path)
     browser.add_argument("--session", required=True)
@@ -185,6 +188,22 @@ def main(argv=None) -> int:
         else:
             for name,items in result.items():print(name+"："+"、".join(item["label"]+"("+item["color"]+")" for item in items))
         return 0
+    if args.command == "format":
+        from .reuse import format_spec
+
+        try:
+            spec = load_spec(str(args.path))
+            if args.path.resolve() == args.output.resolve():
+                raise ValueError("请输出到新的候选文件")
+            text = format_spec(spec)
+            args.output.parent.mkdir(parents=True, exist_ok=True)
+            with args.output.open("x", encoding="utf-8") as handle:
+                handle.write(text)
+            print(f"OK {args.output}")
+            return 0
+        except (OSError, ValueError) as exc:
+            print(f"ERROR FORMAT: {exc}")
+            return 1
     if args.command == "reuse":
         from .reuse import reuse_spec, format_spec
         try:
@@ -231,7 +250,7 @@ def main(argv=None) -> int:
         try:
             spec = load_spec(str(args.path))
             baseline = load_spec(str(args.baseline)) if args.baseline is not None else None
-            html = render_spec(spec, _template_path(args.template), baseline=baseline)
+            html = render_spec(spec, _template_path(args.template), baseline=baseline, source_path=args.path, output_path=args.output)
             args.output.parent.mkdir(parents=True, exist_ok=True)
             args.output.write_text(html, encoding="utf-8")
             print(f"OK {args.output}")

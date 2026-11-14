@@ -1,4 +1,4 @@
-"""Extract profitable exact duplicates, without rewriting any business statements."""
+"""Remove redundant field markers and extract profitable exact duplicates."""
 from __future__ import annotations
 
 import copy
@@ -18,8 +18,29 @@ def _reference(category: str, name: str) -> dict:
     return {'$ref': '#/definitions/' + category + '/' + name.replace('~', '~0').replace('/', '~1')}
 
 
+def compact_change_markers(spec: dict) -> dict:
+    """Keep the whole-record label for new APIs and tables."""
+    result = copy.deepcopy(spec)
+    for section, change_type, slots in (
+        ('apis', '新增接口', ('request', 'response')),
+        ('tables', '新增数据表', ('columns',)),
+    ):
+        for record in result.get(section, []):
+            if not isinstance(record, dict) or record.get('changeType') != change_type:
+                continue
+            for slot in slots:
+                rows = record.get(slot)
+                if not isinstance(rows, list):
+                    continue
+                for row in rows:
+                    if isinstance(row, dict) and row.get('changeStatus') == '新增':
+                        del row['changeStatus']
+    return result
+
+
 def reuse_spec(spec: dict) -> dict:
     validate_references(spec)
+    spec = compact_change_markers(spec)
     result = copy.deepcopy(spec)
     catalogs = copy.deepcopy(spec.get('definitions', {}))
     # Only exact duplicates of existing inline fields/rules qualify; no fuzzy matching.

@@ -1,9 +1,11 @@
 import json
+import re
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from urllib.parse import unquote
 
 from html_sdd.scaffold import skeleton_spec
 
@@ -123,3 +125,80 @@ orders.enabled=false
     def test_release_file_without_config_record_is_reported(self):
         self.spec["configs"].pop(0)
         self.assertEqual({"RELEASE_FILE_UNLINKED"}, self.check("--release", exit_code=1))
+
+    def test_file_references_render_without_copying_release_contents(self):
+        from tests.rendered_payload import decode_html_payload
+
+        for record in self.spec["configs"]:
+            del record["content"]
+        self.assertEqual(set(), self.check("--release"))
+        self.sql.write_text(SQL + "\n-- 新增发布说明\n", encoding="utf-8")
+        self.assertEqual(set(), self.check("--release"))
+        before = self.source.read_bytes()
+        for template in ("vue", "classic"):
+            result, output = self.render(template)
+            self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+            html = output.read_text(encoding="utf-8")
+            self.assertEqual(self.spec, decode_html_payload(html))
+            self.assertNotIn("新增发布说明", html)
+            self.assertNotIn("CREATE TABLE public.orders", html)
+            self.assertIn(self.spec["configs"][1]["source"], html)
+            self.assertEqual("上线SQL清单/上线SQL.sql",
+                             unquote(self.release_paths(html)[self.spec["configs"][1]["source"]]))
+            self.assertEqual(before, self.source.read_bytes())
+            self.sql.write_text(SQL + "\n-- 正文改变后无需重新生成\n", encoding="utf-8")
+            again, output = self.render(template)
+            self.assertEqual(0, again.returncode, again.stdout)
+            self.assertEqual(html, output.read_text(encoding="utf-8"))
+
+    def test_legacy_official_file_content_is_not_rendered(self):
+        self.check()
+        result, output = self.render()
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        self.assertNotIn("CREATE TABLE public.orders", output.read_text(encoding="utf-8"))
+        self.assertNotIn("orders.enabled=true", output.read_text(encoding="utf-8"))
+
+    def test_render_rejects_missing_or_unsafe_release_files(self):
+        del self.spec["configs"][0]["content"]
+        self.check()
+        self.config.unlink()
+        result, _ = self.render()
+        self.assertEqual(1, result.returncode)
+        self.assertIn("RELEASE_FILE_MISSING", result.stdout)
+        outside = self.repo / "outside.properties"
+        outside.write_text(PROPERTIES)
+        self.config.symlink_to(outside)
+        result, _ = self.render()
+        self.assertEqual(1, result.returncode)
+        self.assertIn("RELEASE_SOURCE_INVALID", result.stdout)
+        self.config.unlink()
+        self.config.write_text(PROPERTIES + "\nexample.password=unsafe-example-value\n", encoding="utf-8")
+        result, _ = self.render()
+        self.assertEqual(1, result.returncode)
+        self.assertIn("SENSITIVE_VALUE", result.stdout)
+        self.assertIn("SENSITIVE_VALUE", self.check("--release", exit_code=1))
+        self.assertNotIn("unsafe-example-value", result.stdout + result.stderr)
+
+    def test_release_link_is_relative_to_html_output_directory(self):
+        self.check()
+        output = self.directory / "预览 #稿" / "方案对齐.html"
+        result, output = self.render(output=output)
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        html = output.read_text(encoding="utf-8")
+        href = self.release_paths(html)[self.spec["configs"][1]["source"]]
+        self.assertEqual("../上线SQL清单/上线SQL.sql", unquote(href))
+        self.assertEqual(self.sql.resolve(), (output.parent / unquote(href)).resolve())
+
+    def release_paths(self, html):
+        data = re.search(r'<script id="html-sdd-release-paths" type="application/json">(.*?)</script>', html)
+        self.assertIsNotNone(data)
+        return json.loads(data[1])
+
+    def render(self, template="vue", output=None):
+        output = output or self.directory / "方案对齐.html"
+        result = subprocess.run(
+            [sys.executable, "-m", "html_sdd", "render", str(self.source),
+             "--template", template, "--output", str(output)],
+            cwd=ROOT, capture_output=True, text=True, encoding="utf-8",
+        )
+        return result, output

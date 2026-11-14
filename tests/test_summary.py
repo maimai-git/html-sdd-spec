@@ -85,12 +85,28 @@ class SummaryTest(unittest.TestCase):
         self.assertEqual([True, False, None], [item.get("requiresUserDecision") for item in result["openQuestions"]])
         self.assertIn("apis", result["missingCoverage"])
         self.assertNotIn("tables", result["missingCoverage"])
+        spec["requirements"] = [{
+            "id": "REQ-001", "status": "待验收", "acceptance": [
+                {"id": "AC-001", "text": "这段验收条件只存一份", "status": "已通过"},
+            ],
+        }]
+        spec["plans"] = [{"id": "PLAN-001", "status": "阻塞", "note": "这段备注只存一份"}]
+        result = self.run_summary(spec)
         html = render_spec(spec, ROOT / "html_sdd" / "assets" / "console-vue.html")
         payload = re.search(r'<script id="html-sdd-summary" type="application/json">(.*?)</script>', html, re.S)
         self.assertIsNotNone(payload)
         embedded = json.loads(payload[1])
         for key in ("openQuestions", "pendingPlans", "deliveryGaps", "missingCoverage", "blockingItems", "acceptanceGaps", "unverified"):
-            self.assertEqual(result[key], embedded[key])
+            expected_ids = [item["id"] if isinstance(item, dict) else item for item in result[key]]
+            rendered_ids = [item["id"] if isinstance(item, dict) else item for item in embedded[key]]
+            self.assertEqual(expected_ids, rendered_ids)
+        self.assertEqual(["Q-USER", "Q-AI", "Q-LEGACY"], embedded["openQuestions"])
+        self.assertEqual(["PLAN-001"], embedded["pendingPlans"])
+        self.assertEqual({
+            "id": "AC-001", "status": "待核实", "reason": result["unverified"][0]["reason"],
+        }, embedded["unverified"][0])
+        self.assertNotIn("这段备注只存一份", payload[1])
+        self.assertNotIn("这段验收条件只存一份", payload[1])
 
     def test_invalid_ready_flag_does_not_make_summary_ready(self):
         spec = skeleton_spec()
