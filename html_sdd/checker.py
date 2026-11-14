@@ -5,7 +5,7 @@ import json
 import re
 from typing import Any, Iterable, Optional
 
-from .references import DefinitionError, validate_references
+from .references import DefinitionError, field_change_errors, validate_references
 from .statuses import registry, status_issues
 
 RECORD_SECTIONS = (
@@ -736,6 +736,8 @@ def validate_spec(spec: dict[str, Any]) -> list[Issue]:
     if spec.get("specVersion") != "0.1":
         issues.append(Issue("error", "SPEC_VERSION", "specVersion", "当前 CLI 只支持 specVersion 0.1"))
     issues.extend(Issue(*item) for item in status_issues(spec))
+    issues.extend(Issue("error", "FIELD_CHANGE_STATUS_INVALID", path, "字段变更状态只能为新增、修改或删除")
+                  for path in field_change_errors(spec))
     known_ids, id_issues = _record_ids(spec)
     issues.extend(id_issues)
     issues.extend(_check_required_fields(spec))

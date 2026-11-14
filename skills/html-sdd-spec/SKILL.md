@@ -59,6 +59,10 @@ html-sdd render <JSON> --output <HTML>
 
 验证输出优先摘要，失败再读必要片段。已有 Playwright 会话可运行 `html-sdd browser-check <脚本.js> --session <会话名>`；需预装 playwright-cli，打开会话和调用命令必须在同一工作目录。日志在 `output/playwright/`，须 Git 忽略，不放敏感值。
 
+## 字段级变更
+
+接口请求、返回和表列直接在事实源填 `changeStatus`（新增、修改、删除）。删除只保留原字段名、必要的请求位置与状态，更新示例和 DDL 时按当前契约填写。共享参数将状态写在本次使用的 `$ref` 同级。普通 `render` 直接标色。需要比较旧值时才用 `diff <基线JSON> <当前JSON> --json`。
+
 ## 盘点整个需求
 
 用户问「整个需求还剩哪些」「还有什么没做完」或「离上线还差什么」时，先运行 `html-sdd summary <JSON> --json`，再用 `context` 按 ID 补查。摘要只读取当前事实源。旧版 CLI 没有 `summary` 时，用 Python 或 jq 提取下列字段。参数不确定时运行 `html-sdd <子命令> --help`。

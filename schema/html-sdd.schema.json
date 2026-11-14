@@ -250,6 +250,14 @@
         "$ref": {
           "type": "string",
           "pattern": "^#/definitions/fields/(?:[^~/]|~[01])+$"
+        },
+        "changeStatus": {
+          "type": "string",
+          "enum": [
+            "新增",
+            "修改",
+            "删除"
+          ]
         }
       }
     },
@@ -272,6 +280,16 @@
         "required": [
           "$ref"
         ]
+      },
+      "properties": {
+        "changeStatus": {
+          "type": "string",
+          "enum": [
+            "新增",
+            "修改",
+            "删除"
+          ]
+        }
       }
     },
     "definedField": {
@@ -280,8 +298,17 @@
         "field"
       ],
       "not": {
-        "required": [
-          "$ref"
+        "anyOf": [
+          {
+            "required": [
+              "$ref"
+            ]
+          },
+          {
+            "required": [
+              "changeStatus"
+            ]
+          }
         ]
       },
       "properties": {
@@ -876,6 +903,40 @@
             },
             "ddl": {
               "type": "string"
+            },
+            "columns": {
+              "description": "可选的完整列快照，用于和基线做字段级比较。",
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": [
+                  "name"
+                ],
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "pattern": "\\S"
+                  },
+                  "type": {
+                    "type": "string"
+                  },
+                  "nullable": {
+                    "type": "boolean"
+                  },
+                  "default": {},
+                  "description": {
+                    "type": "string"
+                  },
+                  "changeStatus": {
+                    "type": "string",
+                    "enum": [
+                      "新增",
+                      "修改",
+                      "删除"
+                    ]
+                  }
+                }
+              }
             },
             "current": {
               "type": "string"

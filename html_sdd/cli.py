@@ -147,6 +147,7 @@ def build_parser() -> argparse.ArgumentParser:
     render = sub.add_parser("render", help="生成单文件 HTML（Mermaid 图表按需使用 CDN）")
     render.add_argument("path", type=Path)
     render.add_argument("--output", type=Path, required=True)
+    render.add_argument("--baseline", type=Path, help="本期起点事实源 JSON，用于显示字段差异")
     render.add_argument(
         "--template", choices=("classic", "vue"), default=DEFAULT_TEMPLATE,
         help="页面模板，默认 vue（从 CDN 加载 Vue）；可选 classic",
@@ -233,7 +234,8 @@ def main(argv=None) -> int:
     if args.command == "render":
         try:
             spec = load_spec(str(args.path))
-            html = render_spec(spec, _template_path(args.template))
+            baseline = load_spec(str(args.baseline)) if args.baseline is not None else None
+            html = render_spec(spec, _template_path(args.template), baseline=baseline)
             args.output.parent.mkdir(parents=True, exist_ok=True)
             args.output.write_text(html, encoding="utf-8")
             print(f"OK {args.output}")

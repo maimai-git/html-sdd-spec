@@ -31,6 +31,19 @@ pre{margin:0;overflow:auto;max-height:560px;padding:13px 15px;border-radius:6px;
 }
 .param-scroll:focus-visible{outline:2px solid #2465b2;outline-offset:2px}
 @media print{.param-scroll table,.param-scroll.request-params table{min-width:0}}
+
+.field-change-added{background:#ecfdf3;color:#166534}
+.field-change-changed{background:#fff7e6;color:#854d0e}
+.field-change-removed{background:#fef2f2;color:#991b1b}
+.field-change-badge{display:inline-block;padding:0 6px;border-radius:4px;font-size:12px;font-weight:650}
+.column-diff-table{width:100%;table-layout:fixed}
+.column-diff-table th:first-child{width:20%}
+.column-diff-table th:nth-child(2){width:5.5em}
+.column-diff-table td,.column-diff-table th{vertical-align:top;overflow-wrap:anywhere}
+.column-diff-table dl{margin:0}
+.column-diff-table dt{display:inline;font-weight:600}
+.column-diff-table dd{display:inline;margin:0}
+.column-diff-table code{font-size:inherit}
 </style>
 <script defer src="https://cdn.jsdelivr.net/npm/vue@3.5.24/dist/vue.global.prod.js"></script>
 </head>
@@ -87,9 +100,40 @@ pre{margin:0;overflow:auto;max-height:560px;padding:13px 15px;border-radius:6px;
     <span class="badge" :style="tone(recordStatus(record))">{{ isApi || mode==='tables' ? '部署/验证 · ' : '' }}{{ recordStatus(record) }}</span></div></div>
    <p v-if="isApi && record.summary && record.summary.trim()!==label(record)" class="api-summary">{{ record.summary }}</p>
    <p v-if="!isApi && statusNote(record)" class="muted">{{ statusNote(record) }}</p>
+   <section v-if="mode==='tables' && markedColumns.length" class="block">
+    <h2>本期字段变更</h2>
+    <div class="scroll"><table class="column-diff-table" aria-label="数据表字段状态">
+     <thead><tr><th scope="col">字段</th><th scope="col">变更</th><th scope="col">类型</th></tr></thead>
+     <tbody><tr v-for="column in markedColumns" :key="column.name">
+      <th scope="row"><code>{{ column.name }}</code></th>
+      <td><span class="field-change-badge" :class="'field-change-'+statusKind(column)">{{ column.changeStatus }}</span></td>
+      <td>{{ column.type || '—' }}</td>
+     </tr></tbody>
+    </table></div>
+   </section>
+   <section v-if="mode==='tables' && !markedColumns.length && fieldChanges" class="block">
+    <h2>本期字段变更</h2>
+    <p v-if="fieldChanges.ddlOnly">DDL 已变更，缺少列快照。</p>
+    <div v-if="fieldChanges.rows.length" class="scroll">
+     <table class="column-diff-table" aria-label="数据表字段变更">
+      <thead><tr><th scope="col">字段</th><th scope="col">变更</th><th scope="col">旧值</th><th scope="col">新值</th></tr></thead>
+      <tbody><tr v-for="change in fieldChanges.rows" :key="change.name">
+       <th scope="row"><code>{{ change.name }}</code></th>
+       <td><span class="field-change-badge" :class="'field-change-'+change.kind">{{ fieldLabels[change.kind] }}</span></td>
+       <td v-for="side in ['before','after']" :key="side">
+        <dl v-if="change[side]"><div v-for="[label,value] in columnFacts(change[side])" :key="label">
+         <dt>{{ label }}</dt> <dd>{{ value }}</dd>
+        </div></dl>
+        <span v-else>—</span>
+       </td>
+      </tr></tbody>
+     </table>
+    </div>
+   </section>
+   <label v-if="isApi && hasMarkedFields"><input type="checkbox" v-model="onlyChanged"> 只看变更</label>
    <div v-if="isApi" class="twocol">
     <section class="block" v-for="[slot,title] in [['request','请求参数'],['response','返回参数']]" :key="slot">
-     <h2>{{ title }}</h2><div class="scroll param-scroll" :class="{'request-params':slot==='request'}" tabindex="0" role="region" :aria-label="title"><table><thead><tr><th v-for="key in columns(slot)" :key="key">{{ caption(key) }}</th></tr></thead><tbody><tr v-for="(field,i) in fields(record[slot])" :key="i"><td v-for="key in columns(slot)" :key="key">{{ fieldText(field,key) }}</td></tr><tr v-if="!fields(record[slot]).length"><td :colspan="columns(slot).length">无</td></tr></tbody></table></div>
+     <h2>{{ title }}</h2><div class="scroll param-scroll" :class="{'request-params':slot==='request'}" tabindex="0" role="region" :aria-label="title"><table><thead><tr><th v-for="key in columns(slot)" :key="key">{{ caption(key) }}</th></tr></thead><tbody><tr v-for="(field,i) in visibleFields(slot)" :key="i"><td v-for="key in columns(slot)" :key="key">{{ fieldText(field,key) }} <span v-if="key==='name' && fieldChangeKind(slot,field)" class="field-change-badge" :class="'field-change-'+fieldChangeKind(slot,field)">{{ fieldLabels[fieldChangeKind(slot,field)] }}</span></td></tr><tr v-if="!visibleFields(slot).length"><td :colspan="columns(slot).length">无</td></tr></tbody></table></div>
     </section>
    </div>
    <div v-if="isApi" class="twocol">
@@ -132,27 +176,42 @@ pre{margin:0;overflow:auto;max-height:560px;padding:13px 15px;border-radius:6px;
  </details>
 </template>
 <script id="html-sdd-spec" type="application/json">__HTML_SDD_SPEC_JSON__</script>
+<script id="html-sdd-field-diff" type="application/json">__HTML_SDD_FIELD_DIFF__</script>
 <script>
 window.addEventListener('DOMContentLoaded',()=>{
  if(!window.Vue){document.getElementById('app').textContent='Vue 加载失败，请检查网络后刷新页面。';return}
  const {createApp,ref,reactive,computed,watch,nextTick}=Vue;
  const spec=JSON.parse(document.getElementById('html-sdd-spec').textContent);
+ const fieldDiff=JSON.parse(document.getElementById("html-sdd-field-diff").textContent);
+ const fieldLabels={added:"新增",changed:"修改",removed:"删除"};
+ const statusKind=field=>Object.keys(fieldLabels).find(key=>fieldLabels[key]===field.changeStatus);
  const registry=__HTML_SDD_STATUSES__;
  const tabs=[['requirements','需求'],['plans','排期'],['apis','接口'],['existingInterfaces','现有接口'],['tables','数据表'],['architecture','架构设计'],['configs','上线配置']];
  const labels={name:'字段',location:'位置',type:'类型',required:'必填',description:'说明',example:'示例',summary:'概述',scope:'范围',outOfScope:'非范围',current:'当前情况',conclusion:'方案',steps:'主要做法',impact:'涉及内容',risks:'注意事项',rules:'规则',ddl:'DDL',content:'配置内容',statusNote:'状态说明',repository:'仓库',branch:'分支',commit:'提交',inspectedAt:'检查时间',timezone:'时区',worktreeState:'工作区',relevantDirtyPaths:'相关改动',sub:'子任务',start:'计划开始',end:'预计完成',owner:'负责人',reviewer:'审核人',executor:'执行人',batch:'批次',effort:'预估',deps:'依赖',progress:'进展',note:'备注',blocker:'阻塞原因',acceptanceCriteria:'验收标准',verification:'验证结果',ownerPaths:'文件范围',environment:'环境',kind:'类别',purpose:'用途',difference:'差异',evidence:'证据',notes:'补充说明',fallback:'文字说明',diagramType:'图类型',diagramEngine:'渲染方式'};
  const primaryKeys={requirements:['summary','scope','outOfScope'],tables:['ddl'],architecture:['summary','conclusion','current','steps','impact','risks'],configs:['content']};
- const omitted=['id','group','title','name','displayName','status','statusNote','developmentStatus','changeType','path','method','request','response','requestExample','responseExample','acceptance','related','links','diagramSource','diagramSvg'];
+ const omitted=['id','group','title','name','displayName','status','statusNote','developmentStatus','changeType','path','method','request','response','requestExample','responseExample','acceptance','related','links','diagramSource','diagramSvg','columns'];
  const planOmit=['id','sequence','priority','module','main','requirementIds','status','progress','note','blocker','statusNote','related','links'];
  const agentMap=new Map((spec.agents||[]).map(agent=>[agent.id,agent.name]));
  const byId=new Map(tabs.flatMap(([mode])=>(spec[mode]||[]).map(item=>[item.id,{mode,item}])));
  const label=item=>item.title||(item.displayName?`${item.name}（${item.displayName}）`:item.name)||item.main||item.id;
  const caption=key=>labels[key]||key;
  const readable=value=>value==null?'—':typeof value==='string'?value:typeof value==='object'?JSON.stringify(value,null,2):String(value);
+ const columnFacts=column=>[
+  ['类型',column.type],['可空',column.nullable==null?null:column.nullable?'是':'否'],
+  ['默认值',Object.hasOwn(column,'default')?column.default===null?'NULL':readable(column.default):null],['说明',column.description],
+ ].filter(([,value])=>value!=null && value!=='');
  const tone=status=>registry.tones[registry.statuses[status]||'neutral'];
  const present=value=>value!=null&&value!==''&&(!Array.isArray(value)||value.length>0);
  const extra=(item,omit)=>Object.entries(item).filter(([key,value])=>!omit.includes(key)&&present(value));
  const groupBy=(rows,key)=>{const groups=new Map();for(const row of rows){const name=key(row)||'未分组';if(!groups.has(name))groups.set(name,[]);groups.get(name).push(row)}return [...groups]};
- const resolve=(items,kind)=>(items||[]).flatMap(item=>{if(!item?.$ref)return [item];const name=item.$ref.split('/').at(-1).replace(/~1/g,'/').replace(/~0/g,'~');return spec.definitions?.[kind]?.[name]??[]});
+ const resolve=(items,kind)=>(items||[]).flatMap(item=>{
+  if(!item?.$ref)return [item];
+  const name=item.$ref.split('/').at(-1).replace(/~1/g,'/').replace(/~0/g,'~');
+  const definition=spec.definitions?.[kind]?.[name];
+  if(definition==null)return [];
+  const rows=Array.isArray(definition)?definition:[definition];
+  return item.changeStatus?rows.map(row=>({...row,changeStatus:item.changeStatus})):rows;
+ });
  const fields=items=>resolve(items,'fields');
  const requestColumns=['name','location','type','required','description','example'];
  const responseColumns=requestColumns.filter(key=>key!=='location');
@@ -228,6 +287,20 @@ window.addEventListener('DOMContentLoaded',()=>{
   const visible=computed(()=>{const {query,change,status}=filters[mode.value];return records.value.filter(item=>(!change||item.changeType===change)&&matchesStatus(item,status)&&[label(item),item.path,item.id,item.group].some(value=>String(value||'').toLowerCase().includes(query.trim().toLowerCase())))});
   const catalog=computed(()=>groupBy(visible.value,item=>item.group));
   const record=computed(()=>visible.value.find(item=>item.id===selected.value)||visible.value[0]);
+  const fieldChanges=computed(()=>fieldDiff[mode.value]?.[record.value?.id]);
+  const markedColumns=computed(()=>(record.value?.columns||[]).filter(statusKind));
+  const hasMarkedFields=computed(()=>['request','response'].some(slot=>
+   fields(record.value?.[slot]).some(field=>fieldChangeKind(slot,field))));
+  const onlyChanged=ref(false);
+  watch(record,()=>{onlyChanged.value=false});
+  function fieldChangeKind(slot,field){
+   const explicit=statusKind(field);
+   if(explicit)return explicit;
+   const name=field.name||field.field;
+   const location=slot==='request'?(field.location||field.where||''):'';
+   return fieldChanges.value?.rows.find(row=>row.area===slot&&row.name===name&&row.location===location)?.kind;
+  }
+  const visibleFields=slot=>fields(record.value?.[slot]).filter(field=>!onlyChanged.value||fieldChangeKind(slot,field));
   const primary=computed(()=>(primaryKeys[mode.value]||[]).map(key=>[key,record.value?.[key]]).filter(([,value])=>present(value)));
   const apiRules=computed(()=>isApi.value?resolve(record.value?.rules,'rules').filter(present):[]);
   const more=computed(()=>record.value?extra(record.value,[...omitted,...(primaryKeys[mode.value]||[])]):[]);
@@ -238,7 +311,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   const schedule=computed(()=>groupPlans.value?groupBy(planRows.value,task=>task.module):[['全部任务',planRows.value]]);
   let renderCount=0;
   watch(record,async(item,_,cleanup)=>{let obsolete=false;cleanup(()=>obsolete=true);diagramReady.value=false;if(!item?.diagramSource||diagramEngine(item)!=='mermaid')return;try{const engine=await mermaid();if(obsolete)return;const {svg}=await engine.render('sdd-diagram-'+(++renderCount),item.diagramSource);if(obsolete)return;diagramReady.value=true;await nextTick();if(!obsolete&&diagramNode.value)diagramNode.value.innerHTML=svg}catch{diagramReady.value=false}});
-  return {spec,registry,tabs,mode,selected,openTask,planStatus,sort,groupPlans,filters,records,isApi,catalogFilter,itemStatus,recordStatus,statusNote,changes,developmentFilters,verificationStatuses,visible,catalog,record,primary,apiRules,more,selectMode,jump,planRows,schedule,byId,label,caption,readable,tone,planDetails,columns,fields,fieldText,nameFor,agentNames,taskNote,planColumns,readiness:spec.metadata.readiness,diagramReady,diagramNode,diagramEngine,diagramLabel,svgImage};
+  return {spec,registry,tabs,mode,fieldChanges,fieldLabels,statusKind,markedColumns,hasMarkedFields,columnFacts,onlyChanged,fieldChangeKind,visibleFields,selected,openTask,planStatus,sort,groupPlans,filters,records,isApi,catalogFilter,itemStatus,recordStatus,statusNote,changes,developmentFilters,verificationStatuses,visible,catalog,record,primary,apiRules,more,selectMode,jump,planRows,schedule,byId,label,caption,readable,tone,planDetails,columns,fields,fieldText,nameFor,agentNames,taskNote,planColumns,readiness:spec.metadata.readiness,diagramReady,diagramNode,diagramEngine,diagramLabel,svgImage};
  }}).mount('#app');
 });
 </script>

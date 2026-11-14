@@ -21,8 +21,28 @@ class Change:
     before: Optional[dict[str, Any]] = None
     after: Optional[dict[str, Any]] = None
 
+    @property
+    def fields(self) -> list[dict]:
+        if self.section not in ("apis", "existingInterfaces", "tables"):
+            return []
+        areas = ("columns",) if self.section == "tables" else ("request", "response")
+        return [
+            change
+            for area in areas
+            for change in _field_changes(self.before, self.after, area)
+        ]
+
+    @property
+    def ddl_changed_without_columns(self) -> bool:
+        if self.section != "tables":
+            return False
+        old, new = self.before or {}, self.after or {}
+        return (old.get("ddl") != new.get("ddl")
+                and (self.before is not None and not isinstance(old.get("columns"), list)
+                     or self.after is not None and not isinstance(new.get("columns"), list)))
+
     def as_dict(self) -> dict[str, Any]:
-        return {
+        result = {
             "kind": self.kind,
             "section": self.section,
             "recordId": self.record_id,
@@ -30,6 +50,57 @@ class Change:
             "before": self.before,
             "after": self.after,
         }
+        fields = self.fields
+        if fields:
+            result["fieldChanges"] = fields
+        if self.ddl_changed_without_columns:
+            result["ddlChangedWithoutColumns"] = True
+        return result
+
+
+def _field_index(rows: list, area: str) -> Optional[dict]:
+    result = {}
+    for row in rows:
+        if not isinstance(row, dict):
+            return None
+        if row.get("changeStatus") == "删除":
+            continue
+        name = row.get("name") or row.get("field")
+        location = (row.get("location") or row.get("where") or "") if area == "request" else ""
+        if not isinstance(name, str) or not name or not isinstance(location, str):
+            return None
+        key = (location, name)
+        if key in result:
+            return None
+        normalized = dict(row)
+        normalized.pop("changeStatus", None)
+        for alias, canonical in (("field", "name"), ("where", "location"), ("desc", "description")):
+            if alias in normalized:
+                normalized.setdefault(canonical, normalized.pop(alias))
+        if area == "request":
+            normalized["location"] = location
+        result[key] = normalized
+    return result
+
+
+def _field_changes(before: Optional[dict], after: Optional[dict], area: str) -> list[dict]:
+    # An omitted column inventory represents unknown schema, while a new record has no prior fields.
+    default = None if area == "columns" else []
+    old = before.get(area, default) if before is not None else []
+    new = after.get(area, default) if after is not None else []
+    if not isinstance(old, list) or not isinstance(new, list):
+        return []
+    left, right = _field_index(old, area), _field_index(new, area)
+    if left is None or right is None:
+        return []
+    changes = []
+    for location, name in sorted(left.keys() | right.keys()):
+        previous, current = left.get((location, name)), right.get((location, name))
+        if not _equal(previous, current):
+            kind = "added" if previous is None else "removed" if current is None else "changed"
+            changes.append(dict(area=area, location=location, name=name, kind=kind,
+                                before=previous, after=current))
+    return changes
 
 
 def _records(value: Any) -> dict[str, dict[str, Any]]:
@@ -75,4 +146,12 @@ def diff_specs(before: dict[str, Any], after: dict[str, Any]) -> list[Change]:
 def format_changes(changes: list[Change]) -> str:
     if not changes:
         return "无变化"
-    return "\n".join(f"{change.kind.upper()} {change.section} {change.record_id}: {change.summary}" for change in changes)
+    lines = []
+    for change in changes:
+        lines.append(f"{change.kind.upper()} {change.section} {change.record_id}: {change.summary}")
+        for field in change.fields:
+            name = " / ".join(filter(None, (field["area"], field["location"], field["name"])))
+            lines.append(f'  {field["kind"].upper()} {name}')
+        if change.ddl_changed_without_columns:
+            lines.append("  DDL 已变更，缺少列快照")
+    return "\n".join(lines)

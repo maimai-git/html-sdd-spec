@@ -7,6 +7,7 @@ from typing import Any
 
 API_SECTIONS = ('apis', 'existingInterfaces')
 SLOTS = {'request': 'fields', 'response': 'fields', 'rules': 'rules'}
+FIELD_CHANGE_STATUSES = ('新增', '修改', '删除')
 
 
 class DefinitionError(ValueError):
@@ -21,7 +22,7 @@ def _values(value: Any, category: str, path: str) -> list:
         raise DefinitionError(path, '公共定义不能是空数组')
     for item in items:
         valid = (isinstance(item, dict) and '$ref' not in item
-                 and isinstance(item.get('field'), str) and bool(item['field'].strip())) if category == 'fields' else isinstance(item, str) and bool(item.strip())
+                 and 'changeStatus' not in item and isinstance(item.get('field'), str) and bool(item['field'].strip())) if category == 'fields' else isinstance(item, str) and bool(item.strip())
         if not valid:
             raise DefinitionError(path, 'fields 必须为具名字段对象，rules 必须为非空字符串；定义内不能互相引用')
     return items
@@ -42,7 +43,8 @@ def definitions(spec: dict) -> dict:
 
 
 def _resolve(ref: dict, category: str, defs: dict, path: str) -> list:
-    if set(ref) != {'$ref'}:
+    allowed = {'$ref', 'changeStatus'} if category == 'fields' else {'$ref'}
+    if set(ref) - allowed:
         raise DefinitionError(path, '引用对象只能包含 $ref，不允许隐式覆盖')
     pointer = ref['$ref']
     prefix = '#/definitions/' + category + '/'
@@ -54,7 +56,11 @@ def _resolve(ref: dict, category: str, defs: dict, path: str) -> list:
     name = name.replace('~1', '/').replace('~0', '~')
     if name not in defs.get(category, {}):
         raise DefinitionError(path, '公共定义不存在：' + pointer)
-    return copy.deepcopy(_values(defs[category][name], category, path))
+    rows = copy.deepcopy(_values(defs[category][name], category, path))
+    if 'changeStatus' in ref:
+        for row in rows:
+            row['changeStatus'] = ref['changeStatus']
+    return rows
 
 
 def expand_api(spec: dict, record: dict, path: str = 'api', *, _defs=None) -> dict:
@@ -75,6 +81,25 @@ def expand_api(spec: dict, record: dict, path: str = 'api', *, _defs=None) -> di
                 rows.append(item)
         result[slot] = rows
     return result
+
+
+def field_change_errors(spec: dict):
+    for section, slots in (('apis', ('request', 'response')),
+                           ('existingInterfaces', ('request', 'response')),
+                           ('tables', ('columns',))):
+        records = spec.get(section, [])
+        if not isinstance(records, list):
+            continue
+        for index, record in enumerate(records):
+            if not isinstance(record, dict):
+                continue
+            for slot in slots:
+                items = record.get(slot)
+                if not isinstance(items, list):
+                    continue
+                for row_index, row in enumerate(items):
+                    if isinstance(row, dict) and 'changeStatus' in row and row['changeStatus'] not in FIELD_CHANGE_STATUSES:
+                        yield f'{section}[{index}].{slot}[{row_index}].changeStatus'
 
 
 def validate_references(spec: dict) -> None:

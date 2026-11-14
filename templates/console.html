@@ -129,6 +129,19 @@
 }
 .param-scroll:focus-visible{outline:2px solid #2465b2;outline-offset:2px}
 @media print{.param-scroll table,.param-scroll.request-params table{min-width:0}}
+
+.field-change-added{background:#ecfdf3;color:#166534}
+.field-change-changed{background:#fff7e6;color:#854d0e}
+.field-change-removed{background:#fef2f2;color:#991b1b}
+.field-change-badge{display:inline-block;padding:0 6px;border-radius:4px;font-size:12px;font-weight:650}
+.column-diff-table{width:100%;table-layout:fixed}
+.column-diff-table th:first-child{width:20%}
+.column-diff-table th:nth-child(2){width:5.5em}
+.column-diff-table td,.column-diff-table th{vertical-align:top;overflow-wrap:anywhere}
+.column-diff-table dl{margin:0}
+.column-diff-table dt{display:inline;font-weight:600}
+.column-diff-table dd{display:inline;margin:0}
+.column-diff-table code{font-size:inherit}
   </style>
 </head>
 <body>
@@ -148,6 +161,7 @@
     <main><article class="detail" id="detail" aria-live="polite"></article></main>
   </div>
   <script id="html-sdd-spec" type="application/json">__HTML_SDD_SPEC_JSON__</script>
+  <script id="html-sdd-field-diff" type="application/json">__HTML_SDD_FIELD_DIFF__</script>
   <script>
     (async function(){
     /*
@@ -164,7 +178,7 @@
     const requirements=spec.requirements||[];
     const plans=spec.plans||[];
     const questions=spec.questions||[];
-    const normalizeInterfaceFields=items=>(items||[]).map(field=>Object.assign({},field,{name:field.name||field.field,location:field.location||field.where,description:field.description||field.desc||'',type:field.type||'string'}));
+    const normalizeInterfaceFields=items=>(items||[]).map(field=>Object.assign({},field,{name:field.name||field.field,location:field.location||field.where,description:field.description||field.desc||'',type:field.type||(field.changeStatus==="删除"?"":"string")}));
     const apis=spec.apis||[];
     const existingInterfaces=spec.existingInterfaces||[];
     const tables=spec.tables||[];
@@ -346,7 +360,7 @@
       return values.length?values.map((id,index)=>agentName(id)+(index===0?"（主）":"")).join("、"):"未安排";
     }
     function fieldTable(fields,isRequest){
-      const rows=list(fields).map(f=>"<tr><td class=\"field-name\">"+esc(f.name)+"</td>"+(isRequest?"<td>"+esc(f.location||"")+"</td>":"")+"<td>"+esc(f.type||"")+"</td><td>"+esc(f.required??"")+"</td><td>"+esc(f.description||"")+"</td><td>"+esc(Object.prototype.hasOwnProperty.call(f,"example")?pretty(f.example):"")+"</td></tr>").join("");
+      const rows=list(fields).map(f=>"<tr><td class=\"field-name\">"+esc(f.name)+fieldStatusBadge(f.changeStatus)+"</td>"+(isRequest?"<td>"+esc(f.location||"")+"</td>":"")+"<td>"+esc(f.type||"")+"</td><td>"+esc(f.required??"")+"</td><td>"+esc(f.description||"")+"</td><td>"+esc(Object.prototype.hasOwnProperty.call(f,"example")?pretty(f.example):"")+"</td></tr>").join("");
       const head=isRequest?"<th>字段</th><th>位置</th><th>类型</th><th>必填</th><th>说明</th><th>示例</th>":"<th>字段</th><th>类型</th><th>必填</th><th>说明</th><th>示例</th>";
       return "<div class=\"table-wrap param-scroll "+(isRequest?"request-params":"")+"\" tabindex=\"0\" role=\"region\" aria-label=\""+(isRequest?"请求参数":"返回参数")+"\"><table><thead><tr>"+head+"</tr></thead><tbody>"+(rows||"<tr><td colspan=\""+(isRequest?6:5)+"\">待补充</td></tr>")+"</tbody></table></div>";
     }
@@ -374,7 +388,7 @@
           return [item];
         }
         const prefix="#/definitions/"+category+"/",ref=item.$ref;
-        if(Object.keys(item).length!==1||typeof ref!=="string"||!ref.startsWith(prefix))throw new Error("无效公共引用，不能覆盖字段");
+        if(Object.keys(item).some(key=>key!=="$ref"&&!(category==="fields"&&key==="changeStatus"))||typeof ref!=="string"||!ref.startsWith(prefix))throw new Error("无效公共引用，不能覆盖字段");
         let name=ref.slice(prefix.length);
         if(!name||name.includes("/")||/~(?![01])/.test(name))throw new Error("公共名称须按 JSON Pointer 转义");
         name=name.replace(/~1/g,"/").replace(/~0/g,"~");
@@ -382,7 +396,7 @@
         if(!Object.prototype.hasOwnProperty.call(defs,name))throw new Error("公共定义不存在："+ref);
         const rows=Array.isArray(defs[name])?defs[name]:[defs[name]];
         if(!rows.length||rows.some(row=>category==="fields"?(!row||typeof row!=="object"||Array.isArray(row)||("$ref" in row)||typeof row.field!=="string"||!row.field.trim()):(typeof row!=="string"||!row.trim())))throw new Error("公共定义类型错误："+ref);
-        return rows;
+        return item.changeStatus?rows.map(row=>({...row,changeStatus:item.changeStatus})):rows;
       })};
       return {...record,request:normalizeInterfaceFields(resolve(record.request,"fields")),response:normalizeInterfaceFields(resolve(record.response,"fields")),rules:resolve(record.rules,"rules")};
     }
@@ -393,6 +407,42 @@
     function interfaceSummary(x){
       const text=typeof x.summary==="string"?x.summary.trim():"";
       return text&&text!==String(x.name||"").trim()?"<p class=\"interface-summary\">"+esc(text)+"</p>":"";
+    }
+    function columnSnapshot(column){
+      if(!column)return "—";
+      const facts=[
+        ["类型",column.type],["可空",column.nullable==null?null:column.nullable?"是":"否"],
+        ["默认值",Object.hasOwn(column,"default")?(column.default===null?"NULL":pretty(column.default)):null],
+        ["说明",column.description]
+      ].filter(([,value])=>value!=null && value!=="");
+      return facts.length?"<dl>"+facts.map(([label,value])=>
+        "<div><dt>"+esc(label)+"</dt> <dd>"+esc(value)+"</dd></div>").join("")+"</dl>":"";
+    }
+    function fieldStatusBadge(status){
+      const kinds={"新增":"added","修改":"changed","删除":"removed"};
+      return Object.hasOwn(kinds,status)
+        ? '<span class="field-change-badge field-change-'+kinds[status]+'">'+status+'</span>' : "";
+    }
+    function columnChangesBlock(x){
+      const marked=list(x.columns).filter(column=>fieldStatusBadge(column.changeStatus));
+      if(marked.length){
+        const rows=marked.map(column=>"<tr><th scope=\"row\"><code>"+esc(column.name)+"</code></th><td>"
+          +fieldStatusBadge(column.changeStatus)+"</td><td>"+esc(column.type||"—")+"</td></tr>").join("");
+        return '<section class="section"><h3>本期字段变更</h3><div class="table-wrap">'
+          +'<table class="column-diff-table" aria-label="数据表字段状态"><thead><tr><th scope="col">字段</th>'
+          +'<th scope="col">变更</th><th scope="col">类型</th></tr></thead><tbody>'+rows+'</tbody></table></div></section>';
+      }
+      const delta=JSON.parse(document.getElementById("html-sdd-field-diff")?.textContent || "{}").tables?.[x.id];
+      if(!delta)return "";
+      const labels={added:"新增",changed:"修改",removed:"删除"};
+      const rows=delta.rows.map(row=>`<tr><th scope="row"><code>${esc(row.name)}</code></th>
+        <td><span class="field-change-badge field-change-${esc(row.kind)}">${esc(labels[row.kind])}</span></td>
+        <td>${columnSnapshot(row.before)}</td><td>${columnSnapshot(row.after)}</td></tr>`).join("");
+      const table=rows?`<div class="table-wrap"><table class="column-diff-table" aria-label="数据表字段变更">
+        <thead><tr><th scope="col">字段</th><th scope="col">变更</th><th scope="col">旧值</th><th scope="col">新值</th></tr></thead>
+        <tbody>${rows}</tbody></table></div>`:"";
+      return '<section class="section"><h3>本期字段变更</h3>'
+        +(delta.ddlOnly?"<p>DDL 已变更，缺少列快照。</p>":"")+table+"</section>";
     }
     function renderApis(x){
       try{x=expandApi(x)}catch(error){return "<p class=\"empty\">无法展开接口合同："+esc(error.message)+"</p>"}
@@ -412,7 +462,7 @@
       return "<div class=\"card\"><div class=\"card-head\"><div><h1>"+esc(x.name)+"</h1><small><span class=\"record-id\">"+esc(x.id)+"</span> · "+esc(x.method)+" <span class=\"mono\">"+esc(x.path)+"</span></small></div>"+status(x.status,"existingInterfaces",x.statusNote)+"</div><div class=\"card-body\">"+interfaceSummary(x)+"<div class=\"solution-grid\">"+facts+"</div><div class=\"param-grid\"><div class=\"param-pane\"><h3>请求参数</h3>"+fieldTable(x.request,true)+"</div><div class=\"param-pane\"><h3>返回参数</h3>"+fieldTable(x.response,false)+"</div></div><div class=\"instance-grid\"><div class=\"instance-pane\"><details open class=\"disclosure example-disclosure\"><summary>请求实例</summary><div class=\"disclosure-content\"><pre class=\"instance-box\">"+esc(pretty(x.requestExample))+"</pre></div></details></div><div class=\"instance-pane\"><details open class=\"disclosure example-disclosure\"><summary>响应实例</summary><div class=\"disclosure-content\"><pre class=\"instance-box\">"+esc(pretty(x.responseExample))+"</pre></div></details></div></div>"+rulesBlock(x.rules)+(notes?"<details class=\"disclosure\"><summary>现状边界</summary><div class=\"disclosure-content\"><ul>"+notes+"</ul></div></details>":"")+relatedBlock(x)+"</div></div>";
     }
     function renderTables(x){
-      return "<div class=\"card\"><div class=\"card-head\"><div><h1>"+esc(tableTitle(x))+"</h1><small><span class=\"record-id\">"+esc(x.id)+"</span></small></div><div class=\"tag-list\">"+change(x.changeType)+developmentTag(x)+"</div></div><div class=\"card-body\"><details open class=\"disclosure text-disclosure\"><summary>查看 DDL</summary><div class=\"disclosure-content\"><pre class=\"text-box\">"+esc(x.ddl||"-- 待补充")+"</pre></div></details>"+relatedBlock(x)+"</div></div>";
+      return "<div class=\"card\"><div class=\"card-head\"><div><h1>"+esc(tableTitle(x))+"</h1><small><span class=\"record-id\">"+esc(x.id)+"</span></small></div><div class=\"tag-list\">"+change(x.changeType)+developmentTag(x)+"</div></div><div class=\"card-body\">"+columnChangesBlock(x)+"<details open class=\"disclosure text-disclosure\"><summary>查看 DDL</summary><div class=\"disclosure-content\"><pre class=\"text-box\">"+esc(x.ddl||"-- 待补充")+"</pre></div></details>"+relatedBlock(x)+"</div></div>";
     }
     function renderArchitecture(x){
       if(x.type==="solution"){

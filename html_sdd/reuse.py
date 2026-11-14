@@ -32,7 +32,7 @@ def reuse_spec(spec: dict) -> dict:
                     if kind != category or not isinstance(record.get(slot), list):
                         continue
                     for value in record[slot]:
-                        eligible = (isinstance(value, dict) and '$ref' not in value
+                        eligible = (isinstance(value, dict) and '$ref' not in value and 'changeStatus' not in value
                                     and isinstance(value.get('field'), str) and value['field'].strip()) if category == 'fields' else isinstance(value, str) and value.strip()
                         if eligible:
                             key = _json(value)
