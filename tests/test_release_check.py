@@ -74,6 +74,26 @@ class ReleaseCheckTest(unittest.TestCase):
     def test_valid_release_with_sql_subheading(self):
         self.assertEqual(set(), self.check("--release"))
 
+    def test_nested_yaml_release_configuration(self):
+        text = """# ===== Dataplane / Apollo / 资产库 =====
+# 目标环境：测试
+# AppId：assets
+# Namespace：application
+
+app:
+  assets:
+    model-generation:
+      # 生图服务地址｜提供生图能力。默认值为空字符串。
+      # 目标环境确认值。
+      endpoint: https://example.com/image/generate
+"""
+        self.replace_file(self.config, text)
+        self.assertEqual(set(), self.check("--release"))
+        self.replace_file(self.config, text.replace("目标环境确认值", "示例值"))
+        self.assertEqual({"RELEASE_CONFIG_EXAMPLE"}, self.check("--release", exit_code=1))
+        self.replace_file(self.config, text.replace("      endpoint:", "     endpoint:"))
+        self.assertIn("RELEASE_CONFIG_FORMAT", self.check("--release", exit_code=1))
+
     def test_missing_file_and_stale_snapshot_are_release_only(self):
         self.sql.unlink()
         self.config.write_text(PROPERTIES.replace("true", "false"), encoding="utf-8")

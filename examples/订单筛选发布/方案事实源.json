@@ -1,0 +1,136 @@
+{
+  "specVersion": "0.1",
+  "metadata": {"id":"PROJECT-ORDER-FILTER-RELEASE","title":"订单状态筛选发布示例","summary":"为订单状态筛选准备查询索引和功能开关，演示从方案到提单的完整目录。","status":"验证中","statusPolicy":"strict","language":"zh-CN","updatedAt":"2026-11-16T12:00:00+08:00","readiness":{"overall":"待验收","codingReady":true,"blockingItems":[]},"sectionCoverage":{"tables":{"status":"included","reason":"沿用现有状态列，增加组合索引。"},"architecture":{"status":"not_applicable","reason":"沿用订单列表的查询链路。"},"configs":{"status":"included","reason":"先创建索引，再启用订单状态筛选。"}}},
+  "baseline": {"repository":"order-demo（虚构）","branch":"main","commit":"未记录（演示）","inspectedAt":"2026-11-13 14:00","timezone":"Asia/Shanghai","worktreeState":"unknown","relevantDirtyPaths":[]},
+  "agents": [
+    {
+      "id": "AGENT-OWNER",
+      "name": "负责人 Agent",
+      "role": "确认需求",
+      "status": "已完成"
+    },
+    {
+      "id": "AGENT-REVIEWER",
+      "name": "审核人 Agent",
+      "role": "复核验收",
+      "status": "待开始"
+    },
+    {
+      "id": "AGENT-EXECUTOR",
+      "name": "执行人 Agent",
+      "role": "开发和验证",
+      "status": "进行中"
+    }
+  ],
+  "requirements": [
+    {
+      "id": "REQ-001",
+      "group": "订单查询",
+      "title": "按状态筛选订单",
+      "summary": "运营可以在订单列表中只查看待发货或已发货订单。",
+      "scope": "扩展列表筛选参数，增加状态与订单编号组合索引，通过开关控制筛选能力。省略状态参数时保持原列表行为。",
+      "outOfScope": ["批量导出。"],
+      "status": "待验收",
+      "acceptance": [{"id":"AC-001","text":"省略状态参数时，列表仍返回原有结果。","status":"已通过","evidence":"EVID-001"},{"id":"AC-002","text":"测试环境传入待发货状态时，只返回待发货订单。","status":"待验收"},{"id":"AC-003","status":"待验收","text":"开启开关前确认索引有效。关闭开关时传入状态参数，接口返回明确提示，省略参数时仍可查原列表。"}],
+      "related": ["PLAN-001","PLAN-002","API-001","DATA-001","CFG-001","CFG-002"]
+    }
+  ],
+  "plans": [
+    {
+      "id": "PLAN-001",
+      "sequence": 1,
+      "priority": "P0",
+      "module": "订单查询",
+      "requirementIds": ["REQ-001"],
+      "main": "支持订单状态筛选",
+      "sub": "扩展查询参数，保留旧调用行为。",
+      "owner": "AGENT-OWNER",
+      "reviewer": "AGENT-REVIEWER",
+      "executor": "AGENT-EXECUTOR",
+      "status": "已完成",
+      "progress": "示例中代码和本地回归已完成。"
+    },
+    {
+      "id": "PLAN-002",
+      "sequence": 2,
+      "priority": "P0",
+      "module": "订单查询",
+      "requirementIds": ["REQ-001"],
+      "main": "验证测试环境",
+      "sub": "确认索引有效后启用筛选开关，再用两种状态的订单验收。",
+      "owner": "AGENT-OWNER",
+      "reviewer": "AGENT-REVIEWER",
+      "executor": "AGENT-EXECUTOR",
+      "status": "待验收",
+      "progress": "等待执行数据库工单和配置工单。",
+      "deps": ["PLAN-001"]
+    }
+  ],
+  "apis": [
+    {
+      "id": "API-001",
+      "group": "订单查询",
+      "name": "查询订单列表",
+      "method": "GET",
+      "path": "/api/orders",
+      "changeType": "存量接口变更",
+      "summary": "支持按状态筛选订单，省略时返回全部状态。",
+      "developmentStatus": "已完成",
+      "status": "待部署",
+      "statusNote": "等待部署到测试环境。",
+      "request": [{"field":"status","location":"query","type":"string","required":"否","description":"PENDING 待发货，SHIPPED 已发货。","example":"PENDING"}],
+      "response": [{"field":"items","type":"array","required":"是","description":"符合条件的订单列表。","example":[{"id":42,"status":"PENDING"}]}],
+      "requestExample": {"status":"PENDING"},
+      "responseExample": {"items":[{"id":42,"status":"PENDING"}]},
+      "related": ["REQ-001"],
+      "rules": ["开关关闭时，传入 status 返回 HTTP 400 和筛选功能关闭提示。","开启筛选后，按状态过滤并以订单编号倒序返回。"]
+    }
+  ],
+  "tables": [
+    {
+      "id": "DATA-001",
+      "group": "订单查询",
+      "name": "public.orders",
+      "displayName": "订单表",
+      "changeType": "存量表变更",
+      "status": "待部署",
+      "developmentStatus": "已完成",
+      "purpose": "保存订单和履约状态。本期增加状态与订单编号的组合索引。",
+      "ddl": "-- 新增 (status, id DESC) 组合索引。执行语句见 CFG-001。",
+      "related": ["REQ-001","CFG-001"]
+    }
+  ],
+  "architecture": [],
+  "configs": [
+    {
+      "id": "CFG-001",
+      "group": "订单查询",
+      "kind": "SQL",
+      "title": "订单筛选索引",
+      "environment": "演示测试",
+      "status": "待执行",
+      "source": "examples/订单筛选发布/上线SQL清单/上线SQL.sql",
+      "related": ["REQ-001","DATA-001"]
+    },
+    {
+      "id": "CFG-002",
+      "group": "订单查询",
+      "kind": "Apollo",
+      "title": "订单状态筛选开关",
+      "environment": "演示测试",
+      "status": "待配置",
+      "source": "examples/订单筛选发布/上线配置清单/上线配置.properties",
+      "related": ["REQ-001","CFG-001"]
+    }
+  ],
+  "questions": [],
+  "evidence": [
+    {
+      "id": "EVID-001",
+      "kind": "test",
+      "label": "本地兼容性回归（演示）",
+      "source": "演示记录：不传状态时返回待发货和已发货订单。",
+      "status": "已验证"
+    }
+  ]
+}

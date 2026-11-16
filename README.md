@@ -1,6 +1,6 @@
 # HTML SDD Spec
 
-[English](README.en.md) · [快速上手示例](examples/订单状态筛选/使用说明.md) · [资产库示例](examples/asset-library/README.md) · [安装与使用](docs/安装使用.md) · [版本下载](https://github.com/maimai-git/html-sdd-spec/releases/latest)
+[English](README.en.md) · [完整发布示例](examples/订单筛选发布/使用说明.md) · [快速上手示例](examples/订单状态筛选/使用说明.md) · [资产库示例](examples/asset-library/README.md) · [安装与使用](docs/安装使用.md) · [版本下载](https://github.com/maimai-git/html-sdd-spec/releases/latest)
 
 把一次需求的**目标、现状、方案和进度**放进一份可分享的 HTML。产品、开发和审核人员打开同一个页面，就能看到要做什么、改哪些地方、由谁完成，以及怎么验收。
 

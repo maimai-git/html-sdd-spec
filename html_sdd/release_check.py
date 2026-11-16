@@ -18,6 +18,7 @@ SECTION = {
     SQL: re.compile(r"^\s*--\s*=+\s*\d+\s+([^/=]+)\s*/\s*(.+?)\s*=+\s*$"),
 }
 PROPERTY = re.compile(r"^\s*[^\s=:#]+\s*=\s*(.*)$")
+YAML_ENTRY = re.compile(r"([A-Za-z0-9_.-]+):(?: +(.+))?")
 FIELD = re.compile(r"^([^：:]+)[：:]\s*(.*)$")
 UNCONFIRMED = re.compile(r"^(?:<.*>|\{\{.*\}\}|(?:待(?:核对|确认|填写|核实|补充)|todo|tbd)[。.]?)$", re.I)
 
@@ -74,9 +75,13 @@ def _check_fields(fields: dict[str, str], required: tuple[str, ...], location: s
             yield Issue("error", "RELEASE_TARGET_UNCONFIRMED", location, f"请提单前核对「{label}」")
 
 
-def _check_properties(lines: list[str], location: str, header_line: int) -> Iterator[Issue]:
+def _check_config_entries(lines: list[str], location: str, header_line: int) -> Iterator[Issue]:
     comments = []
     count = 0
+    yaml_mode = None
+    groups: list[str] = []
+    seen_paths = set()
+    pending_group = None
     for line_number, raw in enumerate(lines, header_line + 1):
         line = raw.strip()
         if line.startswith("#"):
@@ -86,13 +91,40 @@ def _check_properties(lines: list[str], location: str, header_line: int) -> Iter
             comments.clear()
             continue
         line_path = f"{location}:{line_number}"
-        value = PROPERTY.fullmatch(line)
-        if value is None:
-            yield Issue("error", "RELEASE_CONFIG_FORMAT", line_path, "配置项须使用单行 key=value")
-            comments.clear()
-            continue
+        if yaml_mode is None:
+            yaml_mode = PROPERTY.fullmatch(line) is None
+        if yaml_mode:
+            entry = YAML_ENTRY.fullmatch(line)
+            indent = len(raw) - len(raw.lstrip())
+            depth = indent // 2
+            if pending_group is not None and depth < len(groups):
+                yield Issue("error", "RELEASE_CONFIG_FORMAT", pending_group, "YAML 分组缺少子项")
+                pending_group = None
+            if entry is None or indent % 2 or depth > len(groups) or "\t" in raw[:indent]:
+                yield Issue("error", "RELEASE_CONFIG_FORMAT", line_path, "YAML 配置须使用两空格缩进和单行键值")
+                comments.clear()
+                continue
+            pending_group = None
+            del groups[depth:]
+            key, scalar = entry.groups()
+            path = (*groups, key)
+            if path in seen_paths:
+                yield Issue("error", "RELEASE_CONFIG_FORMAT", line_path, "YAML 配置路径重复")
+            seen_paths.add(path)
+            if scalar is None:
+                groups.append(key)
+                pending_group = line_path
+                comments.clear()
+                continue
+        else:
+            entry = PROPERTY.fullmatch(line)
+            if entry is None:
+                yield Issue("error", "RELEASE_CONFIG_FORMAT", line_path, "同一分段须统一使用 key=value 或嵌套 YAML")
+                comments.clear()
+                continue
+            scalar = entry[1]
         count += 1
-        if not value[1].strip():
+        if not scalar.strip():
             yield Issue("error", "RELEASE_CONFIG_VALUE", line_path, "配置项缺少值")
         sources = ("本地生效值", "示例值", "目标环境确认值")
         provenance = next((note for note in reversed(comments) if note.startswith(sources)), "")
@@ -107,9 +139,11 @@ def _check_properties(lines: list[str], location: str, header_line: int) -> Iter
             )
         if provenance.startswith("示例值"):
             yield Issue("error", "RELEASE_CONFIG_EXAMPLE", line_path, "请在提单前核对示例项的目标环境取值")
-        elif UNCONFIRMED.fullmatch(value[1].strip()):
+        elif UNCONFIRMED.fullmatch(scalar.strip().strip("\"'") if yaml_mode else scalar.strip()):
             yield Issue("error", "RELEASE_TARGET_UNCONFIRMED", line_path, "请在提单前核对配置值")
         comments.clear()
+    if pending_group is not None:
+        yield Issue("error", "RELEASE_CONFIG_FORMAT", pending_group, "YAML 分组缺少子项")
     if not count:
         yield Issue("error", "RELEASE_SECTION_EMPTY", f"{location}:{header_line}", "配置段缺少配置项")
 
@@ -135,7 +169,7 @@ def _check_layout(text: str, relative: Path, location: str) -> Iterator[Issue]:
                 "目标环境", "部署位置",
             )
             yield from _check_fields(fields, required, line_path)
-            yield from _check_properties(body, location, line)
+            yield from _check_config_entries(body, location, line)
 
 
 def _read_release_file(source, directory: Path, relative: Path, field_path: str) -> str:

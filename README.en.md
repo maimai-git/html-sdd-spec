@@ -1,6 +1,6 @@
 # HTML SDD Spec
 
-[中文](README.md) · [Quick-start example](examples/订单状态筛选/使用说明.md) · [Asset library example](examples/asset-library/README.md) · [Setup guide](docs/安装使用.md) · [Downloads](https://github.com/maimai-git/html-sdd-spec/releases/latest)
+[中文](README.md) · [Complete release example](examples/订单筛选发布/使用说明.md) · [Quick-start example](examples/订单状态筛选/使用说明.md) · [Asset library example](examples/asset-library/README.md) · [Setup guide](docs/安装使用.md) · [Downloads](https://github.com/maimai-git/html-sdd-spec/releases/latest)
 
 Bring a requirement's **goals, current implementation, design, and progress** together in a shareable HTML page. Product managers, developers, and reviewers can see what needs to change, who owns the work, and how to verify it.
 
