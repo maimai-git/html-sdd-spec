@@ -5,7 +5,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import tempfile
-from urllib.parse import unquote
+from urllib.parse import unquote, urljoin
 
 from playwright.sync_api import expect, sync_playwright
 
@@ -176,10 +176,11 @@ def main():
             expect(link).to_have_text(config["source"])
             href = link.get_attribute("href")
             assert not href.startswith(("/", "http:", "https:", "file:"))
+            target_url = urljoin(release_html.as_uri(), href)
             target = (release_dir / unquote(href)).resolve()
             # Chromium may download these extensions on Linux instead of firing load.
             # Verify the actual file navigation without requiring an OS-specific viewer.
-            with page.context.expect_event("request", predicate=lambda request: request.url == target.as_uri()) as navigation:
+            with page.context.expect_event("request", predicate=lambda request: request.url == target_url) as navigation:
                 with page.expect_popup() as popup:
                     link.click()
             opened = popup.value
