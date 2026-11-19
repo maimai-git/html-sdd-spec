@@ -5,6 +5,7 @@ from pathlib import Path
 import shutil
 import subprocess
 import tempfile
+from urllib.parse import unquote
 
 from playwright.sync_api import expect, sync_playwright
 
@@ -173,14 +174,19 @@ def main():
             page.locator(f'[data-record="{config["id"]}"]').click()
             link = page.locator("article a[target='_blank']")
             expect(link).to_have_text(config["source"])
-            assert not link.get_attribute("href").startswith(("/", "http:", "https:", "file:"))
-            with page.expect_popup() as popup:
-                link.click()
+            href = link.get_attribute("href")
+            assert not href.startswith(("/", "http:", "https:", "file:"))
+            target = (release_dir / unquote(href)).resolve()
+            # Chromium may download these extensions on Linux instead of firing load.
+            # Verify the actual file navigation without requiring an OS-specific viewer.
+            with page.context.expect_event("request", predicate=lambda request: request.url == target.as_uri()) as navigation:
+                with page.expect_popup() as popup:
+                    link.click()
             opened = popup.value
-            opened.wait_for_load_state()
-            assert opened.url.startswith("file:"), opened.url
-            assert "orders" in opened.locator("body").inner_text().lower()
-            opened.close()
+            assert navigation.value.resource_type == "document"
+            assert "orders" in target.read_text(encoding="utf-8").lower()
+            if not opened.is_closed():
+                opened.close()
         assert errors == [], errors
         browser.close()
         print("PASS Vue：目录筛选、状态、原生查找、公共参数、示例、排期、跳转和文本转义")
