@@ -47,22 +47,19 @@ class FieldChangesTest(unittest.TestCase):
     def test_generated_pages_contain_safe_field_data_only_with_baseline(self):
         before = {"apis": [{"id": "API-1", "request": []}]}
         after = {"apis": [{"id": "API-1", "request": [{"name": "</script>"}]}]}
-        for name in ("console.html", "console-vue.html"):
-            template = ROOT / "html_sdd" / "assets" / name
-            html = render_spec(after, template, baseline=before)
-            self.assertIn('"kind":"added"', html)
-            self.assertIn(r"\u003c/script\u003e", html)
-            self.assertNotIn('"kind":"added"', render_spec(after, template))
+        template = ROOT / "html_sdd" / "assets" / "console-vue.html"
+        html = render_spec(after, template, baseline=before)
+        self.assertIn('"kind":"added"', html)
+        self.assertIn(r"\u003c/script\u003e", html)
+        self.assertNotIn('"kind":"added"', render_spec(after, template))
 
     def test_templates_use_a_table_for_column_diffs_without_a_standalone_api_diff(self):
-        for name in ("console.html", "console-vue.html"):
-            with self.subTest(template=name):
-                template = (ROOT / "html_sdd" / "assets" / name).read_text()
-                self.assertNotIn("查看字段详情", template)
-                self.assertNotIn("field-change-list", template)
-                self.assertIn("column-diff-table", template)
-                for label in ("字段", "变更", "旧值", "新值"):
-                    self.assertIn(f'scope="col">{label}</th>', template)
+        template = (ROOT / "html_sdd" / "assets" / "console-vue.html").read_text()
+        self.assertNotIn("查看字段详情", template)
+        self.assertNotIn("field-change-list", template)
+        self.assertIn("column-diff-table", template)
+        for label in ("字段", "变更", "旧值", "新值"):
+            self.assertIn(f'scope="col">{label}</th>', template)
 
     def test_reference_status_is_local_and_does_not_change_the_contract_diff(self):
         from html_sdd.references import expand_api
@@ -88,4 +85,4 @@ class FieldChangesTest(unittest.TestCase):
         spec["tables"] = [{"id": "DATA-1", "columns": [{"name": "id", "changeStatus": "待确认"}]}]
         self.assertTrue(any(issue.code == "FIELD_CHANGE_STATUS_INVALID" for issue in validate_spec(spec)))
         with self.assertRaisesRegex(ValueError, "changeStatus"):
-            render_spec(spec, ROOT / "html_sdd/assets/console.html")
+            render_spec(spec, ROOT / "html_sdd/assets/console-vue.html")

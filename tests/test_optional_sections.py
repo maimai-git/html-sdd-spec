@@ -9,7 +9,7 @@ from tests.rendered_payload import decode_html_payload
 
 
 ROOT = Path(__file__).resolve().parents[1]
-TEMPLATE = ROOT / "html_sdd" / "assets" / "console.html"
+TEMPLATE = ROOT / "html_sdd" / "assets" / "console-vue.html"
 
 
 class OptionalSectionsTest(unittest.TestCase):

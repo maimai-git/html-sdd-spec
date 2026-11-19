@@ -1,5 +1,4 @@
 import json
-import re
 import tempfile
 import unittest
 from pathlib import Path
@@ -9,13 +8,13 @@ from tests.rendered_payload import decode_html_payload
 
 ROOT = Path(__file__).resolve().parents[1]
 EXAMPLE = json.loads((ROOT / "examples/asset-library/sdd.json").read_text())
-TEMPLATE = ROOT / "html_sdd" / "assets" / "console.html"
+TEMPLATE = ROOT / "html_sdd" / "assets" / "console-vue.html"
 
 
 class RendererTest(unittest.TestCase):
     def test_render_injects_spec_and_keeps_all_tabs(self):
         html = render_spec(EXAMPLE, TEMPLATE)
-        for label in ("需求", "排期", "接口", "数据表", "架构设计", "上线需要配置"):
+        for label in ("需求", "排期", "接口", "数据表", "架构设计", "上线配置"):
             self.assertIn(label, html)
         self.assertIn("JSON.parse", html)
 

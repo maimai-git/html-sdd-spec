@@ -1,7 +1,6 @@
 import copy
 import json
 import shutil
-import subprocess
 import unittest
 from pathlib import Path
 
@@ -19,61 +18,54 @@ class AlignmentSummaryTest(unittest.TestCase):
         return catalog.CatalogFiltersTest.run_js(self,expression,spec)
 
     def test_project_status_is_not_inferred_from_coding_readiness(self):
-        output = self.run_js(EXAMPLE, "renderSnapshot(); return nodes.documentState.textContent;")
-        self.assertEqual("待核实", output)
-        spec = copy.deepcopy(EXAMPLE)
-        spec["metadata"].pop("status")
-        self.assertEqual("待核实", self.run_js(spec, "renderSnapshot(); return nodes.documentState.textContent;"))
-        spec["metadata"]["readiness"] = {"codingReady": True}
-        self.assertEqual("待核实", self.run_js(spec, "renderSnapshot(); return nodes.documentState.textContent;"))
+        from html_sdd.statuses import registry
+        neutral=registry()['tones']['neutral']
+        spec=copy.deepcopy(EXAMPLE)
+        for ready in (False,True):
+            spec['metadata']['readiness']['codingReady']=ready
+            self.assertEqual(neutral,self.run_js(spec,'return tone(spec.metadata.status);'))
+        spec['metadata'].pop('status')
+        spec['metadata']['statusPolicy']='legacy'
+        self.assertEqual(neutral,self.run_js(spec,'return tone(spec.metadata.status);'))
 
     def test_blank_status_and_missing_blockers_are_not_reported_as_ready(self):
-        spec = copy.deepcopy(EXAMPLE)
-        spec["metadata"]["status"] = "  "
-        spec["metadata"]["readiness"] = {"codingReady": True, "overall": "状态待记录"}
-        result = self.run_js(spec, "renderSnapshot(); return {text:nodes.documentState.textContent,html:nodes.snapshot.innerHTML};")
-        self.assertEqual("待核实", result["text"])
-        self.assertIn("未记录", result["html"])
-        self.assertNotIn("0 项", result["html"])
-        self.assertNotIn("暂无阻塞项", result["html"])
+        spec=copy.deepcopy(EXAMPLE)
+        spec['metadata']['status']='  '
+        spec['metadata']['statusPolicy']='legacy'
+        spec['metadata']['readiness']={'codingReady':True,'overall':'状态待记录'}
+        result=self.run_js(spec,'return {ready:summary.codingReady,issues:summary.readinessIssues};')
+        self.assertIs(False,result['ready'])
+        self.assertTrue(result['issues'])
 
-    def test_global_conditions_are_not_repeated_in_subrequirements(self):
-        output = self.run_js(EXAMPLE, "renderSnapshot(); return {top:nodes.snapshot.innerHTML, detail:renderRequirements(spec.requirements[0])};")
-        self.assertEqual(1, output["top"].count("readiness-card"))
-        self.assertNotIn("readiness-card", output["detail"])
+    def test_global_conditions_are_not_added_to_subrequirements(self):
+        output=self.run_js(EXAMPLE,'return {global:readiness,detail:spec.requirements[0]};')
+        self.assertIn('blockingItems',output['global'])
+        self.assertNotIn('readiness',output['detail'])
 
     def test_incomplete_or_failed_status_is_not_green(self):
-        texts = ["已实现，迁移待执行", "代码完成，尚未验收", "已完成，校验失败", "已完成", "待开始", "待复核", "未验证", "部分完成"]
-        result = self.run_js(EXAMPLE, "return " + json.dumps(texts, ensure_ascii=False) + ".map(s=>statusClass(s,'requirements'));")
-        self.assertEqual(["neutral", "neutral", "neutral", "done", "neutral", "review", "neutral", "neutral"], result)
+        from html_sdd.statuses import registry
+        texts=['已实现，迁移待执行','代码完成，尚未验收','已完成，校验失败','已完成','待开始','待复核','未验证','部分完成']
+        result=self.run_js(EXAMPLE,'return '+json.dumps(texts,ensure_ascii=False)+'.map(tone);')
+        tones=registry()['tones']
+        self.assertEqual([tones[kind] for kind in ['neutral','neutral','neutral','done','neutral','review','neutral','wait']],result)
 
     def test_questions_are_classified_without_guessing_and_closed_ones_are_hidden(self):
-        spec = copy.deepcopy(EXAMPLE)
-        spec["questions"] = [
-            {"id": "Q-USER", "question": "保留多久？", "status": "待确认", "requiresUserDecision": True},
-            {"id": "Q-TECH", "question": "验证接口", "status": "待确认", "requiresUserDecision": False},
-            {"id": "Q-OLD", "question": "旧问题", "status": "待确认"},
-            {"id": "Q-DONE", "question": "已决定", "status": "已确认", "requiresUserDecision": True},
-            {"id": "Q-CANCEL", "question": "已撤销", "state": "cancelled", "status": "待确认", "requiresUserDecision": True},
+        spec=copy.deepcopy(EXAMPLE)
+        spec['questions']=[
+            {'id':'Q-USER','question':'保留多久？','status':'待确认','requiresUserDecision':True},
+            {'id':'Q-TECH','question':'验证接口','status':'待确认','requiresUserDecision':False},
+            {'id':'Q-OLD','question':'旧问题','status':'待确认'},
+            {'id':'Q-DONE','question':'已决定','status':'已确认','requiresUserDecision':True},
+            {'id':'Q-CANCEL','question':'已撤销','state':'cancelled','status':'待确认','requiresUserDecision':True},
         ]
-        html = self.run_js(spec, "return renderQuestionSummary();")
-        self.assertIn("保留多久？", html)
-        self.assertIn("AI 核实（1）", html)
-        self.assertIn("待分类（1）", html)
-        self.assertNotIn("已决定", html)
-        self.assertNotIn("已撤销", html)
-        self.assertNotIn("无需用户", html)
+        result=self.run_js(spec,'return summary.openQuestions.map(item=>[item.id,questionKind(item)]);')
+        self.assertEqual([['Q-USER','等用户决定'],['Q-TECH','AI 继续核实'],['Q-OLD','待分类']],result)
 
-    def test_only_three_decisions_are_expanded_and_text_is_escaped(self):
-        spec = copy.deepcopy(EXAMPLE)
-        spec["questions"] = [{"id": f"Q-{i}", "question": f"决定{i}<script>alert(1)</script>", "status": "待确认", "requiresUserDecision": True} for i in range(5)]
-        html = self.run_js(spec, "return renderQuestionSummary();")
-        self.assertIn("其余 2 项", html)
-        visible = html.split('<details class="more-decisions"', 1)[0]
-        self.assertEqual(3, visible.count('data-question='))
-        self.assertEqual(5, html.count('data-question='))
-        self.assertNotIn("<script>", html)
-        self.assertIn("&lt;script&gt;", html)
+    def test_all_pending_decisions_preserve_text_for_vue_escaping(self):
+        spec=copy.deepcopy(EXAMPLE)
+        spec['questions']=[{'id':f'Q-{i}','question':f'决定{i}<script>alert(1)</script>','status':'待确认','requiresUserDecision':True} for i in range(5)]
+        result=self.run_js(spec,'return summary.openQuestions.map(item=>item.title);')
+        self.assertEqual([question['question'] for question in spec['questions']],result)
 
 
 class QuestionContractTest(unittest.TestCase):

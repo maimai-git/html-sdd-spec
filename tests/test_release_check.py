@@ -155,21 +155,20 @@ orders.enabled=false
         self.sql.write_text(SQL + "\n-- 新增发布说明\n", encoding="utf-8")
         self.assertEqual(set(), self.check("--release"))
         before = self.source.read_bytes()
-        for template in ("vue", "classic"):
-            result, output = self.render(template)
-            self.assertEqual(0, result.returncode, result.stdout + result.stderr)
-            html = output.read_text(encoding="utf-8")
-            self.assertEqual(self.spec, decode_html_payload(html))
-            self.assertNotIn("新增发布说明", html)
-            self.assertNotIn("CREATE TABLE public.orders", html)
-            self.assertIn(self.spec["configs"][1]["source"], html)
-            self.assertEqual("上线SQL清单/上线SQL.sql",
-                             unquote(self.release_paths(html)[self.spec["configs"][1]["source"]]))
-            self.assertEqual(before, self.source.read_bytes())
-            self.sql.write_text(SQL + "\n-- 正文改变后无需重新生成\n", encoding="utf-8")
-            again, output = self.render(template)
-            self.assertEqual(0, again.returncode, again.stdout)
-            self.assertEqual(html, output.read_text(encoding="utf-8"))
+        result, output = self.render()
+        self.assertEqual(0, result.returncode, result.stdout + result.stderr)
+        html = output.read_text(encoding="utf-8")
+        self.assertEqual(self.spec, decode_html_payload(html))
+        self.assertNotIn("新增发布说明", html)
+        self.assertNotIn("CREATE TABLE public.orders", html)
+        self.assertIn(self.spec["configs"][1]["source"], html)
+        self.assertEqual("上线SQL清单/上线SQL.sql",
+                         unquote(self.release_paths(html)[self.spec["configs"][1]["source"]]))
+        self.assertEqual(before, self.source.read_bytes())
+        self.sql.write_text(SQL + "\n-- 正文改变后无需重新生成\n", encoding="utf-8")
+        again, output = self.render()
+        self.assertEqual(0, again.returncode, again.stdout)
+        self.assertEqual(html, output.read_text(encoding="utf-8"))
 
     def test_legacy_official_file_content_is_not_rendered(self):
         self.check()
@@ -214,11 +213,11 @@ orders.enabled=false
         self.assertIsNotNone(data)
         return json.loads(data[1])
 
-    def render(self, template="vue", output=None):
+    def render(self, output=None):
         output = output or self.directory / "方案对齐.html"
         result = subprocess.run(
             [sys.executable, "-m", "html_sdd", "render", str(self.source),
-             "--template", template, "--output", str(output)],
+             "--output", str(output)],
             cwd=ROOT, capture_output=True, text=True, encoding="utf-8",
         )
         return result, output

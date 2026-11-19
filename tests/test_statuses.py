@@ -36,9 +36,12 @@ class StatusTest(unittest.TestCase):
         self.assertFalse([i for i in validate_spec(result) if i.level=='error'])
 
     def test_browser_uses_exact_mapping_and_preserves_legacy_note(self):
-        result=self.run_js('return {label:statusInfo("已实现但迁移待执行","apis").label,tone:statusClass("已实现但迁移待执行","apis"),badge:status("已完成","plans")};')
-        self.assertEqual('待核实',result['label']);self.assertEqual('neutral',result['tone'])
-        self.assertIn('done',result['badge'])
+        result=self.run_js('mode.value="apis";return {label:recordStatus({status:"已实现但迁移待执行"}),note:statusNote({status:"已实现但迁移待执行",statusNote:"备注"}),tone:tone("已实现但迁移待执行"),done:tone("已完成")};')
+        self.assertEqual('待核实',result['label'])
+        self.assertEqual('备注 · 已实现但迁移待执行',result['note'])
+        from html_sdd.statuses import registry
+        self.assertEqual(registry()['tones']['neutral'],result['tone'])
+        self.assertEqual(registry()['tones']['done'],result['done'])
 
     def test_generated_artifacts_and_packaging_cover_registry(self):
         import subprocess,sys
@@ -62,17 +65,16 @@ class StatusTest(unittest.TestCase):
 
     def test_header_color_does_not_change_with_active_tab(self):
         spec=copy.deepcopy(EXAMPLE);spec['metadata']['status']='开发中'
-        result=self.run_js('return ["requirements","apis","tables"].map(mode=>{state.mode=mode;renderSnapshot();return [nodes.documentState.textContent,nodes.documentState.className]});',spec)
-        self.assertTrue(all(row==['开发中','document-state status progress'] for row in result))
+        result=self.run_js('return ["requirements","apis","tables"].map(key=>{mode.value=key;return [spec.metadata.status,tone(spec.metadata.status)]});',spec)
+        self.assertTrue(all(row==result[0] for row in result));self.assertEqual('开发中',result[0][0])
 
     def test_render_always_rejects_invalid_development_status(self):
         from html_sdd.renderer import render_spec
         from pathlib import Path
         spec=copy.deepcopy(EXAMPLE);spec['metadata']['statusPolicy']='legacy';spec['apis'][0]['developmentStatus']='完成一半'
-        with self.assertRaises(ValueError):render_spec(spec,Path(__file__).resolve().parents[1]/'html_sdd/assets/console.html')
+        with self.assertRaises(ValueError):render_spec(spec,Path(__file__).resolve().parents[1]/'html_sdd/assets/console-vue.html')
 
-    def test_legacy_tooltips_keep_both_old_text_and_note(self):
+    def test_legacy_status_note_keeps_both_old_text_and_note(self):
         spec=copy.deepcopy(EXAMPLE);spec['metadata'].update(status='旧阶段说明',statusNote='额外说明',statusPolicy='legacy')
-        result=self.run_js('renderSnapshot();return {title:nodes.documentState.title,badge:status("旧文字","apis","备注")};',spec)
-        self.assertIn('旧阶段说明',result['title']);self.assertIn('额外说明',result['title'])
-        self.assertIn('旧文字',result['badge']);self.assertIn('备注',result['badge'])
+        result=self.run_js('mode.value="apis";return statusNote({status:"旧文字",statusNote:"备注"});',spec)
+        self.assertIn('旧文字',result);self.assertIn('备注',result)

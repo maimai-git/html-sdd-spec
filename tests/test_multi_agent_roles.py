@@ -7,7 +7,7 @@ from html_sdd.scaffold import skeleton_spec
 
 
 ROOT = Path(__file__).resolve().parents[1]
-TEMPLATE = ROOT / "html_sdd" / "assets" / "console.html"
+TEMPLATE = ROOT / "html_sdd" / "assets" / "console-vue.html"
 
 
 class MultiAgentRolesTest(unittest.TestCase):
@@ -65,7 +65,7 @@ class MultiAgentRolesTest(unittest.TestCase):
 
     def test_schedule_template_has_primary_and_collaborator_role_renderer(self):
         html = render_spec(self._spec_with_collaborators(), TEMPLATE)
-        self.assertIn("roleNames", html)
+        self.assertIn("agentNames", html)
         self.assertIn("reviewerIds", html)
         self.assertIn("executorIds", html)
 

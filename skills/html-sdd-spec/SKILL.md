@@ -53,7 +53,7 @@ html-sdd check <JSON>
 html-sdd render <JSON> --output <HTML>
 ```
 
-默认生成 Vue 版。请用浏览器直接打开本地 HTML 文件。HTTP 和 HTTPS 下页面会提示改用本地文件。Vue 版需联网加载 Vue，无法联网时给 `render` 加 `--template classic`。
+只生成 Vue 页面，不需要指定模板。请用浏览器直接打开本地 HTML 文件。HTTP 和 HTTPS 下页面会提示改用本地文件。打开时需联网加载固定版本的 Vue；加载失败时检查网络后刷新。
 
 公共参数/规则可用 `definitions.fields/rules` 和本地 `$ref` 复用；`reuse` 先预览再生成候选，展开等价后替换。
 

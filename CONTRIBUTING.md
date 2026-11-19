@@ -11,8 +11,10 @@ python3 -m html_sdd check examples/asset-library/sdd.json
 python3 -m html_sdd render examples/asset-library/sdd.json --output /tmp/html-sdd-index.html
 ~~~
 
-3. 在浏览器打开 Vue 页面。需要离线查看时，用 `render --template classic` 生成 Classic 页面。
+3. 在浏览器直接打开生成的本地 Vue 页面，确认 Vue CDN 加载成功及交互正常。
 4. Pull Request 说明改变了哪些字段、兼容性影响和验证结果。
+
+Vue 浏览器回归使用 Playwright Python：安装当前包和 `playwright==1.59.0`，运行 `python -m playwright install chromium` 后执行 `python tests/browser/console.py` 和 `python tests/browser/summary.py`。这两个用例分别验证页面交互和 CLI 摘要一致性。
 
 ## 设计原则
 

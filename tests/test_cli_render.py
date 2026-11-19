@@ -12,29 +12,18 @@ EXAMPLE = ROOT / "examples/asset-library/sdd.json"
 
 
 class CliRenderTest(unittest.TestCase):
-    def test_classic_render_is_available_explicitly(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            output = Path(tmp) / "index.html"
-            result = subprocess.run(
-                [
-                    sys.executable,
-                    "-m",
-                    "html_sdd",
-                    "render",
-                    str(EXAMPLE),
-                    "--template",
-                    "classic",
-                    "--output",
-                    str(output),
-                ],
-                cwd=ROOT,
-                capture_output=True,
-                text=True,
-            )
-            self.assertEqual(0, result.returncode, result.stderr)
-            self.assertTrue(output.exists())
-            self.assertNotIn("vue.global.prod.js", output.read_text())
-            self.assertIn("asset_library_resource", str(decode_html_payload(output.read_text())))
+    def test_removed_template_option_is_rejected_without_creating_output(self):
+        for template in ("classic", "vue"):
+            with self.subTest(template=template), tempfile.TemporaryDirectory() as tmp:
+                output = Path(tmp) / "index.html"
+                result = subprocess.run(
+                    [sys.executable, "-m", "html_sdd", "render", str(EXAMPLE),
+                     "--template", template, "--output", str(output)],
+                    cwd=ROOT, capture_output=True, text=True,
+                )
+                self.assertEqual(2, result.returncode, result.stderr)
+                self.assertIn(f"unrecognized arguments: --template {template}", result.stderr)
+                self.assertFalse(output.exists())
 
 
     def test_default_render_preserves_all_source_records_with_vue(self):

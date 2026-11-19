@@ -1,7 +1,6 @@
 import copy
 import json
 import shutil
-import subprocess
 import unittest
 from pathlib import Path
 
@@ -30,69 +29,36 @@ def fixture():
 @unittest.skipUnless(shutil.which("node"), "模板运行回归需要 Node")
 class CatalogFiltersTest(unittest.TestCase):
     def run_js(self, expression, spec=None):
-        from html_sdd.statuses import registry
-        source = (ROOT / "html_sdd/assets/console.html").read_text().replace("__HTML_SDD_STATUSES__",json.dumps(registry(),ensure_ascii=False))
-        code = source[source.index("    const statusRegistry="):source.rindex("    render();")]
-        prelude = """
-const spec=SPEC;
-const window={};
-const nodes={};
-const document={addEventListener(){},querySelectorAll:()=>[],getElementById:id=>(nodes[id]??={innerHTML:'',textContent:'',className:'',querySelectorAll:()=>[],classList:{add(){},remove(){},toggle(){}}})};
-""".replace("SPEC", json.dumps(spec if spec is not None else fixture(), ensure_ascii=False))
-        script = prelude + code + "\nconsole.log(JSON.stringify((()=>{" + expression + "})()));"
-        result = subprocess.run(["node", "-"], input=script, capture_output=True, text=True)
-        self.assertEqual(0, result.returncode, result.stderr)
-        return json.loads(result.stdout)
+        from tests.vue_runtime import run_vue
+        return run_vue(expression, spec if spec is not None else fixture())
 
     def test_development_status_is_explicit_and_missing_stays_unverified(self):
-        self.assertEqual(["已完成", "部分完成", "未开发", "待核实"], self.run_js("return apis.map(developmentStatus);"))
-        self.assertEqual("unknown", self.run_js('return changeKind({changeType:"未知"});'))
+        self.assertEqual(["已完成", "部分完成", "未开发", "待核实"], self.run_js('mode.value="apis";return records.value.map(itemStatus);'))
 
     def test_filters_combine_and_remain_independent_between_categories(self):
-        result = self.run_js('catalogFilters.apis={status:"已完成",type:"new"};catalogFilters.tables={status:"部分完成",type:"existing"};return {apis:allItems("apis").map(x=>x.id),tables:allItems("tables").map(x=>x.id),existing:allItems("existingInterfaces").length};')
-        self.assertEqual({"apis": ["API-1"], "tables": ["DATA-3"], "existing": 1}, result)
-        self.assertEqual(["API-2", "API-3"], self.run_js('catalogFilters.apis.type="existing";return allItems("apis").map(x=>x.id);'))
-        self.assertEqual(["API-4"], self.run_js('catalogFilters.apis.status="待核实";return allItems("apis").map(x=>x.id);'))
+        result = self.run_js('''filters.apis={query:"",status:"已完成",change:"新增接口"};
+filters.tables={query:"",status:"部分完成",change:"存量表复用"};
+return Object.fromEntries(["apis","tables","existingInterfaces"].map(key=>{mode.value=key;return [key,visible.value.map(x=>x.id)]}));''')
+        self.assertEqual({"apis": ["API-1"], "tables": ["DATA-3"], "existingInterfaces": ["API-1"]}, result)
+        self.assertEqual(["API-2", "API-3"], self.run_js('mode.value="apis";filters.apis.status="未完成";return visible.value.map(x=>x.id);'))
+        self.assertEqual(["API-4"], self.run_js('mode.value="apis";filters.apis.status="待核实";return visible.value.map(x=>x.id);'))
 
-    def test_empty_results_clear_detail_and_selection(self):
-        result = self.run_js('state.mode="apis";state.selectedId="API-1";render();catalogFilters.apis={status:"已完成",type:"reused"};render();return {selected:state.selectedId,html:nodes.detail.innerHTML,count:nodes.catalogCount.textContent};')
-        self.assertIsNone(result["selected"])
-        self.assertIn("没有匹配条目", result["html"])
-        self.assertNotIn("API-1", result["html"])
-        self.assertIn("0 / 4", result["count"])
+    def test_empty_results_have_no_selected_detail(self):
+        result = self.run_js('mode.value="apis";selected.value="API-1";filters.apis={query:"",status:"已完成",change:"存量接口复用"};return {record:record.value||null,count:visible.value.length,total:records.value.length};')
+        self.assertEqual({"record": None, "count": 0, "total": 4}, result)
 
-    def test_api_and_table_heads_separate_development_and_deployment(self):
-        result = self.run_js('return {api:renderApis(apis[1]),table:renderTables(tables[2])};')
-        for html in result.values():
-            self.assertIn("部分完成", html)
-        self.assertIn("delivery-note", result["api"])
-        self.assertIn("代码已实现，迁移待执行", result["api"])
-        self.assertNotIn("执行情况待核实", result["table"])
-        self.assertIn("待核实", self.run_js('return renderApis(apis[3]);'))
-
-    def test_examples_and_ddl_are_open_but_other_details_stay_collapsible(self):
-        result = self.run_js('return {api:renderApis(apis[0]),table:renderTables(tables[0])};')
-        self.assertEqual(2, result["api"].count('<details open class="disclosure example-disclosure"'))
-        self.assertIn('<details open class="disclosure text-disclosure"', result["table"])
-        self.assertNotIn("结构差异", result["table"])
+    def test_development_and_deployment_status_are_independent(self):
+        result = self.run_js('return ["apis","tables"].map(key=>{mode.value=key;const item=records.value.find(x=>x.developmentStatus==="部分完成");return [itemStatus(item),recordStatus(item),statusNote(item)]});')
+        self.assertEqual(["部分完成", "待核实", "代码已实现，迁移待执行"], result[0])
+        self.assertEqual(["部分完成", "待核实", "执行情况待核实"], result[1])
 
     def test_response_parameter_columns_include_required_heading(self):
-        html = self.run_js('return fieldTable([{name:"items",type:"array",required:"是",description:"示意结果",example:[]}],false);')
-        self.assertIn("<th>必填</th>", html)
-        self.assertEqual(5, html.count("<th>"))
-        self.assertEqual(5, html.count("<td"))
+        self.assertEqual(["字段", "类型", "必填", "说明", "示例"], self.run_js('return columns("response").map(caption);'))
 
-    def test_compact_snapshot_does_not_repeat_work_status(self):
-        html = self.run_js('renderSnapshot();return nodes.snapshot.innerHTML;')
-        self.assertNotIn("snapshot-summary", html)
-        self.assertNotIn("测试中的真实阶段", html)
-        self.assertIn("版本信息", html)
-        self.assertIn("编码条件", html)
-
-    def test_config_page_keeps_content_without_rejected_notice(self):
-        html = self.run_js('return renderConfigs({id:"CFG-1",title:"发布配置",content:"DEMO_ENABLED=true"});')
-        self.assertIn("DEMO_ENABLED=true", html)
-        self.assertNotIn("只展示需要填写或执行的文本", html)
+    def test_config_content_is_preserved_in_primary_fields(self):
+        spec=fixture()
+        spec["configs"]=[{"id":"CFG-1","title":"发布配置","content":"DEMO_ENABLED=true"}]
+        self.assertEqual([["content", "DEMO_ENABLED=true"]], self.run_js('mode.value="configs";return primary.value;', spec))
 
 
 class DevelopmentStatusContractTest(unittest.TestCase):

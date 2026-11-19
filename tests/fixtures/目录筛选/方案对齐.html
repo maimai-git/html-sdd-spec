@@ -1,125 +1,22 @@
 <!doctype html>
 <html lang="zh-CN">
 <head>
-  <meta charset="utf-8">
-  <meta name="color-scheme" content="light">
-  <link rel="icon" href="data:,">
-  <title>HTML SDD Spec 文件管理 · 目录筛选演示</title>
-  <style>
-    :root{--ink:#182230;--muted:#475569;--line:#d7dee8;--canvas:#f5f7fb;--paper:#fff;--side:#f8fafc;--side-hover:#edf2fa;--accent:#254b86;--accent-soft:#eaf0fb;--success:#166534;--success-soft:#ecfdf3;--blue:#1d4ed8;--blue-soft:#eff6ff;--amber:#854d0e;--amber-soft:#fff7e6;--red:#b42318;--red-soft:#fef3f2;--violet:#6d28d9;--violet-soft:#f5f3ff;--shadow:none}
-    *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--canvas);color:var(--ink);font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}button{font:inherit;cursor:pointer}code,pre,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}code{font-size:.92em;overflow-wrap:anywhere}
-    .topbar{height:48px;position:sticky;top:0;z-index:8;display:flex;align-items:center;gap:11px;padding:0 18px;background:#fff;border-bottom:1px solid var(--line)}.brand-mark{width:26px;height:26px;display:grid;place-items:center;border-radius:6px;background:var(--accent);color:#fff;font:800 15px ui-monospace,monospace}.brand{font-size:16px;font-weight:800}.project-title{overflow:hidden;color:var(--muted);font-size:15px;text-overflow:ellipsis;white-space:nowrap}.document-state{margin-left:auto;max-width:48vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-    .tabbar{height:40px;position:sticky;top:48px;z-index:7;display:flex;align-items:stretch;gap:3px;padding:0 16px;background:#fff;border-bottom:1px solid var(--line);overflow-x:auto}.tab{position:relative;flex:0 0 auto;padding:0 14px;border:0;background:transparent;color:#475569;font-size:15px;font-weight:800;white-space:nowrap}.tab:hover{background:#f1f5f9;color:var(--ink)}.tab.active{color:var(--accent)}.tab.active:after{position:absolute;right:10px;bottom:-1px;left:10px;height:2px;background:var(--accent);content:""}
-    .snapshot{display:flex;flex-wrap:wrap;align-items:center;gap:6px;position:relative;z-index:6;max-width:none;margin:0;padding:4px 18px;border-bottom:1px solid var(--line);background:#fff}.snapshot-item{min-width:0;padding:9px 11px;background:#fff;border:1px solid var(--line);border-radius:8px}.snapshot-label{color:var(--muted);font-size:12px}.snapshot-value{margin-top:2px;overflow:hidden;font-size:14px;font-weight:700;text-overflow:ellipsis;white-space:nowrap}
-    .shell{display:grid;grid-template-columns:310px minmax(0,1fr);min-height:calc(100vh - 126px);max-width:none;margin:0 auto}.shell.plan-mode{display:block}.shell.plan-mode .sidebar{display:none}.sidebar{position:sticky;top:88px;height:calc(100vh - 88px);overflow:auto;padding:10px 8px 24px;background:var(--side);border-right:1px solid var(--line)}.catalog-title{padding:0 8px 6px;color:#334155;font-size:14px;font-weight:700}.catalog-count{float:right;color:#64748b;font-size:12px;font-weight:600}.catalog-group{margin-top:8px}.catalog-group:first-child{margin-top:0}.catalog-group-heading{display:flex;align-items:center;gap:6px;padding:3px 8px;color:#334155;font-size:15px;font-weight:700;line-height:20px}.catalog-group-heading:before{width:3px;height:13px;border-radius:2px;background:var(--accent);content:""}.catalog-item:hover{background:var(--side-hover);color:var(--ink)}.catalog-item.active{background:var(--accent-soft);color:#1e3a5f;box-shadow:inset 2px 0 var(--accent)}
-    main{min-width:0;padding:16px 24px 44px}.detail{max-width:none;margin:0 auto}.page-head{padding:2px 0 15px;border-bottom:1px solid var(--line)}.page-kicker{margin:0 0 5px;color:var(--muted);font-size:12px;font-weight:800}.page-title-row{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}.page-title{margin:0;font-size:28px;line-height:1.3;overflow-wrap:anywhere}.page-intro{margin:6px 0 0;color:#475569;font-size:15px}.page-meta{display:flex;flex-wrap:wrap;gap:6px 15px;margin-top:10px;color:var(--muted);font-size:12px}.page-meta b{color:#334155}.card{margin:0 0 14px;overflow:hidden;background:var(--paper);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow)}.card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:13px 16px;border-bottom:1px solid var(--line)}.card-head h1,.card-head h2{margin:0;font-size:22px;line-height:1.4;overflow-wrap:anywhere}.card-head>div:first-child{min-width:0}.interface-summary{margin:0 0 14px;font-size:16px}.card-head small{color:var(--muted);font-size:14px}.card-body{padding:16px}.section{margin:0 0 18px}.section:last-child{margin-bottom:0}.section h3{margin:0 0 8px;color:#334155;font-size:15px}.section p{margin:0;color:var(--ink);font-size:16px}.two-col{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.solution-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.solution-section{padding:11px 12px;border:1px solid var(--line);border-radius:8px;background:#fafcff}.solution-section h3{margin:0 0 6px;font-size:14px}.solution-section p{margin:0;color:#334155;font-size:16px}.solution-section ol,.solution-section ul{margin:0;padding-left:18px;color:#334155;font-size:16px}.solution-section li+li{margin-top:4px}
-    .status,.change-type,.tag{display:inline-flex;align-items:center;border-radius:999px;padding:3px 8px;font-size:12px;font-weight:800;white-space:nowrap}.change-type.new{background:var(--blue-soft);color:var(--blue)}.change-type.existing{background:var(--amber-soft);color:var(--amber)}.change-type.reuse{background:var(--success-soft);color:var(--success)}.tag{border:1px solid #cbd5e1;background:#fff;color:#475569;font:700 12px ui-monospace,monospace}.tag-list{display:flex;flex-wrap:wrap;gap:6px}.callout{padding:10px 12px;border-left:3px solid var(--accent);border-radius:5px;background:var(--accent-soft);color:#1e3a5f;font-size:14px}.callout.warn{border-color:#d39a3e;background:var(--amber-soft);color:#754509}
-    .param-grid,.instance-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}.param-pane{min-width:0}.param-pane h3,.instance-pane h3{margin:0 0 8px;font-size:15px}.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:7px;background:#fff}table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:8px 9px;border-bottom:1px solid #e2e8f0;text-align:left;vertical-align:top}th{background:#f1f5f9;color:#475569;font-weight:800;white-space:nowrap}tr:last-child td{border-bottom:0}.field-name{font:700 14px ui-monospace,monospace;color:#1e3a5f}.instance-pane{min-width:0}.instance-box,.text-box{margin:0;overflow:auto;padding:12px;border-radius:7px;background:#111827;color:#f8fafc;font:14px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;white-space:pre-wrap;overflow-wrap:anywhere}.text-box{min-height:66px}.diagram-panel{display:grid;gap:10px}.diagram-view{min-height:180px;display:grid;place-items:center;padding:12px;border:1px solid var(--line);border-radius:8px;background:#fafcff}.diagram-view svg{max-width:100%;height:auto}.diagram-view-mermaid{display:grid;gap:8px;place-items:center}.diagram-view-mermaid .mermaid{width:100%;margin:0;overflow:auto;text-align:center}.diagram-view-mermaid .mermaid svg{max-width:100%;height:auto}.diagram-fallback{margin:0;width:100%;white-space:pre-wrap;font:14px/1.6 ui-monospace,monospace;color:#334155}.diagram-fallback-note{margin:0;color:var(--muted);font-size:12px;text-align:center}.diagram-label{color:var(--muted);font-size:12px;font-weight:800}.related{margin-top:13px}.related h3{margin:0 0 7px;color:#334155;font-size:14px}
-    .summary-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:14px}.summary{padding:12px 13px;background:#fff;border:1px solid var(--line);border-radius:8px}.summary-label{color:var(--muted);font-size:12px}.summary-value{margin-top:2px;font-size:24px;font-weight:800}.summary-note{margin-top:2px;color:var(--muted);font-size:12px}.plan-wrap{overflow:auto;border:1px solid var(--line);border-radius:10px;background:#fff;box-shadow:var(--shadow)}.plan-table{width:100%;min-width:1280px;border-collapse:collapse;font-size:14px}.plan-table th{padding:10px 9px;background:#eef2f8;color:#475569;font-size:14px}.plan-table td{padding:10px 9px;border-bottom:1px solid #e2e8f0;vertical-align:top}.plan-table tbody tr:last-child td{border-bottom:0}.plan-table tbody tr:hover{filter:brightness(.985)}.plan-table .status{font-size:14px;display:inline-block;max-width:100%;white-space:normal;overflow-wrap:anywhere;line-height:1.4;text-align:center}.module-0{background:#fafcff}.module-1{background:#eff6ff}.module-2{background:#fffbeb}.module-3{background:#f5f3ff}.module-4{background:#fff1f2}
-    .empty{padding:32px;text-align:center;color:var(--muted);border:1px dashed #cbd5e1;border-radius:8px}.footer-note{margin-top:24px;padding-top:10px;border-top:1px solid var(--line);color:#526176;font-size:12px}
-    /* Keep the first screen focused on status; reveal implementation detail on demand. */
-
-    .snapshot-summary{display:none}
-    .snapshot-version{position:relative;margin:0;padding:0;color:var(--muted);font-size:13px}
-    .snapshot-version>summary{display:block;padding:3px 8px;line-height:24px;font-size:13px;font-weight:600;cursor:pointer;list-style:none}
-    .snapshot-version>summary::-webkit-details-marker,.readiness-summary::-webkit-details-marker,.disclosure>summary::-webkit-details-marker{display:none}
-    .snapshot-version>summary:before,.disclosure>summary:before{content:"＋";display:inline-block;width:18px;color:var(--accent);font-weight:800}
-    .snapshot-version[open]>summary:before,.disclosure[open]>summary:before{content:"－"}
-    .version-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-top:8px}
-    .readiness-card{padding:0}
-    .readiness-summary{display:block;padding:3px 8px;line-height:24px;font-size:13px;font-weight:600;cursor:pointer;list-style:none}
-    .readiness-summary>span:first-child{display:grid;gap:2px}
-    .readiness-summary strong{font-size:16px}
-    .readiness-summary small{color:var(--muted);font-size:14px}
-    .readiness-summary-meta{display:flex;align-items:center;gap:10px;min-width:0}
-    .readiness-summary-meta .status{max-width:280px;overflow:hidden;text-overflow:ellipsis}
-    .disclosure-label{color:var(--accent);font-size:14px;font-weight:700;white-space:nowrap}
-    .disclosure{margin:10px 0;border:1px solid var(--line);border-radius:7px;background:#fff}
-    .disclosure>summary{padding:9px 11px;cursor:pointer;color:#334155;font-size:14px;font-weight:700;list-style:none}
-    .disclosure-content{padding:0 11px 12px}
-    .disclosure .section{margin:0}
-    .instance-grid{margin-top:12px!important}
-    .instance-box{max-height:420px}
-    .text-disclosure .text-box{max-height:560px}
-    .related-disclosure{margin-top:12px}
-    .related-disclosure .related{margin:0}
-    .acceptance-disclosure{margin-top:10px}
-    .shell.plan-mode{max-width:none}
-    .plan-table{min-width:1280px;table-layout:fixed}
-    .plan-table th:nth-child(1),.plan-table td:nth-child(1){width:60px}
-    .plan-table th:nth-child(2),.plan-table td:nth-child(2){width:70px}
-    .plan-table th:nth-child(3),.plan-table td:nth-child(3){width:22%}
-    .plan-table th:nth-child(4),.plan-table td:nth-child(4){width:170px}
-    .plan-table th:nth-child(5),.plan-table td:nth-child(5){width:145px}
-    .plan-table th:nth-child(6),.plan-table td:nth-child(6){width:100px}
-    .plan-task{display:grid;gap:5px;min-width:0}
-    .plan-task strong{font-size:14px}
-    .plan-preview{display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow-wrap:anywhere}
-    .plan-reqs{display:grid;gap:5px}
-    .plan-req{display:inline-block;padding:2px 5px;border-radius:4px;background:#fff;color:#334155;font-family:inherit;font-size:12px;font-weight:400;text-align:left;border:1px solid var(--line);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
-    button.plan-req{cursor:pointer}
-    .plan-toggle{padding:0;border:0;background:transparent;color:var(--accent);font:inherit;text-align:left;cursor:pointer;overflow-wrap:anywhere;line-height:1.5}
-    .plan-toggle:hover,button.plan-req:hover{color:var(--ink)}
-    .plan-toggle:before{content:"▸ ";color:var(--muted)}
-    .plan-toggle[aria-expanded="true"]:before{content:"▾ "}
-    .plan-details-row[hidden]{display:none!important}
-    .plan-details-row td{padding:12px 14px;background:rgba(255,255,255,.82)}
-    .plan-details-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 14px}
-    .plan-detail{min-width:0;display:grid;gap:2px}
-    .plan-detail.wide{grid-column:1/-1}
-    .plan-detail b{color:var(--muted);font-size:14px}
-    .plan-detail span{overflow-wrap:anywhere;font-size:14px}
-
-    .page-meta{display:none}
-    .snapshot .readiness-card{position:relative;margin:0;padding:0;border:0;overflow:visible;background:transparent;box-shadow:none}.question-summary{margin:8px 0;padding:12px 16px;background:#fff;border:1px solid var(--line);border-radius:8px;font-size:15px}.question-summary strong{font-size:16px}.question-summary p{margin:5px 0;color:var(--muted)}.question-summary ul{margin:6px 0;padding-left:18px}.question-summary li+li{margin-top:6px}.question-summary small{display:block;color:var(--muted);font-size:14px}.question-summary details{margin-top:6px}.question-summary summary{cursor:pointer;color:var(--accent);font-weight:700}
-    @media print{.topbar,.tabbar,.sidebar,.snapshot{display:none}.shell,.shell.plan-mode{display:block;min-height:0}main{padding:0}.detail{max-width:none}.card,.plan-wrap{box-shadow:none}.table-wrap,.plan-wrap,.instance-box,.text-box{overflow:visible}.disclosure:not([open])>*:not(summary){display:block}.plan-details-row[hidden]{display:table-row}}
-
-    .snapshot-version>summary:before{display:none}
-
-    .snapshot-questions{position:relative}
-
-    .snapshot-questions>summary{padding:3px 8px;line-height:24px;font-size:13px;font-weight:600;cursor:pointer;list-style:none;color:var(--accent)}
-
-    .snapshot-panel{position:absolute;left:0;top:calc(100% + 4px);width:min(760px,calc(100vw - 36px));max-height:60vh;overflow:auto;padding:16px;background:#fff;border:1px solid var(--line);border-radius:8px}
-
-    .snapshot-panel.version-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:0}
-
-    .snapshot-panel .question-summary{margin:0;padding:0;border:0}
-
-    .catalog-filters{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:4px 6px;margin-bottom:6px}
-
-    .catalog-filters label{display:grid;gap:3px;font-size:12px;color:var(--muted)}
-
-    .catalog-filters select{width:100%;min-width:0;padding:5px 4px;border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--ink);font:inherit;font-size:13px;line-height:1.4}
-
-    .catalog-filters button{grid-column:1/-1;justify-self:end;padding:2px 0;border:0;background:transparent;color:var(--accent);font-size:12px}
-
-    .delivery-note{margin:0 0 12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--muted);font-size:14px}
-    .plan-module-start>td{border-top:2px solid var(--line)}
-    .schedule-controls{display:flex;align-items:center;flex-wrap:wrap;gap:10px 18px;margin:0 0 14px;font-size:14px}.schedule-controls label{display:flex;align-items:center;gap:7px}.schedule-controls select{padding:6px 8px;border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--ink);font:inherit}.schedule-controls button{padding:5px 8px;border:1px solid var(--line);border-radius:5px;background:#fff;color:var(--accent);font:inherit}.schedule-controls span{color:var(--muted)}.schedule-group input{width:16px;height:16px;accent-color:var(--accent)}
-.catalog-item{width:100%;display:flex;flex-direction:column;align-items:stretch;gap:3px;margin:2px 0;padding:6px 8px;border:0;border-radius:5px;background:transparent;color:#334155;text-align:left}
-.catalog-name{display:block;min-width:0;overflow:hidden;font-size:14px;line-height:20px;text-overflow:ellipsis;white-space:nowrap}
-.catalog-path{display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;user-select:text;font:13px/18px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;color:#475569}
-.catalog-tags{display:flex;flex-wrap:wrap;align-items:center;gap:4px;min-width:0}
-.catalog-tag{display:inline-flex;align-items:center;max-width:100%;min-height:20px;padding:1px 6px;border:1px solid var(--line);border-radius:4px;background:#f1f5f9;color:#475569;font-size:12px;font-weight:600;line-height:18px;white-space:nowrap}
-.catalog-code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
-.catalog-tags .status,.catalog-tags .change-type{padding:1px 6px;border-radius:4px;font-size:12px;font-weight:600;line-height:18px;white-space:nowrap}
-.catalog-item.compact-record{gap:2px;margin:1px 0;padding:3px 8px}
-.compact-record .catalog-name{font-size:13px;line-height:17px}
-.compact-record .catalog-path{font-size:11px;line-height:15px}
-.compact-record .catalog-tags{gap:3px}
-.compact-record .catalog-tag,.compact-record .catalog-tags .status,.compact-record .catalog-tags .change-type{min-height:16px;padding:0 4px;font-size:11px;line-height:14px}
-.catalog-count{padding:0 6px;border:1px solid var(--line);border-radius:4px;background:#f1f5f9;color:#475569;line-height:18px}
-
-    .record-id{color:#64748b;font:400 12px/1.5 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
-    .related .tag{padding:0 5px;border-color:#e2e8f0;border-radius:4px;background:transparent;color:#64748b;font:400 11px/18px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
-    .plan-req{padding:1px 4px;background:transparent;color:#64748b;font:400 12px/18px ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
-    .status.done{color:#166534;background:#ecfdf3}.catalog-status.done{color:#166534}
-.status.progress{color:#1d4ed8;background:#eff6ff}.catalog-status.progress{color:#1d4ed8}
-.status.wait{color:#854d0e;background:#fff7e6}.catalog-status.wait{color:#854d0e}
-.status.review{color:#6d28d9;background:#f5f3ff}.catalog-status.review{color:#6d28d9}
-.status.blocked{color:#b42318;background:#fef3f2}.catalog-status.blocked{color:#b42318}
-.status.neutral{color:#475569;background:#f1f5f9}.catalog-status.neutral{color:#475569}
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HTML SDD Spec 文件管理 · 目录筛选演示</title>
+<style>
+:root{font:16px/1.55 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif;color:#172739;background:#f5f7fa;--line:#d8e0eb;--navy:#244779;--muted:#536579;--pale:#eef3f9}
+*{box-sizing:border-box}body{margin:0}button,select,input{font:inherit}button{color:inherit;cursor:pointer}button:focus-visible,summary:focus-visible,a:focus-visible{outline:2px solid #2465b2;outline-offset:2px}
+header{background:#fff;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:1}.top{display:flex;align-items:center;gap:14px;padding:13px 24px}.brand{font-weight:760;color:var(--navy);white-space:nowrap}.project{flex:1;color:var(--muted)}nav{display:flex;gap:7px;padding:0 24px;overflow:auto}nav button{background:none;border:0;border-bottom:3px solid transparent;padding:9px 12px;white-space:nowrap}nav button.active{color:var(--navy);font-weight:700;border-color:var(--navy)}
+.layout{display:grid;grid-template-columns:292px minmax(0,1fr);min-height:calc(100vh - 102px)}aside{position:sticky;top:102px;align-self:start;max-height:calc(100vh - 102px);overflow:auto;padding:15px 12px;background:#f9fbfd;border-right:1px solid var(--line)}.tools{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-bottom:15px}.tools select,.tools input:not([type=checkbox]){border:1px solid var(--line);border-radius:6px;background:white;color:inherit;padding:5px 8px}.search{width:100%;margin-bottom:8px;border:1px solid var(--line);border-radius:6px;background:#fff;padding:6px 8px}.catalog-tools{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px}.catalog-tools select{min-width:0;width:100%;font-size:13px}.catalog-tools .verification{grid-column:1/-1}.muted,small{color:var(--muted);font-size:13px}.group{margin:15px 6px 6px;font-weight:730;color:#294668}.record{display:block;text-align:left;width:100%;border:1px solid transparent;border-radius:6px;padding:7px 8px;background:none}.record.active{background:#e6eefb;border-color:#c5d7ef}.record:hover{background:var(--pale)}.path{display:block;font:13px ui-monospace,monospace;overflow-wrap:anywhere;color:var(--muted);margin-top:3px}.tags{display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-top:4px}.badge{display:inline-block;padding:1px 7px;border-radius:5px;font-size:12px;font-weight:650;background:var(--pale);white-space:nowrap}
+main{padding:20px 24px;min-width:0}.surface{background:#fff;border:1px solid var(--line);border-radius:9px;padding:20px 23px}.head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:15px}.head h1,h1{font-size:24px;line-height:1.3;margin:0 0 5px}h2{font-size:16px;margin:0 0 6px}p{margin:0 0 12px}.block{margin-top:17px}.block p{white-space:pre-wrap;overflow-wrap:anywhere}.twocol{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.scroll{overflow:auto;border:1px solid var(--line);border-radius:7px}table{width:100%;border-collapse:collapse;text-align:left;font-size:14px}th,td{padding:8px 9px;vertical-align:top;border-bottom:1px solid var(--line);overflow-wrap:anywhere}th{background:var(--pale);white-space:nowrap}tr:last-child td{border-bottom:0}.plan table{min-width:1060px}.note{max-width:430px}.clamp{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}.link{background:none;border:0;padding:0;text-align:left;color:var(--navy);text-decoration:underline;text-underline-offset:3px}.plan .link{text-decoration:none}.plan .link:hover{color:#172739}.grouphead td{padding:6px 9px;background:#e9eff7;color:var(--navy);font-weight:700}.plan-expanded td{background:#f6f9fd;padding:12px 16px}.plan-expanded b{color:var(--navy)}
+pre{margin:0;overflow:auto;max-height:560px;padding:13px 15px;border-radius:6px;background:#152131;color:#f0f5fb;font:13px/1.55 ui-monospace,monospace}.diagram{overflow:auto;padding:10px;border:1px solid var(--line);border-radius:6px;text-align:center}.diagram svg,.diagram img{max-width:100%;height:auto}summary{cursor:pointer;color:var(--navy);font-weight:650;margin-bottom:8px}.facts{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:6px 14px;margin:0;font-size:14px}.facts dt{font-weight:700}.api-rules{margin:0;padding-left:1.2em;overflow-wrap:anywhere}.api-rules li+li{margin-top:4px}.api-summary{white-space:pre-wrap;overflow-wrap:anywhere}.facts dd{margin:0;white-space:pre-wrap;overflow-wrap:anywhere}.overview{margin-bottom:12px}.overview details{background:#fff;border:1px solid var(--line);border-radius:6px;padding:7px 11px}.empty{color:var(--muted);padding:24px}.related{display:flex;flex-wrap:wrap;gap:5px 13px}
+@media(max-width:900px){.layout{grid-template-columns:230px minmax(0,1fr)}.twocol{grid-template-columns:1fr}main{padding:14px}.head{display:block}}
+.record.compact-record{padding:3px 8px}
+.compact-record .record-name{display:block;font-size:13px;line-height:17px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.compact-record .path{margin-top:2px;font-size:11px;line-height:15px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;user-select:text}
+.compact-record .tags{margin-top:2px;gap:3px}
+.compact-record .badge{padding:0 4px;font-size:11px;line-height:16px}
 
 .param-scroll{max-width:100%;overflow-x:auto}
 .param-scroll table{min-width:540px}
@@ -147,429 +44,360 @@
 .column-diff-table dt{display:inline;font-weight:600}
 .column-diff-table dd{display:inline;margin:0}
 .column-diff-table code{font-size:inherit}
-  </style>
+</style>
+<script defer src="https://cdn.jsdelivr.net/npm/vue@3.5.24/dist/vue.global.prod.js"></script>
 </head>
 <body>
-  <header class="topbar">
-    <span class="brand-mark" aria-hidden="true">S</span>
-    <span class="brand">HTML SDD Spec</span>
-    <span class="project-title" id="projectTitle"></span>
-    <span class="document-state" id="documentState">状态待记录</span>
-  </header>
-  <nav class="tabbar" id="tabs" aria-label="文档分类"></nav>
-  <section class="snapshot" id="snapshot" aria-label="当前版本快照"></section>
-  <div class="shell" id="shell">
-    <aside class="sidebar" id="sidebar" aria-label="当前分类目录">
-      <div class="catalog-title"><span id="catalogTitle">需求清单</span><span class="catalog-count" id="catalogCount"></span></div>
-      <nav id="catalog" aria-label="条目清单"></nav>
-    </aside>
-    <main><article class="detail" id="detail" aria-live="polite"></article></main>
+<div id="app">正在加载方案页面…</div>
+<template id="console-view">
+<header>
+ <div class="top"><span class="brand">HTML SDD Spec</span><span class="project">{{ spec.metadata.title }}</span><span class="badge" :style="tone(spec.metadata.status)">{{ spec.metadata.status }}</span></div>
+ <nav aria-label="方案分类"><button v-for="tab in tabs" :key="tab[0]" :class="{active:mode===tab[0]}" :data-mode="tab[0]" :aria-current="mode===tab[0]?'page':null" @click="selectMode(tab[0])">{{ tab[1] }}</button></nav>
+</header>
+<div :class="{layout:mode!=='plans'}">
+ <aside v-if="mode!=='plans'">
+  <input class="search" type="search" v-model="filters[mode].query" placeholder="筛选名称、路径或编号" aria-label="筛选目录">
+  <div class="tools catalog-tools" v-if="catalogFilter">
+   <select v-model="filters[mode].change" aria-label="变更类型"><option value="">全部变更</option><option v-for="kind in changes" :key="kind">{{ kind }}</option></select>
+   <select v-model="filters[mode].status" aria-label="本期开发状态">
+    <option value="">全部开发状态</option>
+    <option v-for="status in developmentFilters" :key="status">{{ status }}</option>
+   </select>
   </div>
-  <script id="html-sdd-spec" type="application/json">{"specVersion":"0.1","metadata":{"id":"CATALOG-DEMO","title":"文件管理 · 目录筛选演示","summary":"示意数据，用于体验筛选和开发/部署状态区分，不代表业务开发实绩。","status":"待核实","updatedAt":"2026-11-12T00:00:00+08:00","language":"zh-CN","readiness":{"overall":"待验收","codingReady":false,"blockingItems":[],"exitCriteria":["需求、接口、数据表、配置和验证证据可追踪","未决问题已经明确负责人和下一步"]},"sectionCoverage":{"requirements":{"status":"included","reason":"交互示意数据"},"plans":{"status":"included","reason":"交互示意数据"},"apis":{"status":"included","reason":"交互示意数据"},"tables":{"status":"included","reason":"交互示意数据"},"architecture":{"status":"not_applicable","reason":"本例只演示目录交互"},"configs":{"status":"included","reason":"交互示意数据"}},"statusNote":"交互示意","statusPolicy":"strict"},"baseline":{"repository":"交互示意","branch":"示意数据","commit":"非业务代码快照","inspectedAt":"2026-11-12","timezone":"Asia/Shanghai","worktreeState":"unknown","relevantDirtyPaths":[]},"agents":[{"id":"AGENT-OWNER","name":"负责人 Agent","role":"和用户对齐、分派和汇报","status":"待核实"},{"id":"AGENT-REVIEWER","name":"审核人 Agent","role":"拆需求、查现状、审核方案","status":"待核实"},{"id":"AGENT-EXECUTOR","name":"执行人 Agent","role":"写代码、测试和验证","status":"待核实"}],"requirements":[{"id":"REQ-001","group":"交互演示","title":"本期文件管理迭代","summary":"示意数据，用于体验筛选和开发/部署状态区分，不代表业务开发实绩。","scope":"展示状态分类、目录筛选、默认展开及紧凑阅读。","status":"待核实","related":["API-001","API-002","API-003","API-004","DATA-001","DATA-002","DATA-003","PLAN-001","CFG-001","CFG-002"],"acceptance":[{"id":"AC-001","text":"组合筛选和恢复后目录与详情一致。","status":"待核实","evidence":"仅交互示意","statusNote":"演示用例"}],"statusNote":"示意需求"}],"plans":[{"id":"PLAN-001","priority":"P2","module":"文件","requirementIds":["REQ-001"],"main":"文件查询示意","sub":"演示数据不用于评估真实开发完成度。","owner":"AGENT-OWNER","reviewer":"AGENT-REVIEWER","executor":"AGENT-EXECUTOR","status":"已完成","note":"仅为交互展示","sequence":1},{"id":"PLAN-002","priority":"P0","module":"空间","requirementIds":["REQ-001"],"main":"空间隔离示意","sub":"演示数据不用于评估真实开发完成度。","owner":"AGENT-OWNER","reviewer":"AGENT-REVIEWER","executor":"AGENT-EXECUTOR","status":"进行中","note":"仅为交互展示","sequence":2},{"id":"PLAN-003","priority":"P0","module":"文件","requirementIds":["REQ-001"],"main":"文件上传示意","sub":"演示数据不用于评估真实开发完成度。","owner":"AGENT-OWNER","reviewer":"AGENT-REVIEWER","executor":"AGENT-EXECUTOR","status":"待开始","note":"仅为交互展示","sequence":5},{"id":"PLAN-004","priority":"P1","module":"空间","requirementIds":["REQ-001"],"main":"空间同步示意","sub":"演示数据不用于评估真实开发完成度。","owner":"AGENT-OWNER","reviewer":"AGENT-REVIEWER","executor":"AGENT-EXECUTOR","status":"阻塞","note":"仅为交互展示","sequence":8}],"apis":[{"id":"API-001","group":"文件管理","name":"查询文件","method":"GET","path":"/api/demo/files","changeType":"新增接口","status":"待核实","summary":"仅用于展示目录交互，不调用真实后端。","request":[{"name":"page","location":"query","type":"integer","required":"否","description":"示意页码","example":1}],"response":[{"name":"items","type":"array","required":"是","description":"示意结果","example":[]}],"requestExample":{"page":1},"responseExample":{"items":[]},"developmentStatus":"已完成","statusNote":"本阶段代码示意已完成，运行环境尚未验证"},{"id":"API-002","group":"文件管理","name":"更新文件标签（原有接口按本期范围逐步改造）","method":"PATCH","path":"/api/demo/files/{id}/tags","changeType":"存量接口变更","status":"待核实","summary":"仅用于展示目录交互，不调用真实后端。","request":[{"name":"page","location":"query","type":"integer","required":"否","description":"示意页码","example":1}],"response":[{"name":"items","type":"array","required":"是","description":"示意结果","example":[]}],"requestExample":{"page":1},"responseExample":{"items":[]},"developmentStatus":"部分完成","statusNote":"路由原已存在，标签同步尚未完成"},{"id":"API-003","group":"文件管理","name":"读取存量下载信息","method":"GET","path":"/api/demo/downloads/{id}","changeType":"存量接口复用","status":"待核实","summary":"仅用于展示目录交互，不调用真实后端。","request":[{"name":"page","location":"query","type":"integer","required":"否","description":"示意页码","example":1}],"response":[{"name":"items","type":"array","required":"是","description":"示意结果","example":[]}],"requestExample":{"page":1},"responseExample":{"items":[]},"developmentStatus":"未开发","statusNote":"存量能力存在，本期接入与验证未开发"},{"id":"API-004","group":"文件管理","name":"历史接口待核对","method":"GET","path":"/api/demo/files/history/long-segment/long-segment/long-segment/long-segment/long-segment/long-segment/long-segment/long-segment/native-find-tail","changeType":"新增接口","status":"待核实","summary":"仅用于展示目录交互，不调用真实后端。","request":[{"name":"page","location":"query","type":"integer","required":"否","description":"示意页码","example":1}],"response":[{"name":"items","type":"array","required":"是","description":"示意结果","example":[]}],"requestExample":{"page":1},"responseExample":{"items":[]},"statusNote":"历史实现说明，当前开发范围待核对"}],"tables":[{"id":"DATA-001","group":"文件管理","name":"demo_file_1","changeType":"新增数据表","developmentStatus":"已完成","status":"待核实","purpose":"用于展示新增、变更和复用筛选，不代表真实业务表。","ddl":"-- 请以当前项目审核后的真实迁移文件为准。","statusNote":"仅演示本阶段开发状态，迁移执行情况未验证","displayName":"演示文件表1"},{"id":"DATA-002","group":"文件管理","name":"demo_file_2","changeType":"存量表变更","developmentStatus":"未开发","status":"待核实","purpose":"用于展示新增、变更和复用筛选，不代表真实业务表。","ddl":"-- 请以当前项目审核后的真实迁移文件为准。","statusNote":"仅演示本阶段开发状态，迁移执行情况未验证","displayName":"演示文件表2"},{"id":"DATA-003","group":"文件管理","name":"demo_file_3","changeType":"存量表复用","developmentStatus":"部分完成","status":"待核实","purpose":"用于展示新增、变更和复用筛选，不代表真实业务表。","ddl":"-- 请以当前项目审核后的真实迁移文件为准。","statusNote":"仅演示本阶段开发状态，迁移执行情况未验证","displayName":"演示文件表3"}],"architecture":[],"configs":[{"id":"CFG-001","group":"本阶段执行项","title":"本阶段配置示意","kind":"文本示意","environment":"演示","status":"待核实","content":"demo.files.enabled=true\n","source":"tests/fixtures/目录筛选/上线配置.txt","related":["REQ-001"],"statusNote":"人工确认后执行"},{"id":"CFG-002","group":"本阶段执行项","title":"本阶段 SQL 示意","kind":"文本示意","environment":"演示","status":"待核实","content":"-- 仅为交互示意，非生产迁移\nCREATE TABLE demo_file (id BIGINT PRIMARY KEY);\n","source":"tests/fixtures/目录筛选/最终SQL.sql","related":["REQ-001"],"statusNote":"人工确认后执行"}],"evidence":[],"questions":[],"existingInterfaces":[{"id":"API-BASELINE","group":"文件管理","name":"读取存量下载信息","method":"GET","path":"/api/demo/downloads/{id}","changeType":"存量接口复用","status":"待核实","summary":"仅用于展示目录交互，不调用真实后端。","request":[{"name":"page","location":"query","type":"integer","required":"否","description":"示意页码","example":1}],"response":[{"name":"items","type":"array","required":"是","description":"示意结果","example":[]}],"requestExample":{"page":1},"responseExample":{"items":[]},"developmentStatus":"未开发","baseline":"示意 master 快照","statusNote":"存量能力存在，本期接入与验证未开发"}]}</script>
-  <script id="html-sdd-release-paths" type="application/json">{}</script>
-  <script id="html-sdd-field-diff" type="application/json">{}</script>
-  <script>
-    (async function(){
-    if(window.location.protocol!=="file:"){
-      document.body.textContent="请直接用浏览器打开本地 HTML 文件。";
-      return;
-    }
-    /*
-     * 使用方法：
-     * 1. 先填写 baseline，再把每条记录的 ID、证据和关联 ID 补齐。
-     * 2. 代码现状和方案提案分开写；没有证据就写“待核实”。
-     * 3. 只把 DDL、环境变量、Apollo 等配置放进黑色文本框，技术方案文字用说明卡片。
-     */
-    const spec=JSON.parse(document.getElementById("html-sdd-spec").textContent);
-    const statusRegistry={"tones":{"done":{"color":"#166534","background":"#ecfdf3"},"progress":{"color":"#1d4ed8","background":"#eff6ff"},"wait":{"color":"#854d0e","background":"#fff7e6"},"review":{"color":"#6d28d9","background":"#f5f3ff"},"blocked":{"color":"#b42318","background":"#fef3f2"},"neutral":{"color":"#475569","background":"#f1f5f9"}},"statuses":{"方案待对齐":"neutral","方案已对齐":"neutral","开发中":"progress","验证中":"progress","待上线":"wait","已上线":"done","阻塞":"blocked","已取消":"neutral","待核实":"neutral","待开始":"neutral","进行中":"progress","已完成":"done","待拆分":"neutral","待确认":"wait","编码 READY":"progress","待复核":"review","待验收":"wait","待接入":"wait","待执行":"wait","待部署":"wait","已部署":"progress","待验证":"wait","已验证":"done","不适用":"neutral","待设计":"neutral","设计中":"progress","已确认":"done","待配置":"wait","已执行":"progress","已记录":"neutral","失败":"blocked","已失效":"blocked","核实中":"progress","已解决":"done","已关闭":"done","部分完成":"wait","未开发":"neutral","已通过":"done","未通过":"blocked"},"sections":{"metadata":["方案待对齐","方案已对齐","开发中","验证中","待上线","已上线","阻塞","已取消","待核实"],"agents":["待开始","进行中","阻塞","已完成","已取消","待核实"],"requirements":["待拆分","待确认","编码 READY","进行中","待复核","待验收","阻塞","已完成","已取消","待核实"],"plans":["待拆分","待确认","编码 READY","待开始","进行中","待接入","待执行","待复核","待验收","阻塞","已完成","已取消"],"apis":["待部署","已部署","待验证","已验证","阻塞","不适用","待核实"],"existingInterfaces":["待部署","已部署","待验证","已验证","阻塞","不适用","待核实"],"tables":["待部署","已部署","待验证","已验证","阻塞","不适用","待核实"],"architecture":["待设计","设计中","待复核","已确认","阻塞","已取消","待核实"],"configs":["待配置","待执行","已执行","待验证","已验证","阻塞","不适用","待核实"],"evidence":["待核实","已记录","已验证","失败","已失效"],"questions":["待确认","核实中","阻塞","已确认","已解决","已关闭","已完成","已取消","待核实"],"developmentStatus":["已完成","部分完成","未开发"],"acceptance":["待验证","待验收","验证中","已通过","未通过","阻塞","不适用","待核实"]},"closedQuestions":["已确认","已解决","已关闭","已完成","已取消"]};
-    const baseline=Object.assign({project:(spec.metadata||{}).title||''},spec.baseline||{});
-    const agents=spec.agents||[];
-    const readiness=(spec.metadata||{}).readiness||{};
-    const requirements=spec.requirements||[];
-    const plans=spec.plans||[];
-    const questions=spec.questions||[];
-    const normalizeInterfaceFields=items=>(items||[]).map(field=>Object.assign({},field,{name:field.name||field.field,location:field.location||field.where,description:field.description||field.desc||'',type:field.type||(field.changeStatus==="删除"?"":"string")}));
-    const apis=spec.apis||[];
-    const existingInterfaces=spec.existingInterfaces||[];
-    const tables=spec.tables||[];
-    const architecture=spec.architecture||[];
-    const configs=spec.configs||[];
-    const sectionCoverage=(spec.metadata||{}).sectionCoverage||{};
-    const tabs=[
-      ["requirements","需求"],
-      ["plan","排期"],
-      ["apis","接口"],
-      ["existingInterfaces","现有相关接口梳理"],
-      ["tables","数据表"],
-      ["architecture","架构设计"],
-      ["configs","上线需要配置"]
-    ];
-    const state={mode:"requirements",selectedId:null};
-    const esc=s=>String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[c]));
-    const pretty=o=>typeof o==="string"?o:JSON.stringify(o,null,2);
-    const list=v=>Array.isArray(v)?v:[];
-    const MERMAID_CDN="https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.min.js";
-    let mermaidLoaderPromise=null;
-    let mermaidInitialized=false;
-    function loadMermaid(){
-      if(window.mermaid)return Promise.resolve(window.mermaid);
-      if(mermaidLoaderPromise)return mermaidLoaderPromise;
-      mermaidLoaderPromise=new Promise((resolve,reject)=>{
-        const script=document.createElement("script");
-        script.src=MERMAID_CDN;
-        script.async=true;
-        script.onload=()=>window.mermaid?resolve(window.mermaid):reject(new Error("Mermaid 未提供全局对象"));
-        script.onerror=()=>reject(new Error("无法加载 Mermaid CDN"));
-        document.head.appendChild(script);
-      }).catch(error=>{mermaidLoaderPromise=null;throw error;});
-      return mermaidLoaderPromise;
-    }
-    function mermaidDiagram(source,fallback){
-      const text=source||fallback||"待补充图形或文字说明";
-      return "<div class=\"diagram-view diagram-view-mermaid\"><pre class=\"mermaid diagram-fallback\" data-mermaid-source=\""+esc(text)+"\">"+esc(text)+"</pre><p class=\"diagram-fallback-note\">网络可用时由 Mermaid CDN 渲染；无网络时保留图源。</p></div>";
-    }
-    async function renderMermaidDiagrams(){
-      const nodes=[...document.querySelectorAll(".diagram-view-mermaid .mermaid")];
-      if(!nodes.length)return;
-      try{
-        const mermaid=await loadMermaid();
-        if(!mermaidInitialized){
-          mermaid.initialize({startOnLoad:false,securityLevel:"strict",theme:"neutral"});
-          mermaidInitialized=true;
-        }
-        await mermaid.run({nodes});
-        nodes.forEach(node=>{
-          const note=node.closest(".diagram-view-mermaid")?.querySelector(".diagram-fallback-note");
-          if(note)note.hidden=true;
-        });
-      }catch(error){
-        nodes.forEach(node=>{
-          node.textContent=node.dataset.mermaidSource||node.textContent;
-          const note=node.closest(".diagram-view-mermaid")?.querySelector(".diagram-fallback-note");
-          if(note){note.hidden=false;note.textContent="Mermaid 加载失败，当前显示图源。";}
-        });
-      }
-    }
-    const statusInfo=(value,section)=>{
-      const board=section||(state.mode==="plan"?"plans":state.mode);
-      const valid=typeof value==="string"&&(statusRegistry.sections[board]||[]).includes(value);
-      const label=valid?value:"待核实";
-      return {label,tone:statusRegistry.statuses[label],note:valid?"":typeof value==="string"?value:""};
-    };
-    const statusClass=(value,section)=>statusInfo(value,section).tone;
-    const statusDescription=(record,section)=>[...new Set([record.statusNote,statusInfo(record.status,section).note].filter(Boolean))].join(" · ");
-    const PLAN_STATUS_ENUM=Object.freeze(statusRegistry.sections.plans);
-    const planStatusClass=value=>PLAN_STATUS_ENUM.includes(value)?statusRegistry.statuses[value]:"invalid";
-    const planStatus=value=>"<span class=\"status "+planStatusClass(value)+"\">"+esc(value||"未填写")+"</span>";
-    const changeClass=s=>/新增/.test(s)?"new":/变更/.test(s)?"existing":/复用|存量/.test(s)?"reuse":"neutral";
-    const agentName=id=>(agents.find(a=>a.id===id)||{}).name||"未安排";
-    const sourceItems=mode=>mode==="requirements"?requirements:mode==="apis"?apis:mode==="existingInterfaces"?existingInterfaces:mode==="tables"?tables:mode==="architecture"?architecture:configs;
-    const catalogFilters={apis:{status:"",type:""},tables:{status:"",type:""}};
-    const developmentStates=statusRegistry.sections.developmentStatus;
-    const developmentStatus=x=>developmentStates.includes(x.developmentStatus)?x.developmentStatus:"待核实";
-    const developmentTag=x=>"<span class=\"status "+statusClass(developmentStatus(x),"developmentStatus")+"\" title=\"本期开发状态\">"+esc(developmentStatus(x))+"</span>";
-    const changeKind=x=>({"新增接口":"new","新增数据表":"new","存量接口变更":"changed","存量表变更":"changed","存量接口复用":"reused","存量表复用":"reused"}[x.changeType]||"unknown");
-    const allItems=mode=>{
-      const items=sourceItems(mode),filter=catalogFilters[mode];
-      return !filter?items:items.filter(x=>(!filter.status||developmentStatus(x)===filter.status)&&(!filter.type||(filter.type==="existing"?["changed","reused"].includes(changeKind(x)):changeKind(x)===filter.type)));
-    };
-    function renderCatalogFilters(mode){
-      const filter=catalogFilters[mode];
-      if(!filter)return "";
-      const option=(value,label,current)=>"<option value=\""+esc(value)+"\""+(value===current?" selected":"")+">"+esc(label)+"</option>";
-      const statuses=["",...developmentStates];
-      if(sourceItems(mode).some(x=>developmentStatus(x)==="待核实"))statuses.push("待核实");
-      return "<div class=\"catalog-filters\"><label>本期开发状态<select aria-label=\"本期开发状态\" data-catalog-filter=\"status\">"+statuses.map(x=>option(x,x||"全部状态",filter.status)).join("")+"</select></label><label>变更类型<select aria-label=\"变更类型\" data-catalog-filter=\"type\">"+[["","全部类型"],["new","新增"],["existing","原有全部"],["changed","原有变更"],["reused","原有复用"]].map(([value,label])=>option(value,label,filter.type)).join("")+"</select></label><button type=\"button\" data-reset-filters>恢复全部</button></div>";
-    }
-    const groupOf=x=>x.group||"未分组";
-    const codeOf=(x,mode)=>mode==="apis"||mode==="existingInterfaces"?x.method:mode==="tables"?"表":mode==="architecture"?(x.type==="diagram"?"图":"方案"):mode==="requirements"?"需求":x.kind||"配置";
-    function tableTitle(x){const label=typeof x.displayName==="string"?x.displayName.trim():"";return String(x.name||"")+(label?"（"+label+"）":"")}
-    const titleOf=(x,mode)=>mode==="apis"||mode==="existingInterfaces"?x.name:mode==="tables"?tableTitle(x):x.title;
-    function emptyState(mode){
-      const key=mode==="plan"?"plans":mode;
-      const coverage=sectionCoverage[key]||{};
-      const title=coverage.status==="not_applicable"?"本次未涉及":coverage.status==="pending"?"待补充":"这里暂时没有内容";
-      const reason=coverage.reason||"可在 questions 或排期中记录原因。";
-      return "<div class=\"empty\"><strong>"+esc(title)+"</strong><div>"+esc(reason)+"</div></div>";
-    }
-    function renderTabs(){
-      document.getElementById("tabs").innerHTML=tabs.map(t=>"<button class=\"tab "+(state.mode===t[0]?"active":"")+"\" data-mode=\""+t[0]+"\">"+esc(t[1])+"</button>").join("");
-      document.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>{state.mode=b.dataset.mode;state.selectedId=null;render()});
-    }
-    function questionIsOpen(question){
-      if(["verified","accepted","cancelled"].includes(question.state))return false;
-      return !statusRegistry.closedQuestions.includes(question.status);
-    }
-    function questionRows(items){
-      return items.map(q=>"<li data-question=\""+esc(q.id)+"\"><span>"+esc(q.question)+"</span>"+(q.impact?"<small>"+esc(q.impact)+"</small>":"")+"</li>").join("");
-    }
-    function renderQuestionSummary(){
-      const open=questions.filter(questionIsOpen);
-      if(!open.length)return "";
-      const decisions=open.filter(q=>q.requiresUserDecision===true);
-      const technical=open.filter(q=>q.requiresUserDecision===false);
-      const unclassified=open.filter(q=>typeof q.requiresUserDecision!=="boolean");
-      const remaining=decisions.slice(3);
-      const more=remaining.length?"<details class=\"more-decisions\"><summary>查看其余 "+remaining.length+" 项决策</summary><ul>"+questionRows(remaining)+"</ul></details>":"";
-      const checks=[
-        ["AI 核实",technical],
-        ["待分类",unclassified]
-      ].filter(([,items])=>items.length).map(([label,items])=>"<details><summary>"+label+"（"+items.length+"）</summary><ul>"+questionRows(items)+"</ul></details>").join("");
-      return "<section class=\"question-summary\" aria-label=\"待处理问题\"><strong>需要你决定（"+decisions.length+"）</strong>"+(decisions.length?"<ul>"+questionRows(decisions.slice(0,3))+"</ul>":"<p>暂无已标记的待决策事项"+(unclassified.length?"，仍有问题待分类":"")+"。</p>")+more+checks+"</section>";
-    }
-    function renderSnapshot(){
-      document.getElementById("projectTitle").textContent=baseline.project;
-      const current=[(spec.metadata||{}).status,readiness.overall].find(value=>typeof value==="string"&&value.trim())||"状态待记录";
-      const statusNode=document.getElementById("documentState");
-      const info=statusInfo(current,"metadata");statusNode.textContent=info.label;statusNode.title=[...new Set([(spec.metadata||{}).statusNote,info.note].filter(Boolean))].join(" · ");
-      statusNode.className="document-state status "+statusClass(current,"metadata");
-      const version=[["仓库",baseline.repository],["分支",baseline.branch],["提交",baseline.commit],["检查时间",(baseline.inspectedAt||"")+" "+(baseline.timezone||"")],["工作树",baseline.worktreeState]];
-      const versionHtml=version.map(([label,value])=>"<div class=\"snapshot-item\"><div class=\"snapshot-label\">"+esc(label)+"</div><div class=\"snapshot-value\" title=\""+esc(value)+"\">"+esc(value||"未记录")+"</div></div>").join("");
-      const open=questions.filter(questionIsOpen),decisions=open.filter(q=>q.requiresUserDecision===true).length;
-      const pending=state.mode==="requirements"&&open.length?"<details class=\"snapshot-questions\"><summary>待决策 "+decisions+" · 待核实 "+(open.length-decisions)+"</summary><div class=\"snapshot-panel\">"+renderQuestionSummary()+"</div></details>":"";
-      const snapshot=document.getElementById("snapshot");
-      snapshot.innerHTML="<details class=\"snapshot-version\"><summary>版本信息</summary><div class=\"version-grid snapshot-panel\">"+versionHtml+"</div></details>"+renderReadiness()+pending;
-      snapshot.querySelectorAll(":scope > details").forEach(details=>details.ontoggle=()=>{
-        if(!details.open)return;
-        snapshot.querySelectorAll(":scope > details").forEach(other=>{if(other!==details)other.open=false});
-        const panel=details.querySelector(".snapshot-panel");
-        if(panel){panel.style.left="0px";const overflow=panel.getBoundingClientRect().right-window.innerWidth+16;if(overflow>0)panel.style.left=-overflow+"px";}
-      });
-    }
-    function renderCatalog(){
-      const arr=allItems(state.mode),filter=catalogFilters[state.mode];
-      const groups=[...new Set(arr.map(groupOf))];
-      const compact=["apis","existingInterfaces","tables"].includes(state.mode);
-      document.getElementById("catalogTitle").textContent=state.mode==="plan"?"排期":"条目清单";
-      document.getElementById("catalogCount").textContent=state.mode==="plan"?"":filter?arr.length+" / "+sourceItems(state.mode).length+" 项":arr.length+" 项";
-      if(state.mode==="plan"){document.getElementById("catalog").innerHTML="";return}
-      const rows=groups.map(g=>"<section class=\"catalog-group\"><div class=\"catalog-group-heading\">"+esc(g)+"</div>"+arr.filter(x=>groupOf(x)===g).map(x=>{
-        const hasPath=["apis","existingInterfaces"].includes(state.mode)&&x.path;
-        const label=filter?developmentStatus(x):statusInfo(x.status,state.mode).label;
-        const note=[filter?developmentStatus(x):"",x.changeType,x.status,x.statusNote].filter(Boolean).join(" · ");
-        const variant=state.mode==="existingInterfaces"?["原有","reuse"]:({new:["新增","new"],changed:["修改","existing"],reused:["复用","reuse"]}[changeKind(x)]);
-        const tags="<span class=\"catalog-tag catalog-code\">"+esc(codeOf(x,state.mode))+"</span>"+(variant?"<span class=\"catalog-tag catalog-change change-type "+variant[1]+"\" title=\""+esc(x.changeType||"原有接口")+"\">"+variant[0]+"</span>":"")+"<span class=\"catalog-tag catalog-status status "+statusClass(filter?developmentStatus(x):x.status,filter?"developmentStatus":state.mode)+"\" title=\""+esc(note)+"\">"+esc(label)+"</span>";
-        return "<button class=\"catalog-item "+(compact?"compact-record ":"")+(hasPath?"has-path ":"")+(state.selectedId===x.id?"active":"")+"\" data-record=\""+esc(x.id)+"\"><span class=\"catalog-name\" title=\""+esc(titleOf(x,state.mode))+"\">"+esc(titleOf(x,state.mode))+"</span>"+(hasPath?"<span class=\"catalog-path\" title=\""+esc(x.path)+"\">"+esc(x.path)+"</span>":"")+"<span class=\"catalog-tags\">"+tags+"</span></button>";
-      }).join("")+"</section>").join("");
-      document.getElementById("catalog").innerHTML=renderCatalogFilters(state.mode)+rows+(filter&&!arr.length?"<div class=\"empty\">没有匹配条目</div>":"");
-      document.querySelectorAll("[data-record]").forEach(b=>b.onclick=()=>{state.selectedId=b.dataset.record;render()});
-      document.querySelectorAll("[data-catalog-filter]").forEach(select=>select.onchange=()=>{filter[select.dataset.catalogFilter]=select.value;state.selectedId=null;render()});
-      document.querySelectorAll("[data-reset-filters]").forEach(button=>button.onclick=()=>{filter.status="";filter.type="";state.selectedId=null;render()});
-    }
-    function relatedBlock(record){
-      const linked=Object.values(record.links||{}).flatMap(list);
-      const values=[...new Set([...list(record.related),...linked].filter(id=>typeof id==="string"&&id.trim()))];
-      if(!values.length)return "";
-      return "<details class=\"disclosure related-disclosure\"><summary>关联记录（"+values.length+"）</summary><div class=\"disclosure-content\"><div class=\"related\"><div class=\"tag-list\">"+values.map(id=>"<span class=\"tag\">"+esc(id)+"</span>").join("")+"</div></div></div></details>";
-    }
-    function statusNoteBlock(x,section){const note=statusDescription(x,section);return note?"<p class=\"delivery-note\">"+esc(note)+"</p>":""}
-    function status(text,section,note){const info=statusInfo(text,section);return "<span class=\"status "+info.tone+"\" title=\""+esc([...new Set([note,info.note].filter(Boolean))].join(" · "))+"\">"+esc(info.label)+"</span>"}
-    function change(text){return "<span class=\"change-type "+changeClass(text)+"\">"+esc(text||"待判断")+"</span>"}
-    function roleNames(primary, ids){
-      const values=[primary,...list(ids).filter(id=>id!==primary)].filter(Boolean);
-      return values.length?values.map((id,index)=>agentName(id)+(index===0?"（主）":"")).join("、"):"未安排";
-    }
-    function fieldTable(fields,isRequest,wholeInterfaceIsNew=false){
-      const rows=list(fields).map(f=>"<tr><td class=\"field-name\">"+esc(f.name)+fieldStatusBadge(wholeInterfaceIsNew && f.changeStatus==="新增" ? "" : f.changeStatus)+"</td>"+(isRequest?"<td>"+esc(f.location||"")+"</td>":"")+"<td>"+esc(f.type||"")+"</td><td>"+esc(f.required??"")+"</td><td>"+esc(f.description||"")+"</td><td>"+esc(Object.prototype.hasOwnProperty.call(f,"example")?pretty(f.example):"")+"</td></tr>").join("");
-      const head=isRequest?"<th>字段</th><th>位置</th><th>类型</th><th>必填</th><th>说明</th><th>示例</th>":"<th>字段</th><th>类型</th><th>必填</th><th>说明</th><th>示例</th>";
-      return "<div class=\"table-wrap param-scroll "+(isRequest?"request-params":"")+"\" tabindex=\"0\" role=\"region\" aria-label=\""+(isRequest?"请求参数":"返回参数")+"\"><table><thead><tr>"+head+"</tr></thead><tbody>"+(rows||"<tr><td colspan=\""+(isRequest?6:5)+"\">待补充</td></tr>")+"</tbody></table></div>";
-    }
-    function renderReadiness(){
-      const known=Array.isArray(readiness.blockingItems),blocking=list(readiness.blockingItems);
-      const summary=!known?"未记录":blocking.length?blocking.length+" 项待核实":readiness.codingReady===true?"条件已满足":"待确认";
-      const blocks=blocking.map(id=>"<span class=\"tag\">"+esc(id)+"</span>").join("");
-      const criteria=list(readiness.exitCriteria).map(item=>"<li>"+esc(item)+"</li>").join("");
-      return "<details class=\"readiness-card\"><summary class=\"readiness-summary\">编码条件 · "+summary+"</summary><div class=\"card-body snapshot-panel\"><div class=\"section\"><h3>整体阻塞项</h3><div class=\"tag-list\">"+(blocks||"<span class=\"tag\">"+(known?"暂无":"未记录")+"</span>")+"</div></div><div class=\"section\"><h3>开始编码需要满足</h3><ul>"+(criteria||"<li>待补充</li>")+"</ul></div></div></details>";
-    }
-    function renderRequirements(x){
-      const exclusions=list(x.outOfScope).filter(item=>typeof item==="string"&&item.trim());
-      const outOfScope=exclusions.length?"<div class=\"section\"><h3>非范围</h3><ul>"+exclusions.map(item=>"<li>"+esc(item)+"</li>").join("")+"</ul></div>":"";
-      const acceptance=list(x.acceptance);
-      const rows=acceptance.map(a=>"<tr><td class=\"field-name record-id\">"+esc(a.id)+"</td><td>"+esc(a.text)+"</td><td>"+status(a.status,"acceptance",a.statusNote)+"</td><td>"+esc(a.evidence||"待验证")+"</td></tr>").join("");
-      return "<div class=\"card\"><div class=\"card-head\"><div><h1>"+esc(x.title)+"</h1><small><span class=\"record-id\">"+esc(x.id)+"</span> · "+esc(x.group||"")+"</small></div>"+status(x.status,"requirements",x.statusNote)+"</div><div class=\"card-body\">"+statusNoteBlock(x,"requirements")+"<div class=\"section\"><h3>要达成什么</h3><p>"+esc(x.summary)+"</p></div><div class=\"section\"><h3>范围</h3><p>"+esc(x.scope||"待补充")+"</p></div>"+outOfScope+"<details class=\"disclosure acceptance-disclosure\"><summary>验收标准（"+acceptance.length+" 项）</summary><div class=\"disclosure-content\"><div class=\"table-wrap\"><table><thead><tr><th>ID</th><th>标准</th><th>状态</th><th>证据</th></tr></thead><tbody>"+(rows||"<tr><td colspan=\"4\">待补充</td></tr>")+"</tbody></table></div></div></details>"+relatedBlock(x)+"</div></div>";
-    }
-    function expandApi(record){
-      const resolve=(items,category)=>{
-        if(items===undefined)return items;
-        if(!Array.isArray(items))throw new Error("参数和规则必须为数组");
-        return items.flatMap(item=>{
-        if(!item||typeof item!=="object"||!("$ref" in item)){
-          if(category==="fields"?(!item||typeof item!=="object"||Array.isArray(item)):typeof item!=="string")throw new Error("字段/规则类型错误");
-          return [item];
-        }
-        const prefix="#/definitions/"+category+"/",ref=item.$ref;
-        if(Object.keys(item).some(key=>key!=="$ref"&&!(category==="fields"&&key==="changeStatus"))||typeof ref!=="string"||!ref.startsWith(prefix))throw new Error("无效公共引用，不能覆盖字段");
-        let name=ref.slice(prefix.length);
-        if(!name||name.includes("/")||/~(?![01])/.test(name))throw new Error("公共名称须按 JSON Pointer 转义");
-        name=name.replace(/~1/g,"/").replace(/~0/g,"~");
-        const defs=(spec.definitions||{})[category]||{};
-        if(!Object.prototype.hasOwnProperty.call(defs,name))throw new Error("公共定义不存在："+ref);
-        const rows=Array.isArray(defs[name])?defs[name]:[defs[name]];
-        if(!rows.length||rows.some(row=>category==="fields"?(!row||typeof row!=="object"||Array.isArray(row)||("$ref" in row)||typeof row.field!=="string"||!row.field.trim()):(typeof row!=="string"||!row.trim())))throw new Error("公共定义类型错误："+ref);
-        return item.changeStatus?rows.map(row=>({...row,changeStatus:item.changeStatus})):rows;
-      })};
-      return {...record,request:normalizeInterfaceFields(resolve(record.request,"fields")),response:normalizeInterfaceFields(resolve(record.response,"fields")),rules:resolve(record.rules,"rules"),notes:typeof record.notes==="string"?[record.notes]:resolve(record.notes,"rules")};
-    }
-    function rulesBlock(rules,title="业务规则"){
-      const rows=list(rules);
-      return rows.length?"<details class=\"disclosure rules-disclosure\"><summary>"+esc(title)+"（"+rows.length+"）</summary><div class=\"disclosure-content\"><ul>"+rows.map(row=>"<li>"+esc(row)+"</li>").join("")+"</ul></div></details>":"";
-    }
-    function interfaceSummary(x){
-      const text=typeof x.summary==="string"?x.summary.trim():"";
-      return text&&text!==String(x.name||"").trim()?"<p class=\"interface-summary\">"+esc(text)+"</p>":"";
-    }
-    function columnSnapshot(column){
-      if(!column)return "—";
-      const facts=[
-        ["类型",column.type],["可空",column.nullable==null?null:column.nullable?"是":"否"],
-        ["默认值",Object.hasOwn(column,"default")?(column.default===null?"NULL":pretty(column.default)):null],
-        ["说明",column.description]
-      ].filter(([,value])=>value!=null && value!=="");
-      return facts.length?"<dl>"+facts.map(([label,value])=>
-        "<div><dt>"+esc(label)+"</dt> <dd>"+esc(value)+"</dd></div>").join("")+"</dl>":"";
-    }
-    function fieldStatusBadge(status){
-      const kinds={"新增":"added","修改":"changed","删除":"removed"};
-      return Object.hasOwn(kinds,status)
-        ? '<span class="field-change-badge field-change-'+kinds[status]+'">'+status+'</span>' : "";
-    }
-    function columnChangesBlock(x){
-      const marked=list(x.columns).filter(column=>fieldStatusBadge(column.changeStatus)
-        && !(x.changeType==="新增数据表" && column.changeStatus==="新增"));
-      if(marked.length){
-        const rows=marked.map(column=>"<tr><th scope=\"row\"><code>"+esc(column.name)+"</code></th><td>"
-          +fieldStatusBadge(column.changeStatus)+"</td><td>"+esc(column.type||"—")+"</td></tr>").join("");
-        return '<section class="section"><h3>本期字段变更</h3><div class="table-wrap">'
-          +'<table class="column-diff-table" aria-label="数据表字段状态"><thead><tr><th scope="col">字段</th>'
-          +'<th scope="col">变更</th><th scope="col">类型</th></tr></thead><tbody>'+rows+'</tbody></table></div></section>';
-      }
-      const delta=JSON.parse(document.getElementById("html-sdd-field-diff")?.textContent || "{}").tables?.[x.id];
-      if(!delta)return "";
-      const labels={added:"新增",changed:"修改",removed:"删除"};
-      const rows=delta.rows.map(row=>`<tr><th scope="row"><code>${esc(row.name)}</code></th>
-        <td><span class="field-change-badge field-change-${esc(row.kind)}">${esc(labels[row.kind])}</span></td>
-        <td>${columnSnapshot(row.before)}</td><td>${columnSnapshot(row.after)}</td></tr>`).join("");
-      const table=rows?`<div class="table-wrap"><table class="column-diff-table" aria-label="数据表字段变更">
-        <thead><tr><th scope="col">字段</th><th scope="col">变更</th><th scope="col">旧值</th><th scope="col">新值</th></tr></thead>
-        <tbody>${rows}</tbody></table></div>`:"";
-      return '<section class="section"><h3>本期字段变更</h3>'
-        +(delta.ddlOnly?"<p>DDL 已变更，缺少列快照。</p>":"")+table+"</section>";
-    }
-    function renderApis(x){
-      try{x=expandApi(x)}catch(error){return "<p class=\"empty\">无法展开接口合同："+esc(error.message)+"</p>"}
-
-      return "<div class=\"card\"><div class=\"card-head\"><div><h1>"+esc(x.name)+"</h1><small><span class=\"record-id\">"+esc(x.id)+"</span> · "+esc(x.method)+" <span class=\"mono\">"+esc(x.path)+"</span></small></div><div class=\"tag-list\">"+change(x.changeType)+developmentTag(x)+"</div></div><div class=\"card-body\"><p class=\"delivery-note\" title=\""+esc(statusDescription(x,"apis")||x.status||"未记录")+"\">范围/部署说明："+esc(statusDescription(x,"apis")||x.status||"未记录")+"</p>"+interfaceSummary(x)+"<div class=\"section\"><h3>当前代码现状</h3><div class=\"callout\">"+esc(x.current||"待核实")+"</div></div><div class=\"param-grid\"><div class=\"param-pane\"><h3>请求参数</h3>"+fieldTable(x.request,true,x.changeType==="新增接口")+"</div><div class=\"param-pane\"><h3>返回参数</h3>"+fieldTable(x.response,false,x.changeType==="新增接口")+"</div></div><div class=\"instance-grid\"><div class=\"instance-pane\"><details open class=\"disclosure example-disclosure\"><summary>请求实例</summary><div class=\"disclosure-content\"><pre class=\"instance-box\">"+esc(pretty(x.requestExample))+"</pre></div></details></div><div class=\"instance-pane\"><details open class=\"disclosure example-disclosure\"><summary>响应实例</summary><div class=\"disclosure-content\"><pre class=\"instance-box\">"+esc(pretty(x.responseExample))+"</pre></div></details></div></div>"+rulesBlock(x.rules)+rulesBlock(x.notes,"补充说明")+relatedBlock(x)+"</div></div>";
-    }
-    function renderExistingInterfaces(x){
-      try{x=expandApi(x)}catch(error){return "<p class=\"empty\">无法展开接口合同："+esc(error.message)+"</p>"}
-
-      const facts=[
-        ["实现基线",x.baseline||"master 分支现状"],
-        ["路由装配",x.routeOwner||"待核实"],
-        ["暴露方式",x.exposure||"待核实"],
-        ["代码位置",x.source||"待核实"]
-      ].map(item=>"<div class=\"solution-section\"><h3>"+esc(item[0])+"</h3><p>"+esc(item[1])+"</p></div>").join("");
-      const notes=list(x.notes).map(item=>"<li>"+esc(item)+"</li>").join("");
-      return "<div class=\"card\"><div class=\"card-head\"><div><h1>"+esc(x.name)+"</h1><small><span class=\"record-id\">"+esc(x.id)+"</span> · "+esc(x.method)+" <span class=\"mono\">"+esc(x.path)+"</span></small></div>"+status(x.status,"existingInterfaces",x.statusNote)+"</div><div class=\"card-body\">"+interfaceSummary(x)+"<div class=\"solution-grid\">"+facts+"</div><div class=\"param-grid\"><div class=\"param-pane\"><h3>请求参数</h3>"+fieldTable(x.request,true)+"</div><div class=\"param-pane\"><h3>返回参数</h3>"+fieldTable(x.response,false)+"</div></div><div class=\"instance-grid\"><div class=\"instance-pane\"><details open class=\"disclosure example-disclosure\"><summary>请求实例</summary><div class=\"disclosure-content\"><pre class=\"instance-box\">"+esc(pretty(x.requestExample))+"</pre></div></details></div><div class=\"instance-pane\"><details open class=\"disclosure example-disclosure\"><summary>响应实例</summary><div class=\"disclosure-content\"><pre class=\"instance-box\">"+esc(pretty(x.responseExample))+"</pre></div></details></div></div>"+rulesBlock(x.rules)+(notes?"<details class=\"disclosure\"><summary>现状边界</summary><div class=\"disclosure-content\"><ul>"+notes+"</ul></div></details>":"")+relatedBlock(x)+"</div></div>";
-    }
-    function renderTables(x){
-      return "<div class=\"card\"><div class=\"card-head\"><div><h1>"+esc(tableTitle(x))+"</h1><small><span class=\"record-id\">"+esc(x.id)+"</span></small></div><div class=\"tag-list\">"+change(x.changeType)+developmentTag(x)+"</div></div><div class=\"card-body\">"+columnChangesBlock(x)+"<details open class=\"disclosure text-disclosure\"><summary>查看 DDL</summary><div class=\"disclosure-content\"><pre class=\"text-box\">"+esc(x.ddl||"-- 待补充")+"</pre></div></details>"+relatedBlock(x)+"</div></div>";
-    }
-    function renderArchitecture(x){
-      if(x.type==="solution"){
-        return "<div class=\"card\"><div class=\"card-head\"><div><h1>"+esc(x.title)+"</h1><small><span class=\"record-id\">"+esc(x.id)+"</span> · "+esc(x.group)+"</small></div>"+status(x.status,"architecture",x.statusNote)+"</div><div class=\"card-body\">"+statusNoteBlock(x,"architecture")+"<div class=\"solution-grid\"><div class=\"solution-section\"><h3>怎么做</h3><p>"+esc(x.conclusion)+"</p></div><div class=\"solution-section\"><h3>现在的情况</h3><p>"+esc(x.current)+"</p></div><div class=\"solution-section\"><h3>主要做法</h3><ol>"+list(x.steps).map(s=>"<li>"+esc(s)+"</li>").join("")+"</ol></div><div class=\"solution-section\"><h3>涉及哪些内容</h3><p>"+esc(x.impact)+"</p></div><div class=\"solution-section\"><h3>注意事项</h3><p>"+esc(x.risks)+"</p></div></div>"+relatedBlock(x)+"</div></div>";
-      }
-      const engine=x.diagramEngine||(x.diagramSource?"mermaid":"svg/fallback");
-      const useMermaid=x.diagramSource&&engine==="mermaid";
-      const diagram=x.diagramSvg&&engine!=="mermaid"?"<div class=\"diagram-view\">"+x.diagramSvg+"</div>":useMermaid?mermaidDiagram(x.diagramSource,x.fallback):"<div class=\"diagram-view\"><pre class=\"diagram-fallback\">"+esc(x.fallback||"待补充图形或文字说明")+"</pre></div>";
-      return "<div class=\"card\"><div class=\"card-head\"><div><h1>"+esc(x.title)+"</h1><small><span class=\"record-id\">"+esc(x.id)+"</span> · "+esc(x.diagramType||"diagram")+" · "+esc(engine)+" · "+esc(x.group)+"</small></div>"+status(x.status,"architecture",x.statusNote)+"</div><div class=\"card-body\">"+statusNoteBlock(x,"architecture")+"<div class=\"section\"><h3>图要表达什么</h3><p>"+esc(x.summary||"待补充")+"</p></div><div class=\"diagram-panel\"><div class=\"diagram-label\">图形</div>"+diagram+"<div class=\"diagram-label\">图源（网络不可用时可读）</div><pre class=\"text-box\">"+esc(x.diagramSource||x.fallback||"待补充")+"</pre></div>"+relatedBlock(x)+"</div></div>";
-    }
-    function renderConfigs(x){
-      const releasePaths=JSON.parse(document.getElementById("html-sdd-release-paths")?.textContent || "{}");
-      const href=Object.hasOwn(releasePaths,x.source)?releasePaths[x.source]:"";
-      const path="<code>"+esc(x.source)+"</code>";
-      const source=x.source?"<p class=\"delivery-note\">执行来源："+(href?"<a href=\""+esc(href)+"\" target=\"_blank\" rel=\"noopener\">"+path+"</a>":path)+"</p>":"";
-      const body=x.content?'<div class="section"><h3>上线配置内容</h3><pre class="text-box">'+esc(x.content)+'</pre></div>':"";
-      return "<div class=\"card\"><div class=\"card-head\"><div><h1>"+esc(x.title)+"</h1><small><span class=\"record-id\">"+esc(x.id)+"</span> · "+esc(x.kind)+" · "+esc(x.environment)+"</small></div>"+status(x.status,"configs",x.statusNote)+"</div><div class=\"card-body\">"+statusNoteBlock(x,"configs")+source+body+relatedBlock(x)+"</div></div>";
-    }
-    const scheduleState={status:"",sort:"priority",group:true};
-    function scheduleRows(){
-      const used=new Set(plans.filter(p=>Number.isSafeInteger(p.sequence)&&p.sequence>0).map(p=>p.sequence));
-      let next=1;
-      const rows=plans.map(p=>{if(Number.isSafeInteger(p.sequence)&&p.sequence>0)return {...p};while(used.has(next))next++;used.add(next);return {...p,sequence:next++}}).filter(p=>!scheduleState.status||p.status===scheduleState.status);
-      const rank=p=>({P0:0,P1:1,P2:2}[p.priority]??3);
-      rows.sort((a,b)=>scheduleState.sort==="sequence"?a.sequence-b.sequence:(scheduleState.sort==="reverse"?rank(b)-rank(a):rank(a)-rank(b))||a.sequence-b.sequence);
-      if(!scheduleState.group)return rows;
-      const groups=new Map();rows.forEach(p=>{const key=p.module||"未分组";if(!groups.has(key))groups.set(key,[]);groups.get(key).push(p)});
-      return [...groups.values()].flat();
-    }
-    function scheduleControls(count){
-      const option=(value,label,current)=>"<option value=\""+esc(value)+"\""+(value===current?" selected":"")+">"+esc(label)+"</option>";
-      return "<div class=\"schedule-controls\"><label>状态<select aria-label=\"排期状态\" data-schedule=\"status\">"+[["","全部状态"],...PLAN_STATUS_ENUM.map(x=>[x,x])].map(([v,l])=>option(v,l,scheduleState.status)).join("")+"</select></label><label>排序<select aria-label=\"排期排序\" data-schedule=\"sort\">"+[["priority","优先级高到低，再按序号"],["reverse","优先级低到高，再按序号"],["sequence","序号从小到大"]].map(([v,l])=>option(v,l,scheduleState.sort)).join("")+"</select></label><label class=\"schedule-group\" title=\"归类时在模块内排序；任务序号保持不变\"><input type=\"checkbox\" aria-label=\"按模块归类\" data-schedule=\"group\""+(scheduleState.group?" checked":"")+">按模块归类</label><span>"+count+" / "+plans.length+" 项</span><button type=\"button\" data-schedule-reset>恢复默认</button></div>";
-    }
-    function planNote(p){
-      const values=[p.blocker,p.progress,p.note,p.statusNote].filter(v=>typeof v==="string"&&v.trim()).map(v=>v.trim());
-      const unique=[...new Set(values)];
-      if(typeof p.blocker==="string"&&p.blocker.trim())unique[0]="阻塞说明："+unique[0];
-      else if(p.status==="阻塞")unique.unshift("阻塞原因待补充");
-      return unique.join("；")||"—";
-    }
-    function requirementLabel(id){const r=requirements.find(x=>x.id===id);return r?r.id+" "+r.title:id}
-    function renderPlan(){
-      const done=plans.filter(p=>p.status==="已完成").length;
-      const doing=plans.filter(p=>p.status==="进行中").length;
-      const blocked=plans.filter(p=>p.status==="阻塞").length;
-      const groups=[...new Set(plans.map(p=>p.module))];
-      const visible=scheduleRows();
-      const rows=visible.map((p,i)=>{
-        const groupClass="module-"+(groups.indexOf(p.module)%5);
-        const requirementIds=list(p.requirementIds);
-        const reqChips=requirementIds.map(id=>{
-          const r=requirements.find(x=>x.id===id);
-          return r?"<button type=\"button\" class=\"plan-req\" data-plan-requirement=\""+esc(id)+"\" title=\""+esc(requirementLabel(id))+"\">"+esc(r.title)+"</button>":"<span class=\"plan-req\">"+esc(id)+"</span>";
-        }).join("");
-        const paths=Array.isArray(p.ownerPaths)?p.ownerPaths.join("、"):(p.ownerPaths||"—");
-        const note=planNote(p);
-        const detailItems=[["任务编号",p.id],["子任务",p.sub,true],["关联需求",requirementIds.map(requirementLabel).join("、"),true],["负责人",agentName(p.owner)],["审核人",roleNames(p.reviewer,p.reviewerIds)],["执行人",roleNames(p.executor,p.executorIds)],["批次",p.batch],["预估",p.effort],["计划开始",p.start],["预计完成",p.end||"待定"],["依赖",p.deps],["文件范围",paths,true],["进展与备注",note==="—"?null:note,true],["验收标准",p.acceptanceCriteria,true],["验证结果",p.verification,true]];
-        const details=detailItems.filter(item=>item[1]!==undefined&&item[1]!==null&&item[1]!==""&&!(Array.isArray(item[1])&&!item[1].length)).map(item=>"<div class=\"plan-detail"+(item[2]?" wide":"")+"\"><b>"+esc(item[0])+"</b><span>"+esc(typeof item[1]==="string"?item[1]:pretty(item[1]))+"</span></div>").join("");
-        const detailId="plan-details-"+p.sequence;
-        return "<tr data-plan-id=\""+esc(p.id)+"\" class=\""+groupClass+(scheduleState.group&&(i===0||visible[i-1].module!==p.module)?" plan-module-start":"")+"\"><td class=\"mono\">"+p.sequence+"</td><td><strong>"+esc(p.priority||"—")+"</strong></td><td><div class=\"plan-task\"><strong>"+esc(p.module||"未分组")+"</strong><button class=\"plan-toggle\" type=\"button\" data-plan-toggle aria-expanded=\"false\" aria-controls=\""+detailId+"\">"+esc(p.main||"未填写")+"</button></div></td><td><div class=\"plan-reqs\">"+(reqChips||"—")+"</div></td><td><span class=\"plan-preview\" title=\""+esc(roleNames(p.executor,p.executorIds))+"\">"+esc(roleNames(p.executor,p.executorIds))+"</span></td><td>"+planStatus(p.status)+"</td><td><span class=\"plan-preview\" title=\""+esc(note)+"\">"+esc(note)+"</span></td></tr><tr id=\""+detailId+"\" class=\"plan-details-row "+groupClass+"\" hidden><td colspan=\"7\"><div class=\"plan-details-grid\">"+details+"</div>"+relatedBlock(p)+"</td></tr>";
-      }).join("");
-      return scheduleControls(visible.length)+"<div class=\"summary-grid\"><div class=\"summary\"><div class=\"summary-label\">全部任务</div><div class=\"summary-value\">"+plans.length+"</div><div class=\"summary-note\">已完成 "+done+" 项</div></div><div class=\"summary\"><div class=\"summary-label\">进行中</div><div class=\"summary-value\">"+doing+"</div><div class=\"summary-note\">按当前排期状态</div></div><div class=\"summary\"><div class=\"summary-label\">存在阻塞</div><div class=\"summary-value\">"+blocked+"</div><div class=\"summary-note\">点击任务查看原因</div></div></div><div class=\"plan-wrap\"><table class=\"plan-table\"><thead><tr><th>序号</th><th>优先级</th><th>模块 / 任务</th><th>关联需求</th><th>执行人</th><th>状态</th><th>进展与备注</th></tr></thead><tbody>"+(rows||"<tr><td colspan=\"7\">没有匹配任务</td></tr>")+"</tbody></table></div>";
-    }
-    function render(){
-      renderTabs();renderSnapshot();renderCatalog();
-      const arr=state.mode==="plan"?[]:allItems(state.mode);
-      if(state.mode!=="plan"){
-        document.getElementById("shell").classList.remove("plan-mode");
-        if(!arr.length){state.selectedId=null;document.getElementById("detail").innerHTML=catalogFilters[state.mode]?"<div class=\"empty\">没有匹配条目</div>":emptyState(state.mode);return}
-        const x=arr.find(y=>y.id===state.selectedId)||arr[0];
-        state.selectedId=x.id;
-        document.getElementById("catalog").querySelectorAll("[data-record]").forEach(b=>b.classList.toggle("active",b.dataset.record===x.id));
-        const body=state.mode==="requirements"?renderRequirements(x):state.mode==="apis"?renderApis(x):state.mode==="existingInterfaces"?renderExistingInterfaces(x):state.mode==="tables"?renderTables(x):state.mode==="architecture"?renderArchitecture(x):renderConfigs(x);
-        document.getElementById("detail").innerHTML=body+"<p class=\"footer-note\">本页面是人和 AI 的对齐记录；它不会读取实时仓库或数据库，也不会自动执行 DDL 和上线配置。</p>";
-        document.getElementById("shell").classList.remove("plan-mode");
-        if(state.mode==="architecture")renderMermaidDiagrams();
-        return;
-      }
-      document.getElementById("shell").classList.add("plan-mode");
-      document.getElementById("detail").innerHTML="<header class=\"page-head\"><h1 class=\"page-title\">需求排期</h1></header>"+(plans.length?renderPlan():emptyState("plan"))+"<p class=\"footer-note\">排期只记录协作安排和当前进度；代码、DDL、配置和验证证据分别放在对应分类。</p>";
-      document.querySelectorAll("[data-schedule]").forEach(control=>control.onchange=()=>{scheduleState[control.dataset.schedule]=control.type==="checkbox"?control.checked:control.value;render()});
-      document.querySelectorAll("[data-schedule-reset]").forEach(button=>button.onclick=()=>{Object.assign(scheduleState,{status:"",sort:"priority",group:true});render()});
-      document.querySelectorAll("[data-plan-requirement]").forEach(button=>button.onclick=()=>{state.mode="requirements";state.selectedId=button.dataset.planRequirement;render()});
-      document.querySelectorAll("[data-plan-toggle]").forEach(button=>button.onclick=()=>{
-        const row=button.closest("tr").nextElementSibling;
-        row.hidden=!row.hidden;
-        button.setAttribute("aria-expanded",String(!row.hidden));
-
-      });
-    }
-    const closeSnapshotPanels=()=>document.getElementById("snapshot").querySelectorAll(":scope > details[open]").forEach(details=>details.open=false);
-    document.addEventListener("click",event=>{if(!document.getElementById("snapshot").contains(event.target))closeSnapshotPanels()});
-    document.addEventListener("keydown",event=>{if(event.key==="Escape")closeSnapshotPanels()});
-    window.__HTML_SDD__={baseline,agents,requirements,plans,apis,existingInterfaces,tables,architecture,configs,questions,readiness,sectionCoverage};
-    render();
-    })();
-  </script>
+  <div class="tools catalog-tools" v-else-if="mode==='existingInterfaces'">
+   <select class="verification" v-model="filters[mode].status" aria-label="现有接口核实状态"><option value="">全部核实状态</option><option v-for="status in verificationStatuses" :key="status">{{ status }}</option></select>
+  </div>
+  <small>{{ visible.length }} / {{ records.length }} 项</small>
+  <section v-for="[group, entries] in catalog" :key="group">
+   <div class="group">{{ group }}</div>
+   <button v-for="item in entries" :key="item.id" class="record" :class="{active:record?.id===item.id,'compact-record':isApi||mode==='tables'}" :data-record="item.id" @click="selected=item.id">
+    <span class="record-name" :title="label(item)">{{ label(item) }}</span><span class="path" v-if="item.path" :title="item.path">{{ item.path }}</span>
+    <span class="tags"><span v-if="item.method" class="badge">{{ item.method }}</span><span v-if="item.changeType" class="badge">{{ item.changeType }}</span><span class="badge" :style="tone(itemStatus(item))">{{ itemStatus(item) }}</span></span>
+   </button>
+  </section>
+ </aside>
+ <main>
+  <div v-if="mode==='requirements'" class="overview tools">
+   <details><summary>版本信息</summary><dl class="facts"><template v-for="[key,value] in Object.entries(spec.baseline||{})" :key="key"><dt>{{ caption(key) }}</dt><dd>{{ readable(value) }}</dd></template></dl></details>
+   <details v-if="readiness"><summary>编码条件 · {{ summary.codingReady === true ? '可开始' : summary.codingReady === false ? '待确认' : '未记录' }}</summary>
+    <p v-for="line in readiness.exitCriteria" :key="line">{{ line }}</p>
+    <p v-for="issue in summary.readinessIssues" :key="issue.path + issue.message"><small>{{ issue.path }} · {{ issue.message }}</small></p>
+    <small v-if="!Array.isArray(readiness.blockingItems)">编码阻塞未记录</small>
+   </details>
+   <details v-if="todoCount" data-summary="todo"><summary>剩余事项 · {{ todoCount }} 项</summary>
+    <div v-for="[key,title] in todoGroups" :key="key">
+     <details v-if="summary[key]?.length" :data-summary="key"><summary>{{ title }}（{{ summary[key].length }}）</summary>
+      <ul><li v-for="item in summary[key]" :key="item.id || item" :data-id="item.id">
+       <template v-if="typeof item === 'string'">{{ caption(item) }}</template>
+       <template v-else>{{ item.title }} <small>· {{ item.id }} · {{ item.status }}<template v-if="key==='openQuestions'"> · {{ questionKind(item) }}</template></small>
+        <div v-if="item.blocker || item.note || item.reason"><small>{{ [item.blocker,item.note,item.reason].filter(Boolean).join(' · ') }}</small></div>
+       </template>
+      </li></ul>
+     </details>
+    </div>
+   </details>
+   <details v-if="spec.metadata.previousSpecs?.length"><summary>旧方案引用</summary><ul>
+    <li v-for="(item,index) in spec.metadata.previousSpecs" :key="index">{{ item.summary }}<br><small>{{ item.source }}<template v-if="item.recordIds?.length"> · {{ item.recordIds.join('、') }}</template><template v-if="item.commit"> · {{ item.commit }}</template></small></li>
+   </ul></details>
+  </div>
+  <section v-if="mode==='plans'" class="plan surface">
+   <h1>需求排期</h1>
+   <div class="tools"><select v-model="planStatus" aria-label="排期状态"><option value="">全部状态</option><option v-for="status in registry.sections.plans" :key="status">{{ status }}</option></select><select v-model="sort" aria-label="排期排序"><option value="priority">优先级从高到低</option><option value="reverse">优先级从低到高</option><option value="sequence">按序号</option></select><label><input type="checkbox" v-model="groupPlans"> 按模块分组</label><small>{{ planRows.length }} / {{ records.length }} 项</small></div>
+   <div class="scroll"><table><thead><tr><th v-for="column in planColumns" :key="column">{{ column }}</th></tr></thead>
+    <tbody v-for="[group,entries] in schedule" :key="group">
+     <tr v-if="groupPlans" class="grouphead"><td :colspan="planColumns.length">{{ group }}</td></tr>
+     <template v-for="task in entries" :key="task.id">
+      <tr :data-plan="task.id"><td>{{ task.sequence }}</td><td><b>{{ task.priority }}</b></td><td><button class="link" :aria-expanded="openTask===task.id" @click="openTask=openTask===task.id?'':task.id">{{ task.main }}</button><small v-if="!groupPlans"> · {{ task.module }}</small></td><td><div v-for="id in task.requirementIds" :key="id"><button class="link" @click="jump(id)">{{ nameFor(id) }}</button></div></td><td>{{ agentNames(task.executor,task.executorIds) }}</td><td><span class="badge" :style="tone(task.status)">{{ task.status }}</span></td><td class="note"><div class="clamp" :title="taskNote(task)">{{ taskNote(task) }}</div></td></tr>
+      <tr class="plan-expanded" v-if="openTask===task.id"><td :colspan="planColumns.length"><dl class="facts"><template v-for="[key,value] in planDetails(task)" :key="key"><dt>{{ caption(key) }}</dt><dd>{{ readable(value) }}</dd></template></dl><related-records :record="task" @jump="jump"></related-records></td></tr>
+     </template>
+    </tbody>
+   </table><p v-if="!planRows.length" class="empty">没有符合条件的任务</p></div>
+  </section>
+  <article class="surface" v-else-if="record" :key="record.id">
+   <div class="head"><div><h1>{{ label(record) }}</h1><small>{{ record.id }}</small><span v-if="record.path" class="path">{{ record.method }} {{ record.path }}</span></div><div class="tags"><span v-if="record.changeType" class="badge">{{ record.changeType }}</span><span v-if="catalogFilter" class="badge" :style="tone(itemStatus(record))">本期开发 · {{ itemStatus(record) }}</span>
+    <span class="badge" :style="tone(recordStatus(record))">{{ isApi || mode==='tables' ? '部署/验证 · ' : '' }}{{ recordStatus(record) }}</span></div></div>
+   <p v-if="isApi && record.summary && record.summary.trim()!==label(record)" class="api-summary">{{ record.summary }}</p>
+   <p v-if="!isApi && statusNote(record)" class="muted">{{ statusNote(record) }}</p>
+   <section v-if="mode==='tables' && markedColumns.length" class="block">
+    <h2>本期字段变更</h2>
+    <div class="scroll"><table class="column-diff-table" aria-label="数据表字段状态">
+     <thead><tr><th scope="col">字段</th><th scope="col">变更</th><th scope="col">类型</th></tr></thead>
+     <tbody><tr v-for="column in markedColumns" :key="column.name">
+      <th scope="row"><code>{{ column.name }}</code></th>
+      <td><span class="field-change-badge" :class="'field-change-'+statusKind(column)">{{ column.changeStatus }}</span></td>
+      <td>{{ column.type || '—' }}</td>
+     </tr></tbody>
+    </table></div>
+   </section>
+   <section v-if="mode==='tables' && !markedColumns.length && fieldChanges" class="block">
+    <h2>本期字段变更</h2>
+    <p v-if="fieldChanges.ddlOnly">DDL 已变更，缺少列快照。</p>
+    <div v-if="fieldChanges.rows.length" class="scroll">
+     <table class="column-diff-table" aria-label="数据表字段变更">
+      <thead><tr><th scope="col">字段</th><th scope="col">变更</th><th scope="col">旧值</th><th scope="col">新值</th></tr></thead>
+      <tbody><tr v-for="change in fieldChanges.rows" :key="change.name">
+       <th scope="row"><code>{{ change.name }}</code></th>
+       <td><span class="field-change-badge" :class="'field-change-'+change.kind">{{ fieldLabels[change.kind] }}</span></td>
+       <td v-for="side in ['before','after']" :key="side">
+        <dl v-if="change[side]"><div v-for="[label,value] in columnFacts(change[side])" :key="label">
+         <dt>{{ label }}</dt> <dd>{{ value }}</dd>
+        </div></dl>
+        <span v-else>—</span>
+       </td>
+      </tr></tbody>
+     </table>
+    </div>
+   </section>
+   <label v-if="isApi && hasMarkedFields"><input type="checkbox" v-model="onlyChanged"> 只看变更</label>
+   <div v-if="isApi" class="twocol">
+    <section class="block" v-for="[slot,title] in [['request','请求参数'],['response','返回参数']]" :key="slot">
+     <h2>{{ title }}</h2><div class="scroll param-scroll" :class="{'request-params':slot==='request'}" tabindex="0" role="region" :aria-label="title"><table><thead><tr><th v-for="key in columns(slot)" :key="key">{{ caption(key) }}</th></tr></thead><tbody><tr v-for="(field,i) in visibleFields(slot)" :key="i"><td v-for="key in columns(slot)" :key="key">{{ fieldText(field,key) }} <span v-if="key==='name' && fieldChangeKind(slot,field)" class="field-change-badge" :class="'field-change-'+fieldChangeKind(slot,field)">{{ fieldLabels[fieldChangeKind(slot,field)] }}</span></td></tr><tr v-if="!visibleFields(slot).length"><td :colspan="columns(slot).length">无</td></tr></tbody></table></div>
+    </section>
+   </div>
+   <div v-if="isApi" class="twocol">
+    <details open class="block" v-for="[slot,title] in [['requestExample','请求示例'],['responseExample','响应示例']]" :key="slot"><summary>{{ title }}</summary><pre>{{ readable(record[slot]) }}</pre></details>
+   </div>
+   <section v-if="mode==='configs' && record.source" class="block">
+    <h2>上线文件路径</h2>
+    <a v-if="releasePath(record.source)" :href="releasePath(record.source)" target="_blank" rel="noopener"><code>{{ record.source }}</code></a>
+    <code v-else>{{ record.source }}</code>
+   </section>
+   <section v-for="[key,value] in primary" :key="key" class="block"><h2>{{ caption(key) }}</h2><pre v-if="['ddl','content'].includes(key)">{{ readable(value) }}</pre><ol v-else-if="Array.isArray(value)"><li v-for="(line,i) in value" :key="i">{{ readable(line) }}</li></ol><p v-else>{{ readable(value) }}</p></section>
+   <section v-if="record.type==='diagram' && (record.diagramSource || record.diagramSvg || record.fallback)" class="block">
+    <h2>{{ diagramLabel(record) }}</h2>
+    <pre v-if="diagramEngine(record)==='text'">{{ record.diagramSource || record.fallback }}</pre>
+    <div v-else-if="record.diagramSvg && diagramEngine(record)!=='mermaid'" class="diagram">
+     <img :src="svgImage(record.diagramSvg)" :alt="record.title">
+    </div>
+    <template v-else>
+     <div v-if="diagramReady" ref="diagramNode" class="diagram"></div>
+     <details v-if="record.diagramSource" :open="!diagramReady"><summary>图源</summary><pre>{{ record.diagramSource }}</pre></details>
+     <p v-if="record.fallback">{{ record.fallback }}</p>
+    </template>
+   </section>
+   <section v-if="record.acceptance?.length" class="block"><h2>验收标准</h2><div class="scroll"><table><thead><tr><th>标准</th><th>状态</th><th>证据</th></tr></thead><tbody><tr v-for="item in record.acceptance" :key="item.id"><td>{{ item.text }}</td><td><span class="badge" :style="tone(item.status)">{{ item.status }}</span></td><td>{{ readable(item.evidence) }}</td></tr></tbody></table></div></section>
+   <details v-if="apiRules.length" class="block">
+    <summary>调用规则（{{ apiRules.length }}）</summary>
+    <ul class="api-rules"><li v-for="(rule,i) in apiRules" :key="i">{{ rule }}</li></ul>
+   </details>
+   <details v-if="apiNotes.length" class="block">
+    <summary>补充说明（{{ apiNotes.length }}）</summary>
+    <ul class="api-rules"><li v-for="(note,i) in apiNotes" :key="i">{{ note }}</li></ul>
+   </details>
+   <details v-if="!isApi && more.length" class="block"><summary>更多信息</summary><dl class="facts"><template v-for="[key,value] in more" :key="key"><dt>{{ caption(key) }}</dt><dd>{{ readable(value) }}</dd></template></dl></details>
+   <related-records :record="record" @jump="jump"></related-records>
+  </article>
+  <p v-else class="empty">{{ records.length ? '没有符合条件的条目' : emptySection(mode) }}</p>
+ </main>
+</div>
+</template>
+<template id="related-records-view">
+ <details v-if="ids.length" class="block related-disclosure">
+  <summary>关联记录（{{ ids.length }}）</summary>
+  <div class="related">
+   <template v-for="id in ids" :key="id">
+    <button v-if="byId.has(id)" class="link" @click="$emit('jump',id)">{{ id }}</button>
+    <small v-else>{{ id }}</small>
+   </template>
+  </div>
+ </details>
+</template>
+<script id="html-sdd-spec" type="application/json">{"specVersion":"0.1","metadata":{"id":"CATALOG-DEMO","title":"文件管理 · 目录筛选演示","summary":"示意数据，用于体验筛选和开发/部署状态区分，不代表业务开发实绩。","status":"待核实","updatedAt":"2026-11-12T00:00:00+08:00","language":"zh-CN","readiness":{"overall":"待验收","codingReady":false,"blockingItems":[],"exitCriteria":["需求、接口、数据表、配置和验证证据可追踪","未决问题已经明确负责人和下一步"]},"sectionCoverage":{"requirements":{"status":"included","reason":"交互示意数据"},"plans":{"status":"included","reason":"交互示意数据"},"apis":{"status":"included","reason":"交互示意数据"},"tables":{"status":"included","reason":"交互示意数据"},"architecture":{"status":"not_applicable","reason":"本例只演示目录交互"},"configs":{"status":"included","reason":"交互示意数据"}},"statusNote":"交互示意","statusPolicy":"strict"},"baseline":{"repository":"交互示意","branch":"示意数据","commit":"非业务代码快照","inspectedAt":"2026-11-12","timezone":"Asia/Shanghai","worktreeState":"unknown","relevantDirtyPaths":[]},"agents":[{"id":"AGENT-OWNER","name":"负责人 Agent","role":"和用户对齐、分派和汇报","status":"待核实"},{"id":"AGENT-REVIEWER","name":"审核人 Agent","role":"拆需求、查现状、审核方案","status":"待核实"},{"id":"AGENT-EXECUTOR","name":"执行人 Agent","role":"写代码、测试和验证","status":"待核实"}],"requirements":[{"id":"REQ-001","group":"交互演示","title":"本期文件管理迭代","summary":"示意数据，用于体验筛选和开发/部署状态区分，不代表业务开发实绩。","scope":"展示状态分类、目录筛选、默认展开及紧凑阅读。","status":"待核实","related":["API-001","API-002","API-003","API-004","DATA-001","DATA-002","DATA-003","PLAN-001","CFG-001","CFG-002"],"acceptance":[{"id":"AC-001","text":"组合筛选和恢复后目录与详情一致。","status":"待核实","evidence":"仅交互示意","statusNote":"演示用例"}],"statusNote":"示意需求"}],"plans":[{"id":"PLAN-001","priority":"P2","module":"文件","requirementIds":["REQ-001"],"main":"文件查询示意","sub":"演示数据不用于评估真实开发完成度。","owner":"AGENT-OWNER","reviewer":"AGENT-REVIEWER","executor":"AGENT-EXECUTOR","status":"已完成","note":"仅为交互展示","sequence":1},{"id":"PLAN-002","priority":"P0","module":"空间","requirementIds":["REQ-001"],"main":"空间隔离示意","sub":"演示数据不用于评估真实开发完成度。","owner":"AGENT-OWNER","reviewer":"AGENT-REVIEWER","executor":"AGENT-EXECUTOR","status":"进行中","note":"仅为交互展示","sequence":2},{"id":"PLAN-003","priority":"P0","module":"文件","requirementIds":["REQ-001"],"main":"文件上传示意","sub":"演示数据不用于评估真实开发完成度。","owner":"AGENT-OWNER","reviewer":"AGENT-REVIEWER","executor":"AGENT-EXECUTOR","status":"待开始","note":"仅为交互展示","sequence":5},{"id":"PLAN-004","priority":"P1","module":"空间","requirementIds":["REQ-001"],"main":"空间同步示意","sub":"演示数据不用于评估真实开发完成度。","owner":"AGENT-OWNER","reviewer":"AGENT-REVIEWER","executor":"AGENT-EXECUTOR","status":"阻塞","note":"仅为交互展示","sequence":8}],"apis":[{"id":"API-001","group":"文件管理","name":"查询文件","method":"GET","path":"/api/demo/files","changeType":"新增接口","status":"待核实","summary":"仅用于展示目录交互，不调用真实后端。","request":[{"name":"page","location":"query","type":"integer","required":"否","description":"示意页码","example":1}],"response":[{"name":"items","type":"array","required":"是","description":"示意结果","example":[]}],"requestExample":{"page":1},"responseExample":{"items":[]},"developmentStatus":"已完成","statusNote":"本阶段代码示意已完成，运行环境尚未验证"},{"id":"API-002","group":"文件管理","name":"更新文件标签（原有接口按本期范围逐步改造）","method":"PATCH","path":"/api/demo/files/{id}/tags","changeType":"存量接口变更","status":"待核实","summary":"仅用于展示目录交互，不调用真实后端。","request":[{"name":"page","location":"query","type":"integer","required":"否","description":"示意页码","example":1}],"response":[{"name":"items","type":"array","required":"是","description":"示意结果","example":[]}],"requestExample":{"page":1},"responseExample":{"items":[]},"developmentStatus":"部分完成","statusNote":"路由原已存在，标签同步尚未完成"},{"id":"API-003","group":"文件管理","name":"读取存量下载信息","method":"GET","path":"/api/demo/downloads/{id}","changeType":"存量接口复用","status":"待核实","summary":"仅用于展示目录交互，不调用真实后端。","request":[{"name":"page","location":"query","type":"integer","required":"否","description":"示意页码","example":1}],"response":[{"name":"items","type":"array","required":"是","description":"示意结果","example":[]}],"requestExample":{"page":1},"responseExample":{"items":[]},"developmentStatus":"未开发","statusNote":"存量能力存在，本期接入与验证未开发"},{"id":"API-004","group":"文件管理","name":"历史接口待核对","method":"GET","path":"/api/demo/files/history/long-segment/long-segment/long-segment/long-segment/long-segment/long-segment/long-segment/long-segment/native-find-tail","changeType":"新增接口","status":"待核实","summary":"仅用于展示目录交互，不调用真实后端。","request":[{"name":"page","location":"query","type":"integer","required":"否","description":"示意页码","example":1}],"response":[{"name":"items","type":"array","required":"是","description":"示意结果","example":[]}],"requestExample":{"page":1},"responseExample":{"items":[]},"statusNote":"历史实现说明，当前开发范围待核对"}],"tables":[{"id":"DATA-001","group":"文件管理","name":"demo_file_1","changeType":"新增数据表","developmentStatus":"已完成","status":"待核实","purpose":"用于展示新增、变更和复用筛选，不代表真实业务表。","ddl":"-- 请以当前项目审核后的真实迁移文件为准。","statusNote":"仅演示本阶段开发状态，迁移执行情况未验证","displayName":"演示文件表1"},{"id":"DATA-002","group":"文件管理","name":"demo_file_2","changeType":"存量表变更","developmentStatus":"未开发","status":"待核实","purpose":"用于展示新增、变更和复用筛选，不代表真实业务表。","ddl":"-- 请以当前项目审核后的真实迁移文件为准。","statusNote":"仅演示本阶段开发状态，迁移执行情况未验证","displayName":"演示文件表2"},{"id":"DATA-003","group":"文件管理","name":"demo_file_3","changeType":"存量表复用","developmentStatus":"部分完成","status":"待核实","purpose":"用于展示新增、变更和复用筛选，不代表真实业务表。","ddl":"-- 请以当前项目审核后的真实迁移文件为准。","statusNote":"仅演示本阶段开发状态，迁移执行情况未验证","displayName":"演示文件表3"}],"architecture":[],"configs":[{"id":"CFG-001","group":"本阶段执行项","title":"本阶段配置示意","kind":"文本示意","environment":"演示","status":"待核实","content":"demo.files.enabled=true\n","source":"tests/fixtures/目录筛选/上线配置.txt","related":["REQ-001"],"statusNote":"人工确认后执行"},{"id":"CFG-002","group":"本阶段执行项","title":"本阶段 SQL 示意","kind":"文本示意","environment":"演示","status":"待核实","content":"-- 仅为交互示意，非生产迁移\nCREATE TABLE demo_file (id BIGINT PRIMARY KEY);\n","source":"tests/fixtures/目录筛选/最终SQL.sql","related":["REQ-001"],"statusNote":"人工确认后执行"}],"evidence":[],"questions":[],"existingInterfaces":[{"id":"API-BASELINE","group":"文件管理","name":"读取存量下载信息","method":"GET","path":"/api/demo/downloads/{id}","changeType":"存量接口复用","status":"待核实","summary":"仅用于展示目录交互，不调用真实后端。","request":[{"name":"page","location":"query","type":"integer","required":"否","description":"示意页码","example":1}],"response":[{"name":"items","type":"array","required":"是","description":"示意结果","example":[]}],"requestExample":{"page":1},"responseExample":{"items":[]},"developmentStatus":"未开发","baseline":"示意 master 快照","statusNote":"存量能力存在，本期接入与验证未开发"}]}</script>
+<script id="html-sdd-summary" type="application/json">{"codingReady":false,"pendingPlans":["PLAN-003","PLAN-002","PLAN-004"],"acceptanceGaps":[],"deliveryGaps":[],"blockingItems":[],"openQuestions":[],"unverified":["AC-001","API-001","API-002","API-003","API-004","DATA-001","DATA-002","DATA-003","CFG-001","CFG-002"],"missingCoverage":[]}</script>
+<script id="html-sdd-release-paths" type="application/json">{}</script>
+<script id="html-sdd-field-diff" type="application/json">{}</script>
+<script>
+window.addEventListener('DOMContentLoaded',()=>{
+ if(window.location.protocol!=='file:'){
+  document.getElementById('app').textContent='请直接用浏览器打开本地 HTML 文件。';
+  return;
+ }
+ if(!window.Vue){document.getElementById('app').textContent='Vue 加载失败，请检查网络后刷新页面。';return}
+ const {createApp,ref,reactive,computed,watch,nextTick}=Vue;
+ const spec=JSON.parse(document.getElementById('html-sdd-spec').textContent);
+ const registry={"tones":{"done":{"color":"#166534","background":"#ecfdf3"},"progress":{"color":"#1d4ed8","background":"#eff6ff"},"wait":{"color":"#854d0e","background":"#fff7e6"},"review":{"color":"#6d28d9","background":"#f5f3ff"},"blocked":{"color":"#b42318","background":"#fef3f2"},"neutral":{"color":"#475569","background":"#f1f5f9"}},"statuses":{"方案待对齐":"neutral","方案已对齐":"neutral","开发中":"progress","验证中":"progress","待上线":"wait","已上线":"done","阻塞":"blocked","已取消":"neutral","待核实":"neutral","待开始":"neutral","进行中":"progress","已完成":"done","待拆分":"neutral","待确认":"wait","编码 READY":"progress","待复核":"review","待验收":"wait","待接入":"wait","待执行":"wait","待部署":"wait","已部署":"progress","待验证":"wait","已验证":"done","不适用":"neutral","待设计":"neutral","设计中":"progress","已确认":"done","待配置":"wait","已执行":"progress","已记录":"neutral","失败":"blocked","已失效":"blocked","核实中":"progress","已解决":"done","已关闭":"done","部分完成":"wait","未开发":"neutral","已通过":"done","未通过":"blocked"},"sections":{"metadata":["方案待对齐","方案已对齐","开发中","验证中","待上线","已上线","阻塞","已取消","待核实"],"agents":["待开始","进行中","阻塞","已完成","已取消","待核实"],"requirements":["待拆分","待确认","编码 READY","进行中","待复核","待验收","阻塞","已完成","已取消","待核实"],"plans":["待拆分","待确认","编码 READY","待开始","进行中","待接入","待执行","待复核","待验收","阻塞","已完成","已取消"],"apis":["待部署","已部署","待验证","已验证","阻塞","不适用","待核实"],"existingInterfaces":["待部署","已部署","待验证","已验证","阻塞","不适用","待核实"],"tables":["待部署","已部署","待验证","已验证","阻塞","不适用","待核实"],"architecture":["待设计","设计中","待复核","已确认","阻塞","已取消","待核实"],"configs":["待配置","待执行","已执行","待验证","已验证","阻塞","不适用","待核实"],"evidence":["待核实","已记录","已验证","失败","已失效"],"questions":["待确认","核实中","阻塞","已确认","已解决","已关闭","已完成","已取消","待核实"],"developmentStatus":["已完成","部分完成","未开发"],"acceptance":["待验证","待验收","验证中","已通过","未通过","阻塞","不适用","待核实"]},"closedQuestions":["已确认","已解决","已关闭","已完成","已取消"]};
+ const releasePaths=JSON.parse(document.getElementById('html-sdd-release-paths').textContent);
+ const releasePath=source=>Object.hasOwn(releasePaths,source)?releasePaths[source]:'';
+ const summary=JSON.parse(document.getElementById('html-sdd-summary').textContent);
+ const todoGroups=[
+  ['pendingPlans','未完成任务'],['acceptanceGaps','验收缺口'],['deliveryGaps','部署与验证待办'],
+  ['blockingItems','其他阻塞'],['openQuestions','未关闭问题'],['unverified','待核实'],['missingCoverage','待补充范围'],
+ ];
+ const todoCount=todoGroups.reduce((total,[key])=>total+(summary[key]?.length||0),0);
+ const todoRecords=new Map();
+ for(const section of ['plans','apis','tables','configs','questions']){
+  for(const item of spec[section]||[])todoRecords.set(item.id,{item,section});
+ }
+ for(const requirement of spec.requirements||[]){
+  for(const item of requirement.acceptance||[])todoRecords.set(item.id,{item,section:'acceptance'});
+ }
+ const brief=value=>{
+  if(typeof value!=='string')return '';
+  const text=Array.from(value.trim().replace(/\s+/gu,' '));
+  return text.length>240?text.slice(0,239).join('')+'…':text.join('');
+ };
+ for(const [key] of todoGroups){
+  if(key==='blockingItems'||key==='missingCoverage')continue;
+  summary[key]=(summary[key]||[]).map(entry=>{
+   const id=typeof entry==='string'?entry:entry.id;
+   const match=todoRecords.get(id);
+   if(!match)return entry;
+   const {item,section}=match;
+   const status=typeof entry==='string'?item.status:entry.status??item.status;
+   const legacyStatus=registry.sections[section].includes(item.status)?'':item.status;
+   const notes=[item.note,item.progress,item.statusNote,legacyStatus].map(brief).filter(Boolean);
+   return {
+    id,status,title:[item.title,item.main,item.name,item.question,item.text].map(brief).find(Boolean)||id,
+    note:brief([...new Set(notes)].join('；')),blocker:section==='plans'?brief(item.blocker):'',
+    reason:entry.reason,requiresUserDecision:item.requiresUserDecision,
+   };
+  });
+ }
+ const questionKind=item=>item.requiresUserDecision===true?'等用户决定':item.requiresUserDecision===false?'AI 继续核实':'待分类';
+ function emptySection(mode){
+  const coverage=spec.metadata.sectionCoverage?.[mode];
+  const reason=typeof coverage?.reason==='string'?coverage.reason.trim():'';
+  if(!['requirements','plans'].includes(mode)&&coverage?.status==='not_applicable'&&reason)return '本期不涉及 · '+reason;
+  if(coverage?.status==='pending')return reason?'待补充 · '+reason:'待补充';
+  return '尚未判断';
+ }
+ const fieldDiff=JSON.parse(document.getElementById("html-sdd-field-diff").textContent);
+ const fieldLabels={added:"新增",changed:"修改",removed:"删除"};
+ const statusKind=field=>Object.keys(fieldLabels).find(key=>fieldLabels[key]===field.changeStatus);
+ const tabs=[['requirements','需求'],['plans','排期'],['apis','接口'],['existingInterfaces','现有接口'],['tables','数据表'],['architecture','架构设计'],['configs','上线配置']];
+ const labels={name:'字段',location:'位置',type:'类型',required:'必填',description:'说明',example:'示例',summary:'概述',scope:'范围',outOfScope:'非范围',current:'当前情况',conclusion:'方案',steps:'主要做法',impact:'涉及内容',risks:'注意事项',rules:'规则',ddl:'DDL',content:'配置内容',statusNote:'状态说明',repository:'仓库',branch:'分支',commit:'提交',inspectedAt:'检查时间',timezone:'时区',worktreeState:'工作区',relevantDirtyPaths:'相关改动',sub:'子任务',start:'计划开始',end:'预计完成',owner:'负责人',reviewer:'审核人',executor:'执行人',batch:'批次',effort:'预估',deps:'依赖',progress:'进展',note:'备注',blocker:'阻塞原因',acceptanceCriteria:'验收标准',verification:'验证结果',ownerPaths:'文件范围',environment:'环境',kind:'类别',purpose:'用途',difference:'差异',evidence:'证据',notes:'补充说明',fallback:'文字说明',diagramType:'图类型',diagramEngine:'渲染方式'};
+ const primaryKeys={requirements:['summary','scope','outOfScope'],tables:['ddl'],architecture:['summary','conclusion','current','steps','impact','risks'],configs:['content']};
+ const omitted=['id','group','title','name','displayName','status','statusNote','developmentStatus','changeType','path','method','request','response','requestExample','responseExample','acceptance','related','links','diagramSource','diagramSvg','columns'];
+ const planOmit=['id','sequence','priority','module','main','requirementIds','status','progress','note','blocker','statusNote','related','links'];
+ const agentMap=new Map((spec.agents||[]).map(agent=>[agent.id,agent.name]));
+ const byId=new Map(tabs.flatMap(([mode])=>(spec[mode]||[]).map(item=>[item.id,{mode,item}])));
+ const label=item=>item.title||(item.displayName?`${item.name}（${item.displayName}）`:item.name)||item.main||item.id;
+ const caption=key=>tabs.find(([id])=>id===key)?.[1]||labels[key]||key;
+ const readable=value=>value==null?'—':typeof value==='string'?value:typeof value==='object'?JSON.stringify(value,null,2):String(value);
+ const columnFacts=column=>[
+  ['类型',column.type],['可空',column.nullable==null?null:column.nullable?'是':'否'],
+  ['默认值',Object.hasOwn(column,'default')?column.default===null?'NULL':readable(column.default):null],['说明',column.description],
+ ].filter(([,value])=>value!=null && value!=='');
+ const tone=status=>registry.tones[registry.statuses[status]||'neutral'];
+ const present=value=>value!=null&&value!==''&&(!Array.isArray(value)||value.length>0);
+ const extra=(item,omit)=>Object.entries(item).filter(([key,value])=>!omit.includes(key)&&present(value));
+ const groupBy=(rows,key)=>{const groups=new Map();for(const row of rows){const name=key(row)||'未分组';if(!groups.has(name))groups.set(name,[]);groups.get(name).push(row)}return [...groups]};
+ const resolve=(items,kind)=>(items||[]).flatMap(item=>{
+  if(!item?.$ref)return [item];
+  const name=item.$ref.split('/').at(-1).replace(/~1/g,'/').replace(/~0/g,'~');
+  const definition=spec.definitions?.[kind]?.[name];
+  if(definition==null)return [];
+  const rows=Array.isArray(definition)?definition:[definition];
+  return item.changeStatus?rows.map(row=>({...row,changeStatus:item.changeStatus})):rows;
+ });
+ const fields=items=>resolve(items,'fields');
+ const requestColumns=['name','location','type','required','description','example'];
+ const responseColumns=requestColumns.filter(key=>key!=='location');
+ const columns=slot=>slot==='request'?requestColumns:responseColumns;
+ const aliases={name:'field',location:'where',description:'desc'};
+ const fieldText=(field,key)=>readable(field[key]??field[aliases[key]]);
+ const nameFor=id=>byId.has(id)?label(byId.get(id).item):id;
+ const agentNames=(primary,ids)=>[...new Set([primary,...(ids||[])].filter(Boolean))].map(id=>agentMap.get(id)||id).join('、')||'未安排';
+ const diagramEngine=item=>item?.diagramEngine||(item?.diagramSvg?'inline-svg':item?.diagramSource?'mermaid':'text');
+ const svgImage=svg=>'data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+ const diagramLabel=item=>({sequence:'时序图',er:'数据关系图',flowchart:'流程图'}[String(item.diagramType||'').toLowerCase()]||'架构图');
+ function taskNote(task){
+  const notes=[task.blocker,task.progress,task.note,task.statusNote]
+   .filter(value=>typeof value==='string'&&value.trim()).map(value=>value.trim());
+  const unique=[...new Set(notes)];
+  if(typeof task.blocker==='string'&&task.blocker.trim())unique[0]='阻塞说明：'+unique[0];
+  else if(task.status==='阻塞')unique.unshift('阻塞原因待补充');
+  return unique.join('；')||'—';
+ }
+ function planDetails(task){
+  const details=extra(task,planOmit);
+  const note=taskNote(task);
+  if(note!=='—')details.push(['进展与备注',note]);
+  return details;
+ }
+ const planColumns=['序号','优先级','模块 / 任务','关联需求','执行人','状态','进展与备注'];
+ let mermaidPromise;
+ function mermaid(){
+  return mermaidPromise??=new Promise((done,fail)=>{const script=document.createElement('script');script.src='https://cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.min.js';script.onload=()=>{if(!window.mermaid){fail();return}window.mermaid.initialize({startOnLoad:false,securityLevel:'strict',theme:'neutral'});done(window.mermaid)};script.onerror=fail;document.head.append(script)});
+ }
+ const RelatedRecords={
+  template:document.getElementById('related-records-view').innerHTML,
+  props:['record'],
+  emits:['jump'],
+  setup(props){
+   const asList=value=>Array.isArray(value)?value:[];
+   const ids=computed(()=>{
+    const linked=Object.values(props.record.links||{}).flatMap(asList);
+    return [...new Set([...asList(props.record.related),...linked].filter(id=>typeof id==='string'&&id.trim()))];
+   });
+   return {ids,byId};
+  },
+ };
+ createApp({template:document.getElementById('console-view').innerHTML,components:{RelatedRecords},setup(){
+  const mode=ref('requirements'),selected=ref(''),openTask=ref(''),planStatus=ref(''),sort=ref('priority'),groupPlans=ref(true),diagramReady=ref(false),diagramNode=ref(null);
+  const filters=reactive(Object.fromEntries(tabs.map(([key])=>[key,{query:'',change:'',status:''}])));
+  const records=computed(()=>spec[mode.value]||[]);
+  const isApi=computed(()=>['apis','existingInterfaces'].includes(mode.value));
+  const catalogFilter=computed(()=>['apis','tables'].includes(mode.value));
+  function recordStatus(item){
+   const section=registry.sections[mode.value]||[];
+   return section.includes(item.status)?item.status:'待核实';
+  }
+  const statusNote=item=>[...new Set([item.statusNote,item.status!==recordStatus(item)?item.status:null].filter(present))].join(' · ');
+  function itemStatus(item){
+   if(!catalogFilter.value)return recordStatus(item);
+   return knownDevelopment.includes(item.developmentStatus)?item.developmentStatus:'待核实';
+  }
+  const changeTypes={
+   apis:['存量接口变更','存量接口复用','新增接口'],
+   tables:['存量表变更','存量表复用','新增数据表'],
+  };
+  const changes=computed(()=>changeTypes[mode.value]||[]);
+  const knownDevelopment=registry.sections.developmentStatus;
+  const developmentFilters=['已完成','未完成',...knownDevelopment.filter(status=>status!=='已完成'),'待核实'];
+  const verificationStatuses=computed(()=>[...new Set(records.value.map(itemStatus))]);
+  function matchesStatus(item,status){
+   if(!status)return true;
+   const actual=itemStatus(item);
+   if(catalogFilter.value&&status==='未完成')return actual==='部分完成'||actual==='未开发';
+   return actual===status;
+  }
+  const visible=computed(()=>{const {query,change,status}=filters[mode.value];return records.value.filter(item=>(!change||item.changeType===change)&&matchesStatus(item,status)&&[label(item),item.path,item.id,item.group].some(value=>String(value||'').toLowerCase().includes(query.trim().toLowerCase())))});
+  const catalog=computed(()=>groupBy(visible.value,item=>item.group));
+  const record=computed(()=>visible.value.find(item=>item.id===selected.value)||visible.value[0]);
+  const fieldChanges=computed(()=>fieldDiff[mode.value]?.[record.value?.id]);
+  const markedColumns=computed(()=>(record.value?.columns||[]).filter(column=>
+   statusKind(column) && !(record.value.changeType==='新增数据表' && column.changeStatus==='新增')));
+  const hasMarkedFields=computed(()=>['request','response'].some(slot=>
+   fields(record.value?.[slot]).some(field=>fieldChangeKind(slot,field))));
+  const onlyChanged=ref(false);
+  watch(record,()=>{onlyChanged.value=false});
+  function fieldChangeKind(slot,field){
+   const explicit=statusKind(field);
+   if(explicit)return explicit==='added' && mode.value==='apis' && record.value?.changeType==='新增接口' ? undefined : explicit;
+   const name=field.name||field.field;
+   const location=slot==='request'?(field.location||field.where||''):'';
+   return fieldChanges.value?.rows.find(row=>row.area===slot&&row.name===name&&row.location===location)?.kind;
+  }
+  const visibleFields=slot=>fields(record.value?.[slot]).filter(field=>!onlyChanged.value||fieldChangeKind(slot,field));
+  const primary=computed(()=>(primaryKeys[mode.value]||[]).map(key=>[key,record.value?.[key]]).filter(([,value])=>present(value)));
+  const apiRules=computed(()=>isApi.value?resolve(record.value?.rules,'rules').filter(present):[]);
+  const apiNotes=computed(()=>{
+   if(!isApi.value)return [];
+   const notes=record.value?.notes;
+   return typeof notes==='string'?[notes].filter(present):resolve(notes,'rules').filter(present);
+  });
+  const more=computed(()=>record.value?extra(record.value,[...omitted,...(primaryKeys[mode.value]||[]),...(mode.value==='configs'?['source']:[])]):[]);
+  function selectMode(key){mode.value=key;selected.value=''}
+  function jump(id){const hit=byId.get(id);if(!hit)return;selectMode(hit.mode);Object.assign(filters[hit.mode],{query:'',change:'',status:''});selected.value=id;if(hit.mode==='plans')openTask.value=id}
+  const numberedPlans=(()=>{const rows=spec.plans||[],used=new Set(rows.map(task=>task.sequence));let next=1;return rows.map(task=>{if(Number.isSafeInteger(task.sequence)&&task.sequence>0)return task;while(used.has(next))next++;return {...task,sequence:next++}})})();
+  const planRows=computed(()=>{const rank={P0:0,P1:1,P2:2};return numberedPlans.filter(task=>!planStatus.value||task.status===planStatus.value).sort((a,b)=>{const delta=(rank[a.priority]??3)-(rank[b.priority]??3);return (sort.value==='sequence'?0:sort.value==='reverse'?-delta:delta)||a.sequence-b.sequence})});
+  const schedule=computed(()=>groupPlans.value?groupBy(planRows.value,task=>task.module):[['全部任务',planRows.value]]);
+  let renderCount=0;
+  watch(record,async(item,_,cleanup)=>{let obsolete=false;cleanup(()=>obsolete=true);diagramReady.value=false;if(!item?.diagramSource||diagramEngine(item)!=='mermaid')return;try{const engine=await mermaid();if(obsolete)return;const {svg}=await engine.render('sdd-diagram-'+(++renderCount),item.diagramSource);if(obsolete)return;diagramReady.value=true;await nextTick();if(!obsolete&&diagramNode.value)diagramNode.value.innerHTML=svg}catch{diagramReady.value=false}});
+  return {spec,releasePath,summary,todoGroups,todoCount,questionKind,emptySection,registry,tabs,mode,fieldChanges,fieldLabels,statusKind,markedColumns,hasMarkedFields,columnFacts,onlyChanged,fieldChangeKind,visibleFields,selected,openTask,planStatus,sort,groupPlans,filters,records,isApi,catalogFilter,itemStatus,recordStatus,statusNote,changes,developmentFilters,verificationStatuses,visible,catalog,record,primary,apiRules,apiNotes,more,selectMode,jump,planRows,schedule,byId,label,caption,readable,tone,planDetails,columns,fields,fieldText,nameFor,agentNames,taskNote,planColumns,readiness:spec.metadata.readiness,diagramReady,diagramNode,diagramEngine,diagramLabel,svgImage};
+ }}).mount('#app');
+});
+</script>
 </body>
 </html>

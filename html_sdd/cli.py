@@ -97,12 +97,8 @@ def context_command(
     return 0
 
 
-DEFAULT_TEMPLATE = "vue"
-
-
-def _template_path(template: str) -> Path:
-    filename = "console-vue.html" if template == "vue" else "console.html"
-    return Path(__file__).resolve().parent / "assets" / filename
+def _template_path() -> Path:
+    return Path(__file__).resolve().parent / "assets" / "console-vue.html"
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -143,14 +139,10 @@ def build_parser() -> argparse.ArgumentParser:
     browser.add_argument("--session", required=True)
     browser.add_argument("--log", type=Path)
     browser.add_argument("--max-output", type=int, default=1600)
-    render = sub.add_parser("render", help="生成单文件 HTML（Mermaid 图表按需使用 CDN）")
+    render = sub.add_parser("render", help="生成 Vue 单文件 HTML（Vue 及 Mermaid 图表使用 CDN）")
     render.add_argument("path", type=Path)
     render.add_argument("--output", type=Path, required=True)
     render.add_argument("--baseline", type=Path, help="本期起点事实源 JSON，用于显示字段差异")
-    render.add_argument(
-        "--template", choices=("classic", "vue"), default=DEFAULT_TEMPLATE,
-        help="页面模板，默认 vue（从 CDN 加载 Vue）；可选 classic",
-    )
     diff = sub.add_parser("diff", help="比较两个 JSON 规范")
     diff.add_argument("before", type=Path)
     diff.add_argument("after", type=Path)
@@ -250,7 +242,7 @@ def main(argv=None) -> int:
         try:
             spec = load_spec(str(args.path))
             baseline = load_spec(str(args.baseline)) if args.baseline is not None else None
-            html = render_spec(spec, _template_path(args.template), baseline=baseline, source_path=args.path, output_path=args.output)
+            html = render_spec(spec, _template_path(), baseline=baseline, source_path=args.path, output_path=args.output)
             args.output.parent.mkdir(parents=True, exist_ok=True)
             args.output.write_text(html, encoding="utf-8")
             print(f"OK {args.output}")
@@ -273,7 +265,7 @@ def main(argv=None) -> int:
             return 1
     if args.command == "init":
         try:
-            init_project(args.directory, _template_path(DEFAULT_TEMPLATE))
+            init_project(args.directory, _template_path())
             print(f"OK {args.directory}")
             return 0
         except (OSError, ValueError) as exc:

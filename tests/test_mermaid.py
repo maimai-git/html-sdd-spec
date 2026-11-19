@@ -9,7 +9,7 @@ from html_sdd.renderer import render_spec
 
 ROOT = Path(__file__).resolve().parents[1]
 EXAMPLE = json.loads((ROOT / "examples/asset-library/sdd.json").read_text())
-TEMPLATE = ROOT / "html_sdd" / "assets" / "console.html"
+TEMPLATE = ROOT / "html_sdd" / "assets" / "console-vue.html"
 
 
 class MermaidContractTest(unittest.TestCase):
@@ -31,9 +31,10 @@ class MermaidContractTest(unittest.TestCase):
     def test_mermaid_template_contains_lazy_loader_and_fallback(self):
         html = render_spec(EXAMPLE, TEMPLATE)
         self.assertIn("cdn.jsdelivr.net/npm/mermaid@11.12.1/dist/mermaid.min.js", html)
-        self.assertIn("loadMermaid", html)
-        self.assertIn("diagram-view-mermaid", html)
-        self.assertIn("Mermaid 加载失败", html)
+        self.assertIn("mermaidPromise", html)
+        self.assertIn("diagramEngine(item)!=='mermaid'", html)
+        self.assertIn("图源", html)
+        self.assertIn("record.fallback", html)
 
     def test_skill_documents_mermaid_engine_and_fallback(self):
         text = (ROOT / "skills/html-sdd-spec/SKILL.md").read_text()

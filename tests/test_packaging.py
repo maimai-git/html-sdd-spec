@@ -27,9 +27,9 @@ class PackagingTest(unittest.TestCase):
             self.assertRegex(text, r'(?m)^html-sdd = "html_sdd\.cli:main"$')
             self.assertRegex(text, r'(?m)^requires-python = ">=3\.9"$')
 
-    def test_package_contains_the_offline_console_asset(self):
-        asset = ROOT / "html_sdd" / "assets" / "console.html"
-        self.assertTrue(asset.exists())
+    def test_package_contains_only_the_vue_console_asset(self):
+        assets = ROOT / "html_sdd" / "assets"
+        self.assertEqual(["console-vue.html"], sorted(path.name for path in assets.glob("*.html")))
 
     def test_skeleton_has_a_readiness_gate(self):
         from html_sdd.scaffold import skeleton_spec
